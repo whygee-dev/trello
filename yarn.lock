@@ -82,7 +82,7 @@
     estree-walker "^2.0.1"
     picomatch "^2.2.2"
 
-"@sveltejs/adapter-auto@next":
+"@sveltejs/adapter-auto@^1.0.0-next.40":
   version "1.0.0-next.40"
   resolved "https://registry.yarnpkg.com/@sveltejs/adapter-auto/-/adapter-auto-1.0.0-next.40.tgz#06dd8a02cd465b536b540a056f269feb33712677"
   integrity sha512-TT6YJUF3asJ/2RbviEpcDJQ/TixPcvmH0L2266fGNT7+KfAf9wbbVdegPWRODk2E2hTN0X+h5YS9l+lap+BK9w==
