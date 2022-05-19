@@ -24,12 +24,10 @@
 		try {
 			const response = (await axios.post(`auth/login`, { email, password })).data;
 
-			console.log(response);
-
 			if (response) {
 				$session.user = response;
 
-				toast.push('Auth success');
+				toast.push('Authentification success');
 
 				goto('/board');
 			}

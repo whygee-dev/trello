@@ -7,9 +7,6 @@ export const handle: Handle = async ({ event, resolve }) => {
 		const cookies = cookie.parse(event.request.headers.get('cookie') || '');
 		const token = cookies.jwt;
 
-		console.log(cookies);
-
-		console.log(token);
 		event.locals.user = token ? (jwt.verify(token, process.env.JWT_SECRET!) as User) : null;
 	} catch (error) {
 		console.log(error);
@@ -19,8 +16,6 @@ export const handle: Handle = async ({ event, resolve }) => {
 };
 
 export const getSession: GetSession = async ({ locals }) => {
-	console.log(locals);
-
 	return {
 		user: locals.user && {
 			email: locals.user.email,
