@@ -6,7 +6,7 @@
 	<title>Trello</title>
 	<meta
 		name="description"
-		content="Flexibilité infinie. Niveau de productivité exceptionnel pour les équipes de toutes tailles. Trello permet de tout gérer, des détails de gros projets aux microtâches. Collaborez où que vous soyez, et même sur un appareil mobile."
+		content="Infinitely flexible. Incredibly productive for teams of all sizes. Thullo manages everything, from big project details to micro tasks. Collaborate anywhere, even on mobile."
 	/>
 </svelte:head>
 
