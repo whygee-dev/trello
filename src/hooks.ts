@@ -1,15 +1,26 @@
 import * as cookie from 'cookie';
 import type { GetSession, Handle } from '@sveltejs/kit';
+import jwt from 'jsonwebtoken';
 
 export const handle: Handle = async ({ event, resolve }) => {
-	const cookies = cookie.parse(event.request.headers.get('cookie') || '');
-	const jwt = cookies.jwt && Buffer.from(cookies.jwt, 'base64').toString('utf-8');
-	event.locals.user = jwt ? JSON.parse(jwt) : null;
+	try {
+		const cookies = cookie.parse(event.request.headers.get('cookie') || '');
+		const token = cookies.jwt;
+
+		console.log(cookies);
+
+		console.log(token);
+		event.locals.user = token ? (jwt.verify(token, process.env.JWT_SECRET!) as User) : null;
+	} catch (error) {
+		console.log(error);
+	}
 
 	return await resolve(event);
 };
 
 export const getSession: GetSession = async ({ locals }) => {
+	console.log(locals);
+
 	return {
 		user: locals.user && {
 			email: locals.user.email,
