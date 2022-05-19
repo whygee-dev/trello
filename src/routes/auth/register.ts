@@ -1,7 +1,7 @@
 import { PrismaClient } from '@prisma/client';
 import type { RequestHandler } from '@sveltejs/kit';
 import * as argon2 from 'argon2';
-import { Validators } from 'src/utils/validators';
+import { Validators } from '../../utils/validators';
 import jwt from 'jsonwebtoken';
 
 type Body = {
@@ -58,13 +58,14 @@ export const post: RequestHandler = async ({ request }) => {
 			data: {
 				username: json.username,
 				email: json.email,
-				password: await argon2.hash(json.password)
+				password: await argon2.hash(json.password),
+				fullname: json.fullname
 			}
 		});
 
-		const sign = jwt.sign(user, process.env.JWT_SECRET);
-
 		const { password, ...body } = user;
+
+		const sign = jwt.sign(body, process.env.JWT_SECRET);
 
 		return {
 			headers: {
@@ -73,6 +74,7 @@ export const post: RequestHandler = async ({ request }) => {
 			body: body as Partial<User>
 		};
 	} catch (error) {
+		console.log(error);
 		return { status: 500, body: { message: 'Server error occured' } };
 	}
 };

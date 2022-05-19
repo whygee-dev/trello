@@ -66,7 +66,7 @@
 
 		<div class="separator" />
 
-		<a href="/register" target="_blank">Sign up for an account</a>
+		<a href="/register">Sign up for an account</a>
 	</div>
 </section>
 
@@ -126,6 +126,12 @@
 
 			a {
 				font-size: 14px;
+			}
+		}
+
+		@media (max-width: 500px) {
+			.login-box {
+				width: 300px;
 			}
 		}
 	}

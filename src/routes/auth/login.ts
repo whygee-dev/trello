@@ -37,9 +37,9 @@ export const post: RequestHandler = async ({ request }) => {
 			return { status: 404, body: { message: 'Invalid credentials' } };
 		}
 
-		const sign = jwt.sign(user, process.env.JWT_SECRET);
-
 		const { password, ...body } = user;
+
+		const sign = jwt.sign(body, process.env.JWT_SECRET);
 
 		return {
 			headers: {
