@@ -2,9 +2,14 @@
 
 // See https://kit.svelte.dev/docs/types#app
 // for information about these interfaces
+
+type User = {
+	email: string;
+	fullname: string;
+};
 declare namespace App {
 	interface Locals {
-		userid: string;
+		user: User;
 	}
 
 	// interface Platform {}
