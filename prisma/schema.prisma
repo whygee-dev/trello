@@ -11,9 +11,41 @@ datasource db {
 }
 
 model User {
-    id         String      @id @unique
-    email      String
-    password   String
-    fullname   String
-    
+  id       Int     @id @unique @default(autoincrement())
+  email    String
+  password String
+  username String
+  Board    Board[]
+}
+
+model Board {
+  id     Int      @id @unique @default(autoincrement())
+  title  String
+  User   User[]
+  Column Column[]
+}
+
+model Column {
+  id      Int    @id @unique @default(autoincrement())
+  title   String
+  Board   Board  @relation(fields: [boardId], references: [id])
+  boardId Int
+  Card    Card[]
+}
+
+model Card {
+  id          Int      @id @unique @default(autoincrement())
+  title       String
+  description String
+  date        DateTime
+  label       Label[]
+  Column      Column   @relation(fields: [columnId], references: [id])
+  columnId    Int
+}
+
+model Label {
+  id    Int    @id @unique @default(autoincrement())
+  title String
+  color String
+  Card  Card[]
 }
