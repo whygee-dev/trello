@@ -3,7 +3,7 @@
 		if (session.user) {
 			return {
 				status: 302,
-				redirect: '/board'
+				redirect: '/boards'
 			};
 		}
 		return {};

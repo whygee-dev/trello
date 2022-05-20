@@ -11,13 +11,13 @@ async function main() {
 			username: 'John',
 			fullname: 'John Smith',
 			password,
-			Board: {
+			boards: {
 				create: {
 					title: 'Board Seed',
-					Column: {
+					columns: {
 						create: {
 							title: 'Column Seed',
-							Card: {
+							cards: {
 								create: {
 									title: 'Card Seed',
 									description: 'Card description',
