@@ -6,7 +6,8 @@
 	import '../style/global.scss';
 
 	const options = {
-		pausable: true
+		pausable: true,
+		duration: 10000
 	};
 </script>
 
