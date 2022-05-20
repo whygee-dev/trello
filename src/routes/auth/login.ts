@@ -2,6 +2,7 @@ import { PrismaClient } from '@prisma/client';
 import type { RequestHandler } from '@sveltejs/kit';
 
 import * as argon2 from 'argon2';
+
 import jwt from 'jsonwebtoken';
 
 type Body = {
@@ -48,6 +49,7 @@ export const post: RequestHandler = async ({ request }) => {
 			body: body as Partial<User>
 		};
 	} catch (error) {
+		console.log(error);
 		return { status: 500, body: { message: 'Server error occured' } };
 	}
 };

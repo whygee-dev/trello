@@ -29,7 +29,7 @@
 
 				toast.push('Authentification success');
 
-				goto('/board');
+				goto('/boards');
 			}
 		} catch (error: any) {
 			toast.push(
