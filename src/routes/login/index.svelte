@@ -40,7 +40,7 @@
 </script>
 
 <svelte:head>
-	<title>Log in to Trullo</title>
+	<title>Log in to Thullo</title>
 </svelte:head>
 
 <section class="container">
