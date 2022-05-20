@@ -1,8 +1,8 @@
-import { PrismaClient } from '@prisma/client';
 import type { RequestHandler } from '@sveltejs/kit';
 import * as argon2 from 'argon2';
 import { Validators } from '../../utils/validators';
 import jwt from 'jsonwebtoken';
+import { prisma } from '../../db';
 
 type Body = {
 	username: string;
@@ -42,8 +42,6 @@ export const post: RequestHandler = async ({ request }) => {
 				}
 			};
 		}
-
-		const prisma = new PrismaClient();
 
 		const existant = await prisma.user.findUnique({ where: { email: json.email } });
 
