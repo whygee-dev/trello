@@ -5,6 +5,10 @@
 	import '../style/global.scss';
 </script>
 
+<svelte:head>
+	<link rel="icon" type="image/svg" href={"logo-sm.svg"}>
+</svelte:head>
+
 {#if $navigating}
 	<PreloadingIndicator />
 {/if}
