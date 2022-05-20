@@ -9,7 +9,8 @@ async function main() {
 		data: {
 			email: 'John@doe.com',
 			username: 'John',
-			password: password,
+			fullname: 'John Smith',
+			password,
 			Board: {
 				create: {
 					title: 'Board Seed',

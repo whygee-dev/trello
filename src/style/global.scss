@@ -17,6 +17,16 @@ input {
 	border: 1px solid #cdd2d4;
 	padding: 10px 5px;
 	margin: 10px auto;
+
+	&.field-danger {
+		outline-color: red;
+		border-color: red;
+	}
+
+	&.field-success {
+		outline-color: #4c9aff;
+		border-color: #4c9aff;
+	}
 }
 
 a {
@@ -30,9 +40,16 @@ a {
 	}
 }
 
+a,
+a:visited,
+a:hover,
+a:active {
+	color: #0052cc;
+}
+
 button {
 	border: none;
-	padding: 10px 5px;
+	padding: 12px 5px;
 	margin: 10px auto;
 	border-radius: 4px;
 	cursor: pointer;

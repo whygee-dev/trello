@@ -6,7 +6,7 @@
 type User = {
 	email: string;
 	fullname: string;
-};
+} | null;
 declare namespace App {
 	interface Locals {
 		user: User;

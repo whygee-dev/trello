@@ -1,33 +1,41 @@
 <script context="module" lang="ts">
-	export async function load({ session }: { session: App.Session }) {
+	export const load: Load = async ({ session }) => {
 		if (session.user) {
 			return {
 				status: 302,
-				redirect: '/'
+				redirect: '/board'
 			};
 		}
 		return {};
-	}
+	};
 </script>
 
 <script lang="ts">
 	import { session } from '$app/stores';
 	import { goto } from '$app/navigation';
 	import axios from 'axios';
+	import { toast } from '@zerodevx/svelte-toast';
+	import type { Load } from '@sveltejs/kit';
 
 	let email = '';
 	let password = '';
-	let errors = null;
 
 	const submit: svelte.JSX.EventHandler<SubmitEvent, HTMLFormElement> = async (event) => {
 		try {
 			const response = (await axios.post(`auth/login`, { email, password })).data;
 
-			if (response.user) {
-				$session.user = response.user;
-				goto('/');
+			if (response) {
+				$session.user = response;
+
+				toast.push('Authentification success');
+
+				goto('/boards');
 			}
-		} catch (error) {}
+		} catch (error: any) {
+			toast.push(
+				error.response.data.message || error.response.data.error || 'An unexpected error occured'
+			);
+		}
 	};
 </script>
 
@@ -58,7 +66,7 @@
 
 		<div class="separator" />
 
-		<a href="/register" target="_blank">Sign up for an account</a>
+		<a href="/register">Sign up for an account</a>
 	</div>
 </section>
 
@@ -94,7 +102,7 @@
 
 				input,
 				button {
-					width: 90%;
+					width: 80%;
 				}
 
 				button {
@@ -118,6 +126,12 @@
 
 			a {
 				font-size: 14px;
+			}
+		}
+
+		@media (max-width: 500px) {
+			.login-box {
+				width: 300px;
 			}
 		}
 	}
