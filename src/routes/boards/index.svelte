@@ -7,8 +7,34 @@
 				redirect: '/login'
 			};
 		}
+		try {
+			const response = await fetch('/boards-api/boards', {
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/json'
+				},
+				body: JSON.stringify({
+					email: session.user.email
+				})
+			});
+
+			return {
+				status: response.status,
+				props: {
+					boards: await response.json()
+				}
+			};
+		} catch (error) {
+			console.error(error);
+		}
 		return {};
 	};
+</script>
+
+<script lang="ts">
+	import type { Board } from '@prisma/client';
+
+	export let boards: Board[] = [];
 </script>
 
 <svelte:head>
@@ -30,17 +56,13 @@
 						</li>
 						<li class="nav-board-item">
 							<a href="#" class="nav-header-content">
-								<div>
-									<img class="icon-nav-left" src="/icon-modele.svg" alt="Modèles" />
-								</div>
+								<img class="icon-nav-left" src="/icon-modele.svg" alt="Modèles" />
 								Modèles
 							</a>
 						</li>
 						<li class="nav-board-item">
 							<a href="#" class="nav-header-content">
-								<div>
-									<img class="icon-nav-left" src="/icon-activity.svg" alt="Acceuil" />
-								</div>
+								<img class="icon-nav-left" src="/icon-activity.svg" alt="Acceuil" />
 								Accueil
 							</a>
 						</li>
@@ -53,8 +75,16 @@
 						<div class="nav-work-header">
 							Espace de travail <img class="icon-nav-right" src="/icon-plus.svg" alt="Plus" />
 						</div>
-						<!-- <li class="nav-board-item">Modèles</li>
-						<li class="nav-board-item">Accueil</li>-->
+						{#each boards as board}
+							<li class="nav-board-item">
+								<!-- @TODO ajouter la propriété image à l'entité Board-->
+								<img class="icon-nav-left" src="/icon-activity.svg" alt="Acceuil" />
+								<a href="#" class="nav-header-content">
+									{board.title}
+									<img class="icon-nav-right" src="/icon-more.svg" alt="more" />
+								</a>
+							</li>
+						{/each}
 					</div>
 				</ul>
 			</div>
@@ -63,14 +93,25 @@
 			<div style="font-weight:bold;">
 				<img src="/icon-clock.svg" class="icon-clock" alt="Horloge" />
 				Récemment consultés
+				{#each boards as board}
+					<div style="background-color:red;width:250px;height:250px;margin:20px">
+						{board.title}
+					</div>
+				{/each}
 			</div>
+			<div>Vos espace de travail</div>
+			{#each boards as board}
+				<div style="background-color:red;width:250px;height:250px;margin:20px">
+					{board.title}
+				</div>
+			{/each}
 		</div>
 	</div>
 </section>
 
 <style lang="scss">
 	section {
-		min-height: calc(100vh - 40px);
+		height: 100%;
 	}
 	.container {
 		align-items: flex-start;
