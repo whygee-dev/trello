@@ -102,7 +102,7 @@
 
 				input,
 				button {
-					width: 90%;
+					width: 80%;
 				}
 
 				button {
