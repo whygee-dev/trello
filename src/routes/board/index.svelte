@@ -21,26 +21,50 @@
 				<div class="nav-board-content">
 					<ul class="nav-board">
 						<li>
-							<a href="#" class="nav-header">
-								<img width="20px" height="20px" src="/logo-sm.svg" alt="ok" />Tableaux
+							<a href="#" class="nav-header nav-header-color">
+								<div>
+									<img class="icon-nav-left" src="/icon-board.svg" alt="Tableaux" />
+								</div>
+								Tableaux
 							</a>
 						</li>
-						<li class="nav-board-item">Modèles</li>
-						<li class="nav-board-item">Accueil</li>
+						<li class="nav-board-item">
+							<a href="#" class="nav-header-content">
+								<div>
+									<img class="icon-nav-left" src="/icon-modele.svg" alt="Modèles" />
+								</div>
+								Modèles
+							</a>
+						</li>
+						<li class="nav-board-item">
+							<a href="#" class="nav-header-content">
+								<div>
+									<img class="icon-nav-left" src="/icon-activity.svg" alt="Acceuil" />
+								</div>
+								Accueil
+							</a>
+						</li>
 					</ul>
 				</div>
 			</nav>
 			<div class="nav-container">
 				<ul class="nav-work">
 					<div class="nav-work-content">
-						<div class="nav-work-header">Espace de travail <span> + </span></div>
+						<div class="nav-work-header">
+							Espace de travail <img class="icon-nav-right" src="/icon-plus.svg" alt="Plus" />
+						</div>
 						<!-- <li class="nav-board-item">Modèles</li>
 						<li class="nav-board-item">Accueil</li>-->
 					</div>
 				</ul>
 			</div>
 		</div>
-		<div class="all-boards" />
+		<div class="all-boards">
+			<div style="font-weight:bold;">
+				<img src="/icon-clock.svg" class="icon-clock" alt="Horloge" />
+				Récemment consultés
+			</div>
+		</div>
 	</div>
 </section>
 
@@ -78,9 +102,26 @@
 		min-width: 288px;
 		width: 100%;
 	}
-	.nav-board-content {
-		display: block;
+	.icon-clock {
+		margin-left: 2px;
+		float: bottom;
+		margin-top: 4px;
+		width: 25px;
+		height: 25px;
 	}
+	.icon-nav-left {
+		float: left;
+		width: 25px;
+	}
+	.icon-nav-right {
+		float: right;
+		width: 25px;
+	}
+	.icon-nav-right:hover {
+		background-color: #e7e9ed;
+		border-radius: 4px;
+	}
+
 	ul {
 		list-style: none;
 		margin: 0;
@@ -97,15 +138,29 @@
 	}
 
 	.nav-header {
-		background-color: #e4f0f6;
-		color: #0079bf;
 		border-radius: 4px;
 		font-weight: bold;
+		color: #172b4d;
 		margin: 0;
 		min-height: 20px;
 		padding: 6px 8px 6px 0;
 		text-decoration: none;
 		width: 207px;
+	}
+	.nav-header-content {
+		border-radius: 4px;
+		font-weight: bold;
+		color: #172b4d;
+		margin: 0;
+		min-height: 20px;
+		padding: 0px 8px 6px 0;
+		text-decoration: none;
+		width: 207px;
+		height: 20px;
+	}
+	.nav-header-color {
+		background-color: #e4f0f6;
+		color: #0079bf;
 	}
 	.nav-board-item:hover {
 		background-color: #e7e9ed;
