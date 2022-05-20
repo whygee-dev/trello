@@ -49,6 +49,7 @@ export const post: RequestHandler = async ({ request }) => {
 			body: body as Partial<User>
 		};
 	} catch (error) {
+		console.log(error);
 		return { status: 500, body: { message: 'Server error occured' } };
 	}
 };
