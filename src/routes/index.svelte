@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
 
+	let y: number;
 	let email = '';
 	let email2 = '';
 	let learnMore1Hidden = true;
@@ -13,10 +14,26 @@
 
 <svelte:head>
 	<title>Thullo</title>
+	<meta
+		name="description"
+		content="Infinitely flexible. Incredibly productive for teams of all sizes. Thullo manages everything, from big project details to micro tasks. Collaborate anywhere, even on mobile."
+	/>
+	<meta property="og:title" content="Thullo" />
+	<meta
+		property="og:description"
+		content="Infinitely flexible. Incredibly productive for teams of all sizes. Thullo manages everything, from big project details to micro tasks. Collaborate anywhere, even on mobile."
+	/>
+
+	<meta
+		property="og:image"
+		content="https://d2k1ftgv7pobq7.cloudfront.net/meta/p/res/images/spirit/18746ed563cbe964e146d69d8e72f5ff/unfurl.png"
+	/>
 </svelte:head>
 
+<svelte:window bind:scrollY={y} />
+
 <section class="container">
-	<nav>
+	<nav class:scrolling={y > 0}>
 		<a href="/"><img src="logo.svg" alt="App logo" width="136" height="36" /></a>
 
 		<div class="buttons">
@@ -148,10 +165,18 @@
 		background: linear-gradient(0deg, #fff, #eae6ff 100%);
 
 		nav {
+			&.scrolling {
+				background-color: white;
+				box-shadow: 0 0 10px rgb(0 0 0 / 30%);
+			}
+
 			display: flex;
 			justify-content: space-between;
 			width: 100%;
-			padding: 10px;
+			padding: 15px 20px;
+			position: fixed;
+			top: 0;
+			transition: background-color 1s ease;
 
 			.buttons {
 				display: flex;
@@ -212,7 +237,7 @@
 			align-items: center;
 			justify-content: center;
 			max-width: 1600px;
-			margin: 50px auto;
+			margin: 0 auto;
 
 			.text {
 				width: 50%;
