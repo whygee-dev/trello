@@ -19,6 +19,7 @@
 	};
 
 	$: innerWidth = 0;
+	$: rootMargin = innerWidth > 568 ? '-250px' : '-150px';
 
 	const onSignup = () => {
 		goto(`/register?email=${email || email2}`);
@@ -142,7 +143,7 @@
 
 	<section class="features">
 		<span
-			use:inview={{ unobserveOnEnter: true, rootMargin: '-250px' }}
+			use:inview={{ unobserveOnEnter: true, rootMargin }}
 			on:change={(event) => handleInView('features', event)}
 		/>
 		{#if inViewMap['features']}
@@ -166,7 +167,7 @@
 		{/if}
 
 		<span
-			use:inview={{ unobserveOnEnter: true, rootMargin: '-250px' }}
+			use:inview={{ unobserveOnEnter: true, rootMargin }}
 			on:change={(event) => handleInView('feature1', event)}
 		/>
 
@@ -235,7 +236,7 @@
 		{/if}
 
 		<span
-			use:inview={{ unobserveOnEnter: true, rootMargin: '-250px' }}
+			use:inview={{ unobserveOnEnter: true, rootMargin }}
 			on:change={(event) => handleInView('feature2', event)}
 		/>
 
@@ -402,7 +403,7 @@
 				color: $black;
 			}
 
-			@media (max-width: 1024px) {
+			@media (max-width: 600px) {
 				display: none;
 			}
 		}
@@ -475,8 +476,13 @@
 				form {
 					button {
 						width: 100%;
-						margin: 0;
 					}
+				}
+			}
+
+			@media (max-width: 600px) {
+				form button {
+					margin: 0;
 				}
 			}
 		}
