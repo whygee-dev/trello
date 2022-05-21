@@ -1,20 +1,32 @@
 <script lang="ts">
 	import { afterNavigate, goto } from '$app/navigation';
-	import { fade, blur, fly, slide, scale, draw, crossfade } from 'svelte/transition';
+	import { fly } from 'svelte/transition';
+	// @ts-ignore
+	import { inview } from 'svelte-inview';
 
 	let y: number;
-	$: innerWidth = 0;
 	let email = '';
 	let email2 = '';
 	let learnMore1Hidden = true;
 	let learnMore2Hidden = true;
+	let duration: number;
+	let visible = false;
+
+	let inViewMap: { [key: string]: boolean } = {
+		features: false,
+		feature1: false,
+		signup: false
+	};
+
+	$: innerWidth = 0;
 
 	const onSignup = () => {
 		goto(`/register?email=${email || email2}`);
 	};
 
-	let duration: number;
-	let visible = false;
+	const handleInView = (id: string, event: any) => {
+		inViewMap[id] = event.detail.inView;
+	};
 
 	afterNavigate(({ from }) => {
 		duration = from === null ? 600 : 0;
@@ -59,19 +71,6 @@
 				<a href="/register" class="btn">Sign up</a>
 			</div>
 		</nav>
-	{:else}
-		<nav>
-			<a href="/">
-				<img src="logo.svg" alt="App logo" width="136" height="36" />
-			</a>
-
-			<div class="buttons">
-				<a href="/login">Log in</a>
-				<a href="/register" class="btn">Sign up</a>
-			</div>
-		</nav>
-	{/if}
-	{#if visible}
 		<div class="hero" in:fly={{ duration, y: -50 }}>
 			<div class="text">
 				<h1>Thullo helps teams move work forward.</h1>
@@ -89,7 +88,28 @@
 
 			<img src="hero.png" alt="Hero" />
 		</div>
+
+		<div class="product" in:fly={{ duration, y: -50 }}>
+			<h2>It’s more than work. It’s a way of working together.</h2>
+
+			<p>
+				Start with a Thullo board, lists, and cards. Customize and expand with more features as your
+				teamwork grows. Manage projects, organize tasks, and build team spirit—all in one place.
+			</p>
+
+			<a class="btn" href="/register">Start doing →</a>
+		</div>
 	{:else}
+		<nav>
+			<a href="/">
+				<img src="logo.svg" alt="App logo" width="136" height="36" />
+			</a>
+
+			<div class="buttons">
+				<a href="/login">Log in</a>
+				<a href="/register" class="btn">Sign up</a>
+			</div>
+		</nav>
 		<div class="hero">
 			<div class="text">
 				<h1>Thullo helps teams move work forward.</h1>
@@ -107,104 +127,215 @@
 
 			<img src="hero.png" alt="Hero" />
 		</div>
+
+		<div class="product">
+			<h2>It’s more than work. It’s a way of working together.</h2>
+
+			<p>
+				Start with a Thullo board, lists, and cards. Customize and expand with more features as your
+				teamwork grows. Manage projects, organize tasks, and build team spirit—all in one place.
+			</p>
+
+			<a class="btn" href="/register">Start doing →</a>
+		</div>
 	{/if}
 
-	<div class="product">
-		<h2>It’s more than work. It’s a way of working together.</h2>
-
-		<p>
-			Start with a Thullo board, lists, and cards. Customize and expand with more features as your
-			teamwork grows. Manage projects, organize tasks, and build team spirit—all in one place.
-		</p>
-
-		<a class="btn" href="/register">Start doing →</a>
-	</div>
-
 	<section class="features">
-		<div class="description">
-			<h2>Features to help your team succeed</h2>
-			<p>
-				Powering a productive team means using a powerful tool (and plenty of snacks). From meetings
-				and projects to events and goal setting, Trello’s intuitive features give any team the
-				ability to quickly set up and customize workflows for just about anything.
-			</p>
-		</div>
-
-		<div class="feature">
-			<div class="text">
-				<h3>CHOOSE A VIEW</h3>
-				<h2>The board is just the beginning</h2>
+		<span
+			use:inview={{ unobserveOnEnter: true, rootMargin: '-250px' }}
+			on:change={(event) => handleInView('features', event)}
+		/>
+		{#if inViewMap['features']}
+			<div class="description" in:fly={{ duration, y: -50 }}>
+				<h2>Features to help your team succeed</h2>
 				<p>
-					Lists and cards are the building blocks of organizing work on a Trello board. Grow from
-					there with task assignments, timelines, productivity metrics, calendars, and more.
+					Powering a productive team means using a powerful tool (and plenty of snacks). From
+					meetings and projects to events and goal setting, Trello’s intuitive features give any
+					team the ability to quickly set up and customize workflows for just about anything.
 				</p>
-				<h3 class="learn-more" on:click={() => (learnMore1Hidden = !learnMore1Hidden)}>
-					<span> {learnMore1Hidden ? '+' : '-'} </span><span>Learn more</span>
-				</h3>
-				<div class="learn-more-content" class:hidden-animated={learnMore1Hidden}>
-					<p>
-						You and your team can start up a Trello board in seconds. With the ability to view board
-						data from many different angles, the entire team stays up-to-date in the way that suits
-						them best:
-					</p>
+			</div>
+		{:else}
+			<div class="description" style="opacity: 0;">
+				<h2>Features to help your team succeed</h2>
+				<p>
+					Powering a productive team means using a powerful tool (and plenty of snacks). From
+					meetings and projects to events and goal setting, Trello’s intuitive features give any
+					team the ability to quickly set up and customize workflows for just about anything.
+				</p>
+			</div>
+		{/if}
 
-					<ul>
-						<li>Use a Timeline view for project planning</li>
-						<li>Calendar helps with time management</li>
-						<li>Table view connects work across boards</li>
-						<li>See board stats with Dashboard, and more!</li>
-					</ul>
+		<span
+			use:inview={{ unobserveOnEnter: true, rootMargin: '-250px' }}
+			on:change={(event) => handleInView('feature1', event)}
+		/>
+
+		{#if inViewMap['feature1']}
+			<div class="feature" in:fly={{ duration, y: -50 }}>
+				<div class="text">
+					<h3>CHOOSE A VIEW</h3>
+					<h2>The board is just the beginning</h2>
+					<p>
+						Lists and cards are the building blocks of organizing work on a Trello board. Grow from
+						there with task assignments, timelines, productivity metrics, calendars, and more.
+					</p>
+					<h3 class="learn-more" on:click={() => (learnMore1Hidden = !learnMore1Hidden)}>
+						<span> {learnMore1Hidden ? '+' : '-'} </span><span>Learn more</span>
+					</h3>
+					<div class="learn-more-content" class:hidden-animated={learnMore1Hidden}>
+						<p>
+							You and your team can start up a Trello board in seconds. With the ability to view
+							board data from many different angles, the entire team stays up-to-date in the way
+							that suits them best:
+						</p>
+
+						<ul>
+							<li>Use a Timeline view for project planning</li>
+							<li>Calendar helps with time management</li>
+							<li>Table view connects work across boards</li>
+							<li>See board stats with Dashboard, and more!</li>
+						</ul>
+					</div>
+				</div>
+				<div class="img-container">
+					<img src="board.svg" alt="Board" />
 				</div>
 			</div>
-			<div class="img-container">
-				<img src="board.svg" alt="Board" />
-			</div>
-		</div>
-
-		<div class="feature">
-			<div class="text">
-				<h3>DIVE INTO THE DETAILS</h3>
-				<h2>Cards contain everything you need</h2>
-				<p>
-					Trello cards are your portal to more organized work—where every single part of your task
-					can be managed, tracked, and shared with teammates. Open any card to uncover an ecosystem
-					of checklists, due dates, attachments, conversations, and more.
-				</p>
-				<h3 class="learn-more" on:click={() => (learnMore2Hidden = !learnMore2Hidden)}>
-					<span>{learnMore2Hidden ? '+' : '-'} </span> <span>Learn more</span>
-				</h3>
-				<div class="learn-more-content" class:hidden-animated={learnMore2Hidden}>
+		{:else}
+			<div class="feature" style="opacity: 0">
+				<div class="text">
+					<h3>CHOOSE A VIEW</h3>
+					<h2>The board is just the beginning</h2>
 					<p>
-						Spin up a Trello card with a click, then uncover everything it can hold. Break down
-						bigger card tasks into steps with file attachment previews, reminders, checklists and
-						comments—emoji reactions included! Plus, gain powerful perspective by seeing all cards
-						by list and status at the board level.
+						Lists and cards are the building blocks of organizing work on a Trello board. Grow from
+						there with task assignments, timelines, productivity metrics, calendars, and more.
 					</p>
-					<p>Your team can:</p>
+					<h3 class="learn-more" on:click={() => (learnMore1Hidden = !learnMore1Hidden)}>
+						<span> {learnMore1Hidden ? '+' : '-'} </span><span>Learn more</span>
+					</h3>
+					<div class="learn-more-content" class:hidden-animated={learnMore1Hidden}>
+						<p>
+							You and your team can start up a Trello board in seconds. With the ability to view
+							board data from many different angles, the entire team stays up-to-date in the way
+							that suits them best:
+						</p>
 
-					<ul>
-						<li>Manage deadlines</li>
-						<li>Provide and track feedback</li>
-						<li>Assign tasks and hand off work</li>
-						<li>Connect work across apps</li>
-					</ul>
+						<ul>
+							<li>Use a Timeline view for project planning</li>
+							<li>Calendar helps with time management</li>
+							<li>Table view connects work across boards</li>
+							<li>See board stats with Dashboard, and more!</li>
+						</ul>
+					</div>
+				</div>
+				<div class="img-container">
+					<img src="board.svg" alt="Board" />
 				</div>
 			</div>
+		{/if}
 
-			<div class="img-container">
-				<img src="card.svg" alt="Cards" />
+		<span
+			use:inview={{ unobserveOnEnter: true, rootMargin: '-250px' }}
+			on:change={(event) => handleInView('feature2', event)}
+		/>
+
+		{#if inViewMap['feature2']}
+			<div class="feature" in:fly={{ duration, y: -50 }}>
+				<div class="text">
+					<h3>DIVE INTO THE DETAILS</h3>
+					<h2>Cards contain everything you need</h2>
+					<p>
+						Trello cards are your portal to more organized work—where every single part of your task
+						can be managed, tracked, and shared with teammates. Open any card to uncover an
+						ecosystem of checklists, due dates, attachments, conversations, and more.
+					</p>
+					<h3 class="learn-more" on:click={() => (learnMore2Hidden = !learnMore2Hidden)}>
+						<span>{learnMore2Hidden ? '+' : '-'} </span> <span>Learn more</span>
+					</h3>
+					<div class="learn-more-content" class:hidden-animated={learnMore2Hidden}>
+						<p>
+							Spin up a Trello card with a click, then uncover everything it can hold. Break down
+							bigger card tasks into steps with file attachment previews, reminders, checklists and
+							comments—emoji reactions included! Plus, gain powerful perspective by seeing all cards
+							by list and status at the board level.
+						</p>
+						<p>Your team can:</p>
+
+						<ul>
+							<li>Manage deadlines</li>
+							<li>Provide and track feedback</li>
+							<li>Assign tasks and hand off work</li>
+							<li>Connect work across apps</li>
+						</ul>
+					</div>
+				</div>
+
+				<div class="img-container">
+					<img src="card.svg" alt="Cards" />
+				</div>
 			</div>
-		</div>
+		{:else}
+			<div class="feature" style="opacity: 0">
+				<div class="text">
+					<h3>DIVE INTO THE DETAILS</h3>
+					<h2>Cards contain everything you need</h2>
+					<p>
+						Trello cards are your portal to more organized work—where every single part of your task
+						can be managed, tracked, and shared with teammates. Open any card to uncover an
+						ecosystem of checklists, due dates, attachments, conversations, and more.
+					</p>
+					<h3 class="learn-more" on:click={() => (learnMore2Hidden = !learnMore2Hidden)}>
+						<span>{learnMore2Hidden ? '+' : '-'} </span> <span>Learn more</span>
+					</h3>
+					<div class="learn-more-content" class:hidden-animated={learnMore2Hidden}>
+						<p>
+							Spin up a Trello card with a click, then uncover everything it can hold. Break down
+							bigger card tasks into steps with file attachment previews, reminders, checklists and
+							comments—emoji reactions included! Plus, gain powerful perspective by seeing all cards
+							by list and status at the board level.
+						</p>
+						<p>Your team can:</p>
+
+						<ul>
+							<li>Manage deadlines</li>
+							<li>Provide and track feedback</li>
+							<li>Assign tasks and hand off work</li>
+							<li>Connect work across apps</li>
+						</ul>
+					</div>
+				</div>
+
+				<div class="img-container">
+					<img src="card.svg" alt="Cards" />
+				</div>
+			</div>
+		{/if}
 	</section>
 
-	<section class="signup">
-		<h3>Sign up and get started with Thullo today. A world of productive teamwork awaits!</h3>
+	<span
+		use:inview={{ unobserveOnEnter: true }}
+		on:change={(event) => handleInView('signup', event)}
+	/>
 
-		<form on:submit|preventDefault={onSignup}>
-			<input type="email" placeholder="Email" bind:value={email2} />
-			<button type="submit">Sign up</button>
-		</form>
-	</section>
+	{#if inViewMap['signup']}
+		<section class="signup" in:fly={{ duration, y: -50 }}>
+			<h3>Sign up and get started with Thullo today. A world of productive teamwork awaits!</h3>
+
+			<form on:submit|preventDefault={onSignup}>
+				<input type="email" placeholder="Email" bind:value={email2} />
+				<button type="submit">Sign up</button>
+			</form>
+		</section>
+	{:else}
+		<section class="signup" style="opacity: 0">
+			<h3>Sign up and get started with Thullo today. A world of productive teamwork awaits!</h3>
+
+			<form on:submit|preventDefault={onSignup}>
+				<input type="email" placeholder="Email" bind:value={email2} />
+				<button type="submit">Sign up</button>
+			</form>
+		</section>
+	{/if}
 </section>
 
 <style lang="scss">
@@ -413,14 +544,14 @@
 			}
 
 			button {
-				background-color: #00b8d9;
+				background-color: $blue;
 				color: white;
 				font-size: 20px;
 				padding: 8px 40px;
 				margin-left: 20px;
 
 				&:hover {
-					background-color: #008da6;
+					background-color: $dark-blue;
 				}
 			}
 
@@ -450,6 +581,7 @@
 
 			.feature {
 				display: flex;
+				flex-direction: row-reverse;
 				justify-content: space-between;
 
 				> div {
@@ -497,9 +629,8 @@
 				}
 			}
 
-			.feature:first-child,
-			:not(.feature) + .feature {
-				flex-direction: row-reverse;
+			.feature:last-child {
+				flex-direction: row;
 			}
 
 			@media (max-width: 1024px) {
