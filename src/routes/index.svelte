@@ -1,7 +1,9 @@
 <script lang="ts">
-	import { goto } from '$app/navigation';
+	import { afterNavigate, goto } from '$app/navigation';
+	import { fade, blur, fly, slide, scale, draw, crossfade } from 'svelte/transition';
 
 	let y: number;
+	$: innerWidth = 0;
 	let email = '';
 	let email2 = '';
 	let learnMore1Hidden = true;
@@ -10,6 +12,15 @@
 	const onSignup = () => {
 		goto(`/register?email=${email || email2}`);
 	};
+
+	let duration: number;
+	let visible = false;
+
+	afterNavigate(({ from }) => {
+		duration = from === null ? 600 : 0;
+
+		visible = true;
+	});
 </script>
 
 <svelte:head>
@@ -30,35 +41,73 @@
 	/>
 </svelte:head>
 
-<svelte:window bind:scrollY={y} />
+<svelte:window bind:scrollY={y} bind:innerWidth />
 
 <section class="container">
-	<nav class:scrolling={y > 0}>
-		<a href="/"><img src="logo.svg" alt="App logo" width="136" height="36" /></a>
+	{#if visible}
+		<nav class:scrolling={y > 0} in:fly={{ duration, y: -50 }}>
+			<a href="/">
+				{#if innerWidth <= 568}
+					<img src="logo-sm.svg" alt="App logo" width="75" height="36" />
+				{:else}
+					<img src="logo.svg" alt="App logo" width="136" height="36" />
+				{/if}
+			</a>
 
-		<div class="buttons">
-			<a href="/login">Log in</a>
-			<a href="/register" class="btn">Sign up</a>
+			<div class="buttons">
+				<a href="/login">Log in</a>
+				<a href="/register" class="btn">Sign up</a>
+			</div>
+		</nav>
+	{:else}
+		<nav>
+			<a href="/">
+				<img src="logo.svg" alt="App logo" width="136" height="36" />
+			</a>
+
+			<div class="buttons">
+				<a href="/login">Log in</a>
+				<a href="/register" class="btn">Sign up</a>
+			</div>
+		</nav>
+	{/if}
+	{#if visible}
+		<div class="hero" in:fly={{ duration, y: -50 }}>
+			<div class="text">
+				<h1>Thullo helps teams move work forward.</h1>
+
+				<p>
+					Collaborate, manage projects, and reach new productivity peaks. From high rises to the
+					home office, the way your team works is unique—accomplish it all with Thullo.
+				</p>
+
+				<form on:submit|preventDefault={onSignup}>
+					<input class="email" type="email" placeholder="Email" bind:value={email} />
+					<button type="submit">Sign up, it's free!</button>
+				</form>
+			</div>
+
+			<img src="hero.png" alt="Hero" />
 		</div>
-	</nav>
+	{:else}
+		<div class="hero">
+			<div class="text">
+				<h1>Thullo helps teams move work forward.</h1>
 
-	<div class="hero">
-		<div class="text">
-			<h1>Thullo helps teams move work forward.</h1>
+				<p>
+					Collaborate, manage projects, and reach new productivity peaks. From high rises to the
+					home office, the way your team works is unique—accomplish it all with Thullo.
+				</p>
 
-			<p>
-				Collaborate, manage projects, and reach new productivity peaks. From high rises to the home
-				office, the way your team works is unique—accomplish it all with Thullo.
-			</p>
+				<form on:submit|preventDefault={onSignup}>
+					<input class="email" type="email" placeholder="Email" bind:value={email} />
+					<button type="submit">Sign up, it's free!</button>
+				</form>
+			</div>
 
-			<form on:submit|preventDefault={onSignup}>
-				<input class="email" type="email" placeholder="Email" bind:value={email} />
-				<button type="submit">Sign up, it's free!</button>
-			</form>
+			<img src="hero.png" alt="Hero" />
 		</div>
-
-		<img src="hero.png" alt="Hero" />
-	</div>
+	{/if}
 
 	<div class="product">
 		<h2>It’s more than work. It’s a way of working together.</h2>
@@ -205,6 +254,10 @@
 			}
 			a {
 				margin: 0;
+			}
+
+			@media (max-width: 568px) {
+				padding: 10px;
 			}
 		}
 
