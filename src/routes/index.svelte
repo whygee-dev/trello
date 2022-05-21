@@ -238,6 +238,7 @@
 			justify-content: center;
 			max-width: 1600px;
 			margin: 0 auto;
+			padding-top: 150px;
 
 			.text {
 				width: 50%;
