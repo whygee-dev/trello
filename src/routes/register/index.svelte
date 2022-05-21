@@ -18,10 +18,11 @@
 	import type { Load } from '@sveltejs/kit';
 	import { createFieldValidator } from '../../utils/fieldValidator';
 	import { Validators } from '../../utils/validators';
+	import { page } from '$app/stores';
 
 	let fullname = '';
 	let username = '';
-	let email = '';
+	let email = $page.url.searchParams.get('email') || '';
 	let password = '';
 
 	const [emailValidity, emailValidate] = createFieldValidator(Validators.emailValidator());
@@ -39,7 +40,7 @@
 
 				toast.push('Account created successfully');
 
-				goto('/board');
+				goto('/boards');
 			}
 		} catch (error: any) {
 			toast.pop(0);
@@ -198,6 +199,19 @@
 
 				display: flex;
 				flex-direction: column;
+
+				input {
+					&.field-danger {
+						outline-color: red;
+						border-color: red;
+					}
+
+					&.field-success {
+						outline-color: #4c9aff;
+						border-color: #4c9aff;
+					}
+				}
+
 				input,
 				button {
 					width: 80%;
