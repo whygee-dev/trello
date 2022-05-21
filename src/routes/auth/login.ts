@@ -1,6 +1,5 @@
-import { PrismaClient } from '@prisma/client';
 import type { RequestHandler } from '@sveltejs/kit';
-
+import { prisma } from '../../db';
 import * as argon2 from 'argon2';
 
 import jwt from 'jsonwebtoken';
@@ -17,8 +16,6 @@ export const post: RequestHandler = async ({ request }) => {
 		if (!json.email || !json.password) {
 			return { status: 401, body: { message: 'Email and password must be specified' } };
 		}
-
-		const prisma = new PrismaClient();
 
 		const user = await prisma.user.findUnique({ where: { email: json.email } });
 

@@ -7,26 +7,24 @@
 				redirect: '/login'
 			};
 		}
+
 		try {
-			const response = await fetch('/boards-api/boards', {
-				method: 'POST',
-				headers: {
-					'Content-Type': 'application/json'
-				},
-				body: JSON.stringify({
-					email: session.user.email
-				})
-			});
+			const response = await fetch('/boards/api');
+
+			const json = await response.json();
+
+			console.log(json);
 
 			return {
 				status: response.status,
 				props: {
-					boards: await response.json()
+					boards: json ?? []
 				}
 			};
 		} catch (error) {
-			console.error(error);
+			//console.error('err', error);
 		}
+
 		return {};
 	};
 </script>

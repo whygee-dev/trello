@@ -16,22 +16,23 @@ model User {
   password String
   username String
   fullname String
-  Board    Board[]
+  boards   Board[]
 }
 
 model Board {
-  id     Int      @id @unique @default(autoincrement())
-  title  String
-  User   User[]
-  Column Column[]
+  id       Int      @id @unique @default(autoincrement())
+  title    String
+  users    User[]
+  columns  Column[]
+  image    String?
 }
 
 model Column {
   id      Int    @id @unique @default(autoincrement())
   title   String
-  Board   Board  @relation(fields: [boardId], references: [id])
+  board   Board  @relation(fields: [boardId], references: [id])
   boardId Int
-  Card    Card[]
+  cards   Card[]
 }
 
 model Card {
@@ -40,7 +41,7 @@ model Card {
   description String
   date        DateTime
   label       Label[]
-  Column      Column   @relation(fields: [columnId], references: [id])
+  column      Column   @relation(fields: [columnId], references: [id])
   columnId    Int
 }
 
@@ -48,5 +49,5 @@ model Label {
   id    Int    @id @unique @default(autoincrement())
   title String
   color String
-  Card  Card[]
+  cards  Card[]
 }
