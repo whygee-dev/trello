@@ -1,30 +1,20 @@
 Arguments: 
-  C:\Program Files\nodejs\node.exe C:\Users\Yahya\AppData\Roaming\npm\node_modules\yarn\bin\yarn.js add -D @types/svelte-inview
+  C:\Program Files\nodejs\node.exe C:\Program Files\nodejs\node_modules\yarn\bin\yarn.js
 
 PATH: 
-  C:\Python310\Scripts\;C:\Python310\;C:\windows\system32;C:\windows;C:\windows\System32\Wbem;C:\windows\System32\WindowsPowerShell\v1.0\;C:\windows\System32\OpenSSH\;C:\Program Files (x86)\NVIDIA Corporation\PhysX\Common;C:\Program Files\NVIDIA Corporation\NVIDIA NvDLISR;C:\Program Files\Git\cmd;C:\ProgramData\chocolatey\bin;C:\Program Files\nodejs\;C:\Program Files\OpenJDK\openjdk-11.0.13_8\bin;C:\Users\Yahya\AppData\Local\Yarn\bin;C:\Program Files (x86)\NetSarang\Xftp 7\;C:\Program Files (x86)\NetSarang\Xshell 7\;C:\Program Files (x86)\PDFtk\bin\;C:\Users\Yahya\scoop\shims;C:\Users\Yahya\AppData\Local\Microsoft\WindowsApps;C:\laragon\bin\php\php-8.1.2-Win32-vs16-x64;C:\Users\Yahya\AppData\Local\ComposerSetup\bin;C:\Users\Yahya\AppData\Roaming\Composer\vendor\bin;C:\Users\Yahya\AppData\Local\Programs\Microsoft VS Code\bin;C:\Users\Yahya\AppData\Local\GitHubDesktop\bin;C:\Users\Yahya\AppData\Roaming\npm;C:\Program Files\OpenJDK\openjdk-11.0.13_8;C:\Users\Yahya\AppData\Local\Android\Sdk\platform-tools;C:\Program Files\PostgreSQL\14\bin;C:\Program Files\heroku\bin;C:\flutter\bin;
+  C:\Program Files (x86)\Common Files\Oracle\Java\javapath;C:\Windows\system32;C:\Windows;C:\Windows\System32\Wbem;C:\Windows\System32\WindowsPowerShell\v1.0\;C:\Windows\System32\OpenSSH\;C:\Program Files (x86)\NVIDIA Corporation\PhysX\Common;C:\Program Files\NVIDIA Corporation\NVIDIA NvDLISR;C:\ProgramData\ComposerSetup\bin;C:\Program Files\Symfony;C:\php;C:\Program Files\Git\cmd;C:\Program Files\nodejs\;C:\WINDOWS\system32;C:\WINDOWS;C:\WINDOWS\System32\Wbem;C:\WINDOWS\System32\WindowsPowerShell\v1.0\;C:\WINDOWS\System32\OpenSSH\;C:\Program Files\dotnet\;C:\Program Files (x86)\Common Files\Oracle\Java\javapath;C:\Windows\system32;C:\Windows;C:\Windows\System32\Wbem;C:\Windows\System32\WindowsPowerShell\v1.0\;C:\Windows\System32\OpenSSH\;C:\Program Files (x86)\NVIDIA Corporation\PhysX\Common;C:\Program Files\NVIDIA Corporation\NVIDIA NvDLISR;C:\ProgramData\ComposerSetup\bin;C:\Program Files\Symfony;C:\php;C:\Program Files\Git\cmd;C:\Program Files\nodejs\;C:\WINDOWS\system32;C:\WINDOWS;C:\WINDOWS\System32\Wbem;C:\WINDOWS\System32\WindowsPowerShell\v1.0\;C:\WINDOWS\System32\OpenSSH\;C:\Program Files\dotnet\;C:\Users\kanou\AppData\Roaming\Composer\vendor\bin;C:\Users\kanou\AppData\Local\Programs\Microsoft VS Code\bin;C:\Program Files\heroku\bin
 
 Yarn version: 
   1.22.17
 
 Node version: 
-  16.14.0
+  16.6.1
 
 Platform: 
   win32 x64
 
 Trace: 
-  Error: https://registry.yarnpkg.com/@types%2fsvelte-inview: Not found
-      at Request.params.callback [as _callback] (C:\Users\Yahya\AppData\Roaming\npm\node_modules\yarn\lib\cli.js:67029:18)
-      at Request.self.callback (C:\Users\Yahya\AppData\Roaming\npm\node_modules\yarn\lib\cli.js:140883:22)
-      at Request.emit (node:events:520:28)
-      at Request.<anonymous> (C:\Users\Yahya\AppData\Roaming\npm\node_modules\yarn\lib\cli.js:141855:10)
-      at Request.emit (node:events:520:28)
-      at IncomingMessage.<anonymous> (C:\Users\Yahya\AppData\Roaming\npm\node_modules\yarn\lib\cli.js:141777:12)
-      at Object.onceWrapper (node:events:639:28)
-      at IncomingMessage.emit (node:events:532:35)
-      at endReadableNT (node:internal/streams/readable:1346:12)
-      at processTicksAndRejections (node:internal/process/task_queues:83:21)
+  Error: EPERM: operation not permitted, unlink 'C:\Svelte\trello\node_modules\esbuild-windows-64\esbuild.exe'
 
 npm manifest: 
   {
