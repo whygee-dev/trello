@@ -3,10 +3,9 @@ import { prisma } from '../../db';
 import { Validators } from '../../utils/validators';
 
 type Body = {
-	id: number;
 	title: string;
+	type: string;
 	description: string;
-	image: string;
 };
 
 export const post: RequestHandler = async ({ request, locals }) => {
@@ -14,42 +13,40 @@ export const post: RequestHandler = async ({ request, locals }) => {
 		if (!locals.user) {
 			return { status: 200, body: { message: 'Unauthorized' } };
 		}
-
 		const json: Body = await request.json();
 
 		const validateTitle = Validators.validateTitle(json.title);
+		const validateType = Validators.validateWorkSpaceType(json.type);
 
-		if (!json.id || typeof json.id !== 'number') {
+		if (!validateTitle.pass || !validateType.pass) {
 			return {
 				status: 401,
 				body: {
-					errors: ['Invalid board id']
+					errors: [validateTitle.message, validateType.message]
 				}
 			};
 		}
 
-		if (!validateTitle.pass) {
-			return {
-				status: 401,
-				body: {
-					errors: [validateTitle.message]
-				}
-			};
-		}
-		const board = await prisma.board.update({
-			where: { id: json.id },
+		const user = await prisma.user.findUnique({ where: { email: locals.user?.email } });
+		const workspace = await prisma.workSpace.create({
 			data: {
 				title: json.title,
+				type: json.type,
 				description: json.description || '',
-				image: json.image || ''
+				users: {
+					connect: {
+						id: user?.id
+					}
+				}
 			}
 		});
 
 		return {
 			status: 200,
-			body: board || []
+			body: workspace || []
 		};
 	} catch (error) {
+		console.log(error);
 		return { status: 500, body: { message: 'Server error occured' } };
 	}
 };

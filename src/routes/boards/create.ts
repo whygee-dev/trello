@@ -14,19 +14,9 @@ export const post: RequestHandler = async ({ request, locals }) => {
 		if (!locals.user) {
 			return { status: 200, body: { message: 'Unauthorized' } };
 		}
-
 		const json: Body = await request.json();
 
 		const validateTitle = Validators.validateTitle(json.title);
-
-		if (!json.id || typeof json.id !== 'number') {
-			return {
-				status: 401,
-				body: {
-					errors: ['Invalid board id']
-				}
-			};
-		}
 
 		if (!validateTitle.pass) {
 			return {
@@ -36,12 +26,16 @@ export const post: RequestHandler = async ({ request, locals }) => {
 				}
 			};
 		}
-		const board = await prisma.board.update({
-			where: { id: json.id },
+
+		const workspace = await prisma.workSpace.findUnique({ where: { id: json.id } });
+		const board = await prisma.board.create({
 			data: {
 				title: json.title,
+				image: json.image || '',
 				description: json.description || '',
-				image: json.image || ''
+				workSpace: {
+					connect: { id: workspace?.id }
+				}
 			}
 		});
 
@@ -50,6 +44,7 @@ export const post: RequestHandler = async ({ request, locals }) => {
 			body: board || []
 		};
 	} catch (error) {
+		console.log(error);
 		return { status: 500, body: { message: 'Server error occured' } };
 	}
 };
