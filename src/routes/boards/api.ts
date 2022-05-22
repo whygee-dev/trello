@@ -10,11 +10,15 @@ export const get: RequestHandler = async ({ locals }) => {
 		const user = await prisma.user.findUnique({
 			where: { email: locals.user.email },
 			include: {
-				boards: true
+				workSpaces: {
+					include: {
+						boards: true
+					}
+				}
 			}
 		});
 
-		const boards = user?.boards;
+		const boards = user?.workSpaces;
 
 		return {
 			status: 200,
