@@ -11,22 +11,29 @@ async function main() {
 			username: 'John',
 			fullname: 'John Smith',
 			password,
-			boards: {
+			workSpaces: {
 				create: {
-					title: 'Board Seed',
-					image: '/favicon.png',
-					columns: {
+					name: 'workspace seed',
+					description: 'workspace seed description',
+					type: 'seed',
+					boards: {
 						create: {
-							title: 'Column Seed',
-							cards: {
+							title: 'Board Seed',
+							description: 'Board Seed Description',
+							columns: {
 								create: {
-									title: 'Card Seed',
-									description: 'Card description',
-									date: '1997-07-16T19:20:30.451Z',
-									label: {
+									title: 'Column Seed',
+									cards: {
 										create: {
-											title: 'label Seed',
-											color: '#ff0000'
+											title: 'Card Seed',
+											description: 'Card description',
+											date: '1997-07-16T19:20:30.451Z',
+											label: {
+												create: {
+													title: 'label Seed',
+													color: '#ff0000'
+												}
+											}
 										}
 									}
 								}
