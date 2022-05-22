@@ -3,7 +3,6 @@
 	import Nav from '../components/Nav.svelte';
 	import PreloadingIndicator from '../components/LoadingIndicator.svelte';
 	import { SvelteToast } from '@zerodevx/svelte-toast';
-	import '../style/global.scss';
 
 	const options = {
 		pausable: true,
@@ -12,7 +11,9 @@
 </script>
 
 <svelte:head>
-	<link rel="icon" type="image/svg" href={"logo-sm.svg"}>
+	<link rel="icon" type="image/svg" href={'logo-sm.svg'} />
+	<link rel="stylesheet" href="/fonts.css" />
+	<meta name="robots" content="noindex, nofollow" />
 </svelte:head>
 
 {#if $navigating}
