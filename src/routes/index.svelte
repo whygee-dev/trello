@@ -526,7 +526,7 @@
 			margin: 100px auto 0;
 			width: 75%;
 			background: #eae6ff;
-			background-image: url(background.svg), linear-gradient(0deg, #4c9aff, #403294 100%);
+			background-image: url(/background.svg), linear-gradient(0deg, #4c9aff, #403294 100%);
 			background-position: center top;
 			background-repeat: no-repeat;
 			background-size: cover;
