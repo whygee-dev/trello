@@ -13,7 +13,7 @@ async function main() {
 			password,
 			workSpaces: {
 				create: {
-					name: 'workspace seed',
+					title: 'workspace seed',
 					description: 'workspace seed description',
 					type: 'seed',
 					boards: {

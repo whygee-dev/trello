@@ -31,38 +31,7 @@
 
 <script lang="ts">
 	import type { Board } from '@prisma/client';
-	import axios from 'axios';
 	export let boards: Board[] = [];
-
-	let boardTitle = '';
-	let boardImage: string | null | ArrayBuffer;
-	let fileinput: HTMLInputElement | null;
-
-	const onFileSelected: svelte.JSX.EventHandler<Event, HTMLInputElement> = async (e) => {
-		if (e) {
-			let image = e.target.files[0];
-			let reader = new FileReader();
-			reader.readAsDataURL(image);
-			reader.onload = (e) => {
-				console.log(e.target.result);
-				boardImage = e.target.result;
-			};
-		}
-	};
-
-	const update: svelte.JSX.EventHandler<SubmitEvent, HTMLFormElement> = async (event) => {
-		console.log(event);
-		try {
-			/*const request = (
-				await axios.post('/boards/api', {
-					title: boardTitle,
-					image: boardImage
-				})
-			).data;*/
-		} catch (error) {
-			console.error(error);
-		}
-	};
 </script>
 
 <svelte:head>
@@ -103,16 +72,6 @@
 						<div class="nav-work-header">
 							Espace de travail <img class="icon-nav-right" src="/icon-plus.svg" alt="Plus" />
 						</div>
-						{#each boards as board}
-							<li class="nav-board-item">
-								<!-- @TODO ajouter la propriété image à l'entité Board-->
-								<img class="icon-nav-left" src="/icon-activity.svg" alt="Acceuil" />
-								<a href="#" class="nav-header-content">
-									{board.title}
-									<img class="icon-nav-right" src="/icon-more.svg" alt="more" />
-								</a>
-							</li>
-						{/each}
 					</div>
 				</ul>
 			</div>
@@ -121,31 +80,11 @@
 			<div style="font-weight:bold;">
 				<img src="/icon-clock.svg" class="icon-clock" alt="Horloge" />
 				Récemment consultés
-				{#each boards as board}
-					<div style="background-color:red;width:250px;height:250px;margin:20px">
-						{board.title}
-					</div>
-					...+3-6
-				{/each}
 			</div>
 			<div>Vos espace de travail</div>
 			{#each boards as board}
 				<div style="width:250px;height:250px;margin:20px">
 					{board.title}
-					<div
-						on:click={() => {
-							fileinput?.click();
-						}}
-					>
-						Choose Image
-					</div>
-					<input
-						style="display:none"
-						type="file"
-						accept=".jpg, .jpeg, .png"
-						on:change={(e) => onFileSelected(e)}
-						bind:this={fileinput}
-					/>
 				</div>
 			{/each}
 		</div>

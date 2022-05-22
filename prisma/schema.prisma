@@ -21,9 +21,9 @@ model User {
 
 model WorkSpace {
   id          Int     @id @default(autoincrement())
-  name        String
+  title       String
   type        String
-  description String
+  description String?
   users       User[]
   boards      Board[]
 }

@@ -12,9 +12,9 @@ CREATE TABLE "User" (
 -- CreateTable
 CREATE TABLE "WorkSpace" (
     "id" SERIAL NOT NULL,
-    "name" TEXT NOT NULL,
+    "title" TEXT NOT NULL,
     "type" TEXT NOT NULL,
-    "description" TEXT NOT NULL,
+    "description" TEXT,
 
     CONSTRAINT "WorkSpace_pkey" PRIMARY KEY ("id")
 );
@@ -25,7 +25,7 @@ CREATE TABLE "Board" (
     "title" TEXT NOT NULL,
     "description" TEXT NOT NULL,
     "image" TEXT,
-    "workSpaceId" INTEGER,
+    "workSpaceId" INTEGER NOT NULL,
 
     CONSTRAINT "Board_pkey" PRIMARY KEY ("id")
 );
@@ -102,7 +102,7 @@ CREATE UNIQUE INDEX "_CardToLabel_AB_unique" ON "_CardToLabel"("A", "B");
 CREATE INDEX "_CardToLabel_B_index" ON "_CardToLabel"("B");
 
 -- AddForeignKey
-ALTER TABLE "Board" ADD CONSTRAINT "Board_workSpaceId_fkey" FOREIGN KEY ("workSpaceId") REFERENCES "WorkSpace"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+ALTER TABLE "Board" ADD CONSTRAINT "Board_workSpaceId_fkey" FOREIGN KEY ("workSpaceId") REFERENCES "WorkSpace"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "Column" ADD CONSTRAINT "Column_boardId_fkey" FOREIGN KEY ("boardId") REFERENCES "Board"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
