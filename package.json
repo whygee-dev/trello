@@ -50,6 +50,7 @@
 		"jsonwebtoken": "^8.5.1",
 		"node-sass": "^7.0.1",
 		"prisma": "^3.14.0",
-		"remove": "^0.1.5"
+		"remove": "^0.1.5",
+		"svelte-inview": "^3.0.0"
 	}
 }
