@@ -15,6 +15,7 @@
 	let inViewMap: { [key: string]: boolean } = {
 		features: false,
 		feature1: false,
+		feature2: false,
 		signup: false
 	};
 
@@ -87,7 +88,7 @@
 				</form>
 			</div>
 
-			<img src="hero.png" alt="Hero" />
+			<img src="hero.webp" alt="Hero" />
 		</div>
 
 		<div class="product" in:fly={{ duration, y: -50 }}>
@@ -563,6 +564,12 @@
 
 			@media (max-width: 1024px) {
 				width: 95%;
+			}
+
+			@media (max-width: 600px) {
+				button {
+					margin: 0;
+				}
 			}
 		}
 
