@@ -127,7 +127,7 @@
 				</form>
 			</div>
 
-			<img src="hero.png" alt="Hero" />
+			<img src="hero.webp" alt="Hero" />
 		</div>
 
 		<div class="product">
@@ -526,8 +526,7 @@
 			margin: 100px auto 0;
 			width: 75%;
 			background: #eae6ff;
-			background-image: url(https://d2k1ftgv7pobq7.cloudfront.net/meta/p/res/images/spirit/sign-up/95ae6a1535b6504e3572dc7393a2d482/background.svg),
-				linear-gradient(0deg, #4c9aff, #403294 100%);
+			background-image: url(background.svg), linear-gradient(0deg, #4c9aff, #403294 100%);
 			background-position: center top;
 			background-repeat: no-repeat;
 			background-size: cover;
