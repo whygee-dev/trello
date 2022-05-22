@@ -10,10 +10,22 @@ CREATE TABLE "User" (
 );
 
 -- CreateTable
+CREATE TABLE "WorkSpace" (
+    "id" SERIAL NOT NULL,
+    "name" TEXT NOT NULL,
+    "type" TEXT NOT NULL,
+    "description" TEXT NOT NULL,
+
+    CONSTRAINT "WorkSpace_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
 CREATE TABLE "Board" (
     "id" SERIAL NOT NULL,
     "title" TEXT NOT NULL,
+    "description" TEXT NOT NULL,
     "image" TEXT,
+    "workSpaceId" INTEGER,
 
     CONSTRAINT "Board_pkey" PRIMARY KEY ("id")
 );
@@ -48,7 +60,7 @@ CREATE TABLE "Label" (
 );
 
 -- CreateTable
-CREATE TABLE "_BoardToUser" (
+CREATE TABLE "_UserToWorkSpace" (
     "A" INTEGER NOT NULL,
     "B" INTEGER NOT NULL
 );
@@ -78,10 +90,10 @@ CREATE UNIQUE INDEX "Card_id_key" ON "Card"("id");
 CREATE UNIQUE INDEX "Label_id_key" ON "Label"("id");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "_BoardToUser_AB_unique" ON "_BoardToUser"("A", "B");
+CREATE UNIQUE INDEX "_UserToWorkSpace_AB_unique" ON "_UserToWorkSpace"("A", "B");
 
 -- CreateIndex
-CREATE INDEX "_BoardToUser_B_index" ON "_BoardToUser"("B");
+CREATE INDEX "_UserToWorkSpace_B_index" ON "_UserToWorkSpace"("B");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "_CardToLabel_AB_unique" ON "_CardToLabel"("A", "B");
@@ -90,16 +102,19 @@ CREATE UNIQUE INDEX "_CardToLabel_AB_unique" ON "_CardToLabel"("A", "B");
 CREATE INDEX "_CardToLabel_B_index" ON "_CardToLabel"("B");
 
 -- AddForeignKey
+ALTER TABLE "Board" ADD CONSTRAINT "Board_workSpaceId_fkey" FOREIGN KEY ("workSpaceId") REFERENCES "WorkSpace"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
 ALTER TABLE "Column" ADD CONSTRAINT "Column_boardId_fkey" FOREIGN KEY ("boardId") REFERENCES "Board"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "Card" ADD CONSTRAINT "Card_columnId_fkey" FOREIGN KEY ("columnId") REFERENCES "Column"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "_BoardToUser" ADD CONSTRAINT "_BoardToUser_A_fkey" FOREIGN KEY ("A") REFERENCES "Board"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "_UserToWorkSpace" ADD CONSTRAINT "_UserToWorkSpace_A_fkey" FOREIGN KEY ("A") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "_BoardToUser" ADD CONSTRAINT "_BoardToUser_B_fkey" FOREIGN KEY ("B") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "_UserToWorkSpace" ADD CONSTRAINT "_UserToWorkSpace_B_fkey" FOREIGN KEY ("B") REFERENCES "WorkSpace"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "_CardToLabel" ADD CONSTRAINT "_CardToLabel_A_fkey" FOREIGN KEY ("A") REFERENCES "Card"("id") ON DELETE CASCADE ON UPDATE CASCADE;

@@ -11,20 +11,31 @@ datasource db {
 }
 
 model User {
-  id       Int     @id @unique @default(autoincrement())
-  email    String  @unique
-  password String
-  username String
-  fullname String
-  boards   Board[]
+  id         Int         @id @unique @default(autoincrement())
+  email      String      @unique
+  password   String
+  username   String
+  fullname   String
+  workSpaces WorkSpace[]
+}
+
+model WorkSpace {
+  id          Int     @id @default(autoincrement())
+  name        String
+  type        String
+  description String
+  users       User[]
+  boards      Board[]
 }
 
 model Board {
-  id       Int      @id @unique @default(autoincrement())
-  title    String
-  users    User[]
-  columns  Column[]
-  image    String?
+  id          Int       @id @unique @default(autoincrement())
+  title       String
+  description String
+  columns     Column[]
+  image       String?
+  workSpace   WorkSpace @relation(fields: [workSpaceId], references: [id])
+  workSpaceId Int
 }
 
 model Column {
@@ -49,5 +60,5 @@ model Label {
   id    Int    @id @unique @default(autoincrement())
   title String
   color String
-  cards  Card[]
+  cards Card[]
 }
