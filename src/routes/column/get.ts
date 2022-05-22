@@ -3,7 +3,7 @@ import { prisma } from '../../db';
 
 type Body = { id: number; };
 
-export const del: RequestHandler = async ({ request, locals }) => {
+export const post: RequestHandler = async ({ request, locals }) => {
 	try {
 		if (!locals.user) { return { status: 401, body: { message: 'Unauthorized' } }; }
 
@@ -11,14 +11,14 @@ export const del: RequestHandler = async ({ request, locals }) => {
 		if (!json.id || typeof json.id !== 'number') {
 			return {
 				status: 400,
-				body: { errors: ['Invalid column ID'] }
+				body: { errors: ['Invalid board ID'] }
 			};
 		}
 
-		const column = await prisma.column.delete({ where: { id: json.id } });
+		const columns = await prisma.column.findMany({ where: { boardId: json.id } });
 		return {
 			status: 200,
-			body: column || {}
+			body: columns || []
 		};
 	} catch (error) { return { status: 500, body: { message: 'Server error occured' } }; }
 };
