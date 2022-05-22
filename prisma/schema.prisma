@@ -20,11 +20,12 @@ model User {
 }
 
 model Board {
-  id       Int      @id @unique @default(autoincrement())
-  title    String
-  users    User[]
-  columns  Column[]
-  image    String?
+  id          Int      @id @unique @default(autoincrement())
+  title       String
+  users       User[]
+  description String   @ignore
+  columns     Column[]
+  image       String?
 }
 
 model Column {
@@ -49,5 +50,5 @@ model Label {
   id    Int    @id @unique @default(autoincrement())
   title String
   color String
-  cards  Card[]
+  cards Card[]
 }

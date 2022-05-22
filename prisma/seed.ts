@@ -14,6 +14,7 @@ async function main() {
 			boards: {
 				create: {
 					title: 'Board Seed',
+					image: '/favicon.png',
 					columns: {
 						create: {
 							title: 'Column Seed',

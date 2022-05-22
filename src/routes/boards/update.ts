@@ -1,7 +1,7 @@
 import type { RequestHandler } from '@sveltejs/kit';
 import { prisma } from '../../db';
 
-export const get: RequestHandler = async ({ locals }) => {
+export const get: RequestHandler = async ({ request, locals }) => {
 	try {
 		if (!locals.user) {
 			return { status: 200, body: { message: 'Unauthorized' } };
