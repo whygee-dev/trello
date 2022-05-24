@@ -5,14 +5,13 @@ import { Validators } from '../../utils/validators';
 type Body = {
 	id: number;
 	title: string;
-	description: string;
-	image: string;
+	color: string;
 };
 
 export const post: RequestHandler = async ({ request, locals }) => {
 	try {
 		if (!locals.user) { return { status: 401, body: { message: 'Unauthorized' } }; }
-		
+
 		const json: Body = await request.json();
 		const validateTitle = Validators.validateTitle(json.title);
 		if (!json.id || typeof json.id !== 'number') {
@@ -27,25 +26,24 @@ export const post: RequestHandler = async ({ request, locals }) => {
 			};
 		}
 
-		const workSpace = await prisma.workSpace.findUnique({ where: { id: json.id } });
-		if (workSpace) {
-			const board = await prisma.board.create({
+		const board = await prisma.board.findUnique({ where: { id: json.id } });
+		if (board) {
+			const label = await prisma.label.create({
 				data: {
 					title: json.title,
-					image: json.image,
-					description: json.description,
-					workSpace: { connect: { id: workSpace?.id } }
+					color: json.color,
+					board: { connect: { id: board.id } }
 				}
 			});
 			return {
 				status: 201,
-				body: board || {}
+				body: label || {}
 			};
 		} else {
 			return {
 				status: 400,
-				body: { errors: ['Undefined workSpace'] }
-			}
+				body: { errors: ['Undefined board'] }
+			};
 		}
 	} catch (error) { return { status: 500, body: { message: 'Server error occured' } }; }
 };

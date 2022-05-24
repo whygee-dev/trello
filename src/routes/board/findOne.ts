@@ -3,7 +3,7 @@ import { prisma } from '../../db';
 
 type Body = { id: number; };
 
-export const del: RequestHandler = async ({ request, locals }) => {
+export const post: RequestHandler = async ({ request, locals }) => {
 	try {
 		if (!locals.user) { return { status: 401, body: { message: 'Unauthorized' } }; }
 
@@ -15,7 +15,7 @@ export const del: RequestHandler = async ({ request, locals }) => {
 			};
 		}
 
-		const board = await prisma.board.delete({ where: { id: json.id } });
+		const board = await prisma.board.findUnique({ where: { id: json.id } });
 		return {
 			status: 200,
 			body: board || {}

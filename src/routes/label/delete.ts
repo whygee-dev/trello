@@ -11,14 +11,14 @@ export const del: RequestHandler = async ({ request, locals }) => {
 		if (!json.id || typeof json.id !== 'number') {
 			return {
 				status: 400,
-				body: { errors: ['Invalid board ID'] }
+				body: { errors: ['Invalid label ID'] }
 			};
 		}
 
-		const board = await prisma.board.delete({ where: { id: json.id } });
+		const label = await prisma.label.delete({ where: { id: json.id } });
 		return {
 			status: 200,
-			body: board || {}
+			body: label || {}
 		};
 	} catch (error) { return { status: 500, body: { message: 'Server error occured' } }; }
 };

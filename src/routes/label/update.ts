@@ -5,8 +5,7 @@ import { Validators } from '../../utils/validators';
 type Body = {
 	id: number;
 	title: string;
-	type: string;
-	description: string;
+	color: string;
 };
 
 export const patch: RequestHandler = async ({ request, locals }) => {
@@ -15,31 +14,30 @@ export const patch: RequestHandler = async ({ request, locals }) => {
 
 		const json: Body = await request.json();
 		const validateTitle = Validators.validateTitle(json.title);
-		const validateType = Validators.validateWorkSpaceType(json.type);
 		if (!json.id || typeof json.id !== 'number') {
 			return {
 				status: 400,
-				body: { errors: ['Invalid workspace ID'] }
+				body: { errors: ['Invalid label ID'] }
 			};
-		} else if (!validateTitle.pass || !validateType.pass) {
+		} else if (!validateTitle.pass) {
 			return {
 				status: 400,
-				body: { errors: [validateTitle.message, validateType.message] }
+				body: { errors: [validateTitle.message] }
 			};
 		}
-
-		const workSpace = await prisma.workSpace.update({
+		
+		const label = await prisma.label.update({
 			where: { id: json.id },
 			data: {
-				title: json?.title,
-				type: json.type,
-				description: json.description
+				title: json.title,
+				color: json.color
 			}
 		});
-
 		return {
 			status: 200,
-			body: workSpace || {}
+			body: label || {}
 		};
-	} catch (error) { return { status: 500, body: { message: 'Server error occured' } }; }
+	} catch (error) {
+		return { status: 500, body: { message: 'Server error occured' } };
+	}
 };

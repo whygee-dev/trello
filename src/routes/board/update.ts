@@ -9,47 +9,35 @@ type Body = {
 	image: string;
 };
 
-export const post: RequestHandler = async ({ request, locals }) => {
+export const patch: RequestHandler = async ({ request, locals }) => {
 	try {
-		if (!locals.user) {
-			return { status: 200, body: { message: 'Unauthorized' } };
-		}
+		if (!locals.user) { return { status: 401, body: { message: 'Unauthorized' } }; }
 
 		const json: Body = await request.json();
-
 		const validateTitle = Validators.validateTitle(json.title);
-
 		if (!json.id || typeof json.id !== 'number') {
 			return {
-				status: 401,
-				body: {
-					errors: ['Invalid board id']
-				}
+				status: 400,
+				body: { errors: ['Invalid board ID'] }
+			};
+		} else if (!validateTitle.pass) {
+			return {
+				status: 400,
+				body: { errors: [validateTitle.message] }
 			};
 		}
 
-		if (!validateTitle.pass) {
-			return {
-				status: 401,
-				body: {
-					errors: [validateTitle.message]
-				}
-			};
-		}
 		const board = await prisma.board.update({
 			where: { id: json.id },
 			data: {
 				title: json.title,
-				description: json.description || '',
-				image: json.image || ''
+				description: json.description,
+				image: json.image
 			}
 		});
-
 		return {
 			status: 200,
 			body: board || []
 		};
-	} catch (error) {
-		return { status: 500, body: { message: 'Server error occured' } };
-	}
+	} catch (error) { return { status: 500, body: { message: 'Server error occured' } }; }
 };

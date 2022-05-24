@@ -5,6 +5,7 @@ const prisma = new PrismaClient();
 
 async function main() {
 	const password = await argon2.hash('secret');
+
 	await prisma.user.create({
 		data: {
 			email: 'John@doe.com',
@@ -13,13 +14,13 @@ async function main() {
 			password,
 			workSpaces: {
 				create: {
-					title: 'workspace seed',
-					description: 'workspace seed description',
-					type: 'seed',
+					title: 'Workspace Seed title',
+					description: 'Workspace Seed description',
+					type: 'Workspace Seed type',
 					boards: {
 						create: {
 							title: 'Board Seed',
-							description: 'Board Seed Description',
+							description: 'Board Seed description',
 							columns: {
 								create: {
 									title: 'Column Seed',
@@ -27,13 +28,7 @@ async function main() {
 										create: {
 											title: 'Card Seed',
 											description: 'Card description',
-											date: '1997-07-16T19:20:30.451Z',
-											label: {
-												create: {
-													title: 'label Seed',
-													color: '#ff0000'
-												}
-											}
+											date: '1997-07-16T19:20:30.451Z'
 										}
 									}
 								}

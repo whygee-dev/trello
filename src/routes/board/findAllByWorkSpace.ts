@@ -1,9 +1,9 @@
 import type { RequestHandler } from '@sveltejs/kit';
 import { prisma } from '../../db';
 
-type Body = { id: number; };
+type Body = { id: number };
 
-export const del: RequestHandler = async ({ request, locals }) => {
+export const post: RequestHandler = async ({ request, locals }) => {
 	try {
 		if (!locals.user) { return { status: 401, body: { message: 'Unauthorized' } }; }
 
@@ -11,14 +11,14 @@ export const del: RequestHandler = async ({ request, locals }) => {
 		if (!json.id || typeof json.id !== 'number') {
 			return {
 				status: 400,
-				body: { errors: ['Invalid board ID'] }
+				body: { errors: ['Invalid workspace ID'] }
 			};
 		}
 
-		const board = await prisma.board.delete({ where: { id: json.id } });
+		const boards = await prisma.board.findMany({ where: { workSpaceId: json.id } });
 		return {
 			status: 200,
-			body: board || {}
+			body: boards || []
 		};
 	} catch (error) { return { status: 500, body: { message: 'Server error occured' } }; }
 };

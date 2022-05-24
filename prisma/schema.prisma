@@ -31,17 +31,18 @@ model WorkSpace {
 model Board {
   id          Int       @id @unique @default(autoincrement())
   title       String
-  description String
-  columns     Column[]
+  description String?
   image       String?
-  workSpace   WorkSpace @relation(fields: [workSpaceId], references: [id])
+  workSpace   WorkSpace @relation(fields: [workSpaceId], references: [id], onDelete: Cascade)
   workSpaceId Int
+  columns     Column[]
+  labels      Label[]
 }
 
 model Column {
   id      Int    @id @unique @default(autoincrement())
   title   String
-  board   Board  @relation(fields: [boardId], references: [id])
+  board   Board  @relation(fields: [boardId], references: [id], onDelete: Cascade)
   boardId Int
   cards   Card[]
 }
@@ -49,16 +50,18 @@ model Column {
 model Card {
   id          Int      @id @unique @default(autoincrement())
   title       String
-  description String
+  description String?
   date        DateTime
-  label       Label[]
-  column      Column   @relation(fields: [columnId], references: [id])
+  labels      Label[]
+  column      Column   @relation(fields: [columnId], references: [id], onDelete: Cascade)
   columnId    Int
 }
 
 model Label {
-  id    Int    @id @unique @default(autoincrement())
-  title String
-  color String
-  cards Card[]
+  id      Int    @id @unique @default(autoincrement())
+  title   String
+  color   String
+  board   Board @relation(fields: [boardId], references: [id], onDelete: Cascade)
+  boardId Int
+  cards   Card[]
 }

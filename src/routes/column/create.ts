@@ -26,15 +26,22 @@ export const post: RequestHandler = async ({ request, locals }) => {
 		}
 
 		const board = await prisma.board.findUnique({ where: { id: json.id } });
-		const column = await prisma.column.create({
-			data: {
-				title: json.title,
-				board: { connect: { id: board?.id } }
-			}
-		});
-		return {
-			status: 201,
-			body: column || {}
-		};
+		if (board) {
+			const column = await prisma.column.create({
+				data: {
+					title: json.title,
+					board: { connect: { id: board.id } }
+				}
+			});
+			return {
+				status: 201,
+				body: column || {}
+			};
+		} else {
+			return {
+				status: 400,
+				body: { errors: ['Undefined board'] }
+			};
+		}
 	} catch (error) { return { status: 500, body: { message: 'Server error occured' } }; }
 };
