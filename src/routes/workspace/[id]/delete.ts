@@ -1,24 +1,14 @@
 import type { RequestHandler } from '@sveltejs/kit';
-import { prisma } from '../../db';
+import { prisma } from '../../../db';
 
-type Body = { id: number; workSpaceId: number };
-
-export const del: RequestHandler = async ({ request, locals }) => {
+export const del: RequestHandler = async ({ locals, params }) => {
 	try {
 		if (!locals.user) {
 			return { status: 401, body: { message: 'Unauthorized' } };
 		}
 
-		const json: Body = await request.json();
-
-		if (!json.id || typeof json.id !== 'number') {
-			return {
-				status: 400,
-				body: { errors: ['Invalid workspace ID'] }
-			};
-		}
-
-		const workSpace = await prisma.workSpace.findUnique({ where: { id: json.workSpaceId } });
+		const workspaceId = params.id;
+		const workSpace = await prisma.workSpace.findUnique({ where: { id: workspaceId } });
 		const user = await prisma.user.findUnique({ where: { email: locals.user.email } });
 
 		if (workSpace && user && user.id === workSpace.ownerId) {
