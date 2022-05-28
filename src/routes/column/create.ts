@@ -31,9 +31,15 @@ export const post: RequestHandler = async ({ request, locals }) => {
 		const board = await prisma.board.findUnique({ where: { id: json.id } });
 
 		if (board) {
+			const columns = await prisma.column.findMany({
+				where: { boardId: json.id },
+				orderBy: { yIndex: 'desc' }
+			});
+			const yIndex = (columns.length > 0) ? ++columns[0].yIndex : 0;
 			const column = await prisma.column.create({
 				data: {
 					title: json.title,
+					yIndex: yIndex,
 					board: { connect: { id: board.id } }
 				}
 			});

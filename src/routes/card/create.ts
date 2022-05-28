@@ -11,9 +11,9 @@ type Body = {
 
 export const post: RequestHandler = async ({ request, locals }) => {
 	try {
-		if (!locals.user) {
+		/* if (!locals.user) {
 			return { status: 401, body: { message: 'Unauthorized' } };
-		}
+		} */
 
 		const json: Body = await request.json();
 		const validateTitle = Validators.validateTitle(json.title);
@@ -33,11 +33,17 @@ export const post: RequestHandler = async ({ request, locals }) => {
 		const column = await prisma.column.findUnique({ where: { id: json.id } });
 
 		if (column) {
+			const cards = await prisma.card.findMany({
+				where: { columnId: json.id },
+				orderBy: { xIndex: 'desc' }
+			});
+			const xIndex = (cards.length > 0) ? ++cards[0].xIndex : 0;
 			const card = await prisma.card.create({
 				data: {
 					title: json.title,
 					description: json.description,
 					date: json.date,
+					xIndex: xIndex,
 					column: { connect: { id: column?.id } }
 				}
 			});

@@ -45,6 +45,7 @@ model Board {
 model Column {
   id      Int    @id @unique @default(autoincrement())
   title   String
+  yIndex  Int
   board   Board  @relation(fields: [boardId], references: [id], onDelete: Cascade)
   boardId Int
   cards   Card[]
@@ -55,6 +56,7 @@ model Card {
   title       String
   description String?
   date        DateTime
+  xIndex      Int
   labels      Label[]
   column      Column   @relation(fields: [columnId], references: [id], onDelete: Cascade)
   columnId    Int

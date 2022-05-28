@@ -24,11 +24,13 @@ async function main() {
 							columns: {
 								create: {
 									title: 'Column Seed',
+									yIndex: 0,
 									cards: {
 										create: {
 											title: 'Card Seed',
 											description: 'Card description',
 											date: '1997-07-16T19:20:30.451Z',
+											xIndex: 0,
 											labels: {
 												create: {
 													title: 'card title',
