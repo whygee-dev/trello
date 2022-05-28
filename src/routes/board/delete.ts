@@ -17,6 +17,7 @@ export const del: RequestHandler = async ({ request, locals }) => {
 				body: { errors: ['Invalid board ID'] }
 			};
 		}
+
 		const board = await prisma.board.findUnique({ where: { id: json.id } });
 
 		if (board) {
@@ -25,12 +26,14 @@ export const del: RequestHandler = async ({ request, locals }) => {
 
 			if (workSpace && user && workSpace.id === user.id) {
 				await prisma.board.delete({ where: { id: board.id } });
+
 				return {
 					status: 200,
 					body: board || []
 				};
 			}
 		}
+
 		return {
 			status: 401,
 			body: ['Unauthorised operation']

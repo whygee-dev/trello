@@ -10,10 +10,13 @@ type Body = {
 
 export const post: RequestHandler = async ({ request, locals }) => {
 	try {
-		if (!locals.user) { return { status: 401, body: { message: 'Unauthorized' } }; }
+		if (!locals.user) {
+			return { status: 401, body: { message: 'Unauthorized' } };
+		}
 
 		const json: Body = await request.json();
 		const validateTitle = Validators.validateTitle(json.title);
+
 		if (!json.id || typeof json.id !== 'number') {
 			return {
 				status: 400,
@@ -27,6 +30,7 @@ export const post: RequestHandler = async ({ request, locals }) => {
 		}
 
 		const board = await prisma.board.findUnique({ where: { id: json.id } });
+
 		if (board) {
 			const label = await prisma.label.create({
 				data: {
@@ -35,6 +39,7 @@ export const post: RequestHandler = async ({ request, locals }) => {
 					board: { connect: { id: board.id } }
 				}
 			});
+
 			return {
 				status: 201,
 				body: label || {}
@@ -45,5 +50,7 @@ export const post: RequestHandler = async ({ request, locals }) => {
 				body: { errors: ['Undefined board'] }
 			};
 		}
-	} catch (error) { return { status: 500, body: { message: 'Server error occured' } }; }
+	} catch (error) {
+		return { status: 500, body: { message: 'Server error occured' } };
+	}
 };

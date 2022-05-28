@@ -11,10 +11,13 @@ type Body = {
 
 export const post: RequestHandler = async ({ request, locals }) => {
 	try {
-		if (!locals.user) { return { status: 401, body: { message: 'Unauthorized' } }; }
+		if (!locals.user) {
+			return { status: 401, body: { message: 'Unauthorized' } };
+		}
 
 		const json: Body = await request.json();
 		const validateTitle = Validators.validateTitle(json.title);
+
 		if (!json.id || typeof json.id !== 'number') {
 			return {
 				status: 400,
@@ -28,6 +31,7 @@ export const post: RequestHandler = async ({ request, locals }) => {
 		}
 
 		const column = await prisma.column.findUnique({ where: { id: json.id } });
+
 		if (column) {
 			const card = await prisma.card.create({
 				data: {
@@ -37,6 +41,7 @@ export const post: RequestHandler = async ({ request, locals }) => {
 					column: { connect: { id: column?.id } }
 				}
 			});
+
 			return {
 				status: 201,
 				body: card || {}
@@ -45,7 +50,9 @@ export const post: RequestHandler = async ({ request, locals }) => {
 			return {
 				status: 400,
 				body: { errors: ['Undefined column'] }
-			}
+			};
 		}
-	} catch (error) { return { status: 500, body: { message: 'Server error occured' } }; }
+	} catch (error) {
+		return { status: 500, body: { message: 'Server error occured' } };
+	}
 };
