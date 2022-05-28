@@ -41,6 +41,7 @@ export class Validators {
 	static validateUsername(u: string) {
 		const pass = // eslint-disable-next-line no-control-regex
 			/^[A-Za-z][A-Za-z0-9_]{3,20}$/.test(u);
+
 		return {
 			pass,
 			message: !pass
@@ -59,6 +60,7 @@ export class Validators {
 
 	static validateFullname(f: string) {
 		const pass = /(?=^.{2,40}$)^[a-zA-Z-]+\s[a-zA-Z-]+$/.test(f);
+
 		return {
 			pass,
 			message: !pass
@@ -78,6 +80,7 @@ export class Validators {
 	static validateTitle(u: string) {
 		const pass = // eslint-disable-next-line no-control-regex
 			/^[A-Za-z][A-Za-z0-9_]/.test(u);
+
 		return {
 			pass,
 			message: !pass
@@ -97,6 +100,7 @@ export class Validators {
 	static validateWorkSpaceType(u: string) {
 		const pass = // eslint-disable-next-line no-control-regex
 			/^[A-Za-z][A-Za-z ]\S.*[^.\s]$/.test(u);
+
 		return {
 			pass,
 			message: !pass

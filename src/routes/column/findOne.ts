@@ -10,6 +10,7 @@ export const post: RequestHandler = async ({ request, locals }) => {
 		}
 
 		const json: Body = await request.json();
+
 		if (!json.id || typeof json.id !== 'number') {
 			return {
 				status: 400,
@@ -18,6 +19,7 @@ export const post: RequestHandler = async ({ request, locals }) => {
 		}
 
 		const column = await prisma.column.findUnique({ where: { id: json.id } });
+
 		return {
 			status: 200,
 			body: column || {}

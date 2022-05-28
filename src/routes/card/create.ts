@@ -17,6 +17,7 @@ export const post: RequestHandler = async ({ request, locals }) => {
 
 		const json: Body = await request.json();
 		const validateTitle = Validators.validateTitle(json.title);
+
 		if (!json.id || typeof json.id !== 'number') {
 			return {
 				status: 400,
@@ -30,6 +31,7 @@ export const post: RequestHandler = async ({ request, locals }) => {
 		}
 
 		const column = await prisma.column.findUnique({ where: { id: json.id } });
+
 		if (column) {
 			const card = await prisma.card.create({
 				data: {
@@ -39,6 +41,7 @@ export const post: RequestHandler = async ({ request, locals }) => {
 					column: { connect: { id: column?.id } }
 				}
 			});
+
 			return {
 				status: 201,
 				body: card || {}

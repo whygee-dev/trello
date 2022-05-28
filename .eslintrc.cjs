@@ -8,6 +8,14 @@ module.exports = {
 	settings: {
 		'svelte3/typescript': () => require('typescript')
 	},
+	rules: {
+		'padding-line-between-statements': [
+			'error',
+			{ blankLine: 'always', prev: '*', next: 'return' },
+			{ blankLine: 'always', prev: '*', next: 'if' },
+			{ blankLine: 'always', prev: 'if', next: '*' }
+		]
+	},
 	parserOptions: {
 		sourceType: 'module',
 		ecmaVersion: 2020

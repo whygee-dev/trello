@@ -10,6 +10,7 @@ export const post: RequestHandler = async ({ request, locals }) => {
 		}
 
 		const json: Body = await request.json();
+
 		if (!json.id || typeof json.id !== 'number') {
 			return {
 				status: 400,
@@ -18,6 +19,7 @@ export const post: RequestHandler = async ({ request, locals }) => {
 		}
 
 		const cards = await prisma.card.findMany({ where: { columnId: json.id } });
+
 		return {
 			status: 200,
 			body: cards || []

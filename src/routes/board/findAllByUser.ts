@@ -20,11 +20,13 @@ export const post: RequestHandler = async ({ locals }) => {
 
 		if (user) {
 			const boards = user.workSpaces.map((workSpace) => workSpace.boards);
+			
 			return {
 				status: 200,
 				body: boards || []
 			};
 		}
+
 		return {
 			status: 401,
 			body: ['User not found']

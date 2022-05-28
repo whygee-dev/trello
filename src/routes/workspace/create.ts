@@ -17,6 +17,7 @@ export const post: RequestHandler = async ({ request, locals }) => {
 		const json: Body = await request.json();
 		const validateTitle = Validators.validateTitle(json.title);
 		const validateType = Validators.validateWorkSpaceType(json.type);
+
 		if (!validateTitle.pass || !validateType.pass) {
 			return {
 				status: 400,

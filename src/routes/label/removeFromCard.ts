@@ -13,6 +13,7 @@ export const patch: RequestHandler = async ({ request, locals }) => {
 		}
 
 		const json: Body = await request.json();
+
 		if (!json.labelId || typeof json.labelId !== 'number') {
 			return {
 				status: 400,
@@ -26,11 +27,13 @@ export const patch: RequestHandler = async ({ request, locals }) => {
 		}
 
 		const card = await prisma.card.findUnique({ where: { id: json.cardId } });
+
 		if (card) {
 			const label = await prisma.label.update({
 				where: { id: json.labelId },
 				data: { cards: { disconnect: { id: card?.id } } }
 			});
+
 			return {
 				status: 201,
 				body: label || {}

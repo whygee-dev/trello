@@ -10,6 +10,7 @@ export const del: RequestHandler = async ({ request, locals }) => {
 		}
 
 		const json: Body = await request.json();
+
 		if (!json.id || typeof json.id !== 'number') {
 			return {
 				status: 400,
@@ -18,6 +19,7 @@ export const del: RequestHandler = async ({ request, locals }) => {
 		}
 
 		const card = await prisma.card.delete({ where: { id: json.id } });
+
 		return {
 			status: 200,
 			body: card || {}

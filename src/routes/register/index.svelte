@@ -6,6 +6,7 @@
 				redirect: '/boards'
 			};
 		}
+
 		return {};
 	};
 </script>

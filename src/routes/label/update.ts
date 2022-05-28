@@ -16,6 +16,7 @@ export const patch: RequestHandler = async ({ request, locals }) => {
 
 		const json: Body = await request.json();
 		const validateTitle = Validators.validateTitle(json.title);
+
 		if (!json.id || typeof json.id !== 'number') {
 			return {
 				status: 400,
@@ -35,6 +36,7 @@ export const patch: RequestHandler = async ({ request, locals }) => {
 				color: json.color
 			}
 		});
+
 		return {
 			status: 200,
 			body: label || {}

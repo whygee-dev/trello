@@ -47,6 +47,7 @@ export const post: RequestHandler = async ({ request }) => {
 		};
 	} catch (error) {
 		console.log(error);
+
 		return { status: 500, body: { message: 'Server error occured' } };
 	}
 };
