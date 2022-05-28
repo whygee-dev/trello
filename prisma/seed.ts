@@ -12,7 +12,7 @@ async function main() {
 			username: 'John',
 			fullname: 'John Smith',
 			password,
-			workSpaces: {
+			ownedWorkspaces: {
 				create: {
 					title: 'Workspace Seed title',
 					description: 'Workspace Seed description',
@@ -28,13 +28,25 @@ async function main() {
 										create: {
 											title: 'Card Seed',
 											description: 'Card description',
-											date: '1997-07-16T19:20:30.451Z'
+											date: '1997-07-16T19:20:30.451Z',
+											labels: {
+												create: {
+													title: 'card title',
+													color: '#FF0000',
+													boardId: 1
+												}
+											}
 										}
 									}
 								}
 							}
 						}
 					}
+				}
+			},
+			workSpaces: {
+				connect: {
+					id: 1
 				}
 			}
 		}

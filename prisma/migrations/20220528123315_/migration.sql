@@ -15,6 +15,7 @@ CREATE TABLE "WorkSpace" (
     "title" TEXT NOT NULL,
     "type" TEXT NOT NULL,
     "description" TEXT,
+    "ownerId" INTEGER NOT NULL,
 
     CONSTRAINT "WorkSpace_pkey" PRIMARY KEY ("id")
 );
@@ -23,7 +24,7 @@ CREATE TABLE "WorkSpace" (
 CREATE TABLE "Board" (
     "id" SERIAL NOT NULL,
     "title" TEXT NOT NULL,
-    "description" TEXT NOT NULL,
+    "description" TEXT,
     "image" TEXT,
     "workSpaceId" INTEGER NOT NULL,
 
@@ -43,7 +44,7 @@ CREATE TABLE "Column" (
 CREATE TABLE "Card" (
     "id" SERIAL NOT NULL,
     "title" TEXT NOT NULL,
-    "description" TEXT NOT NULL,
+    "description" TEXT,
     "date" TIMESTAMP(3) NOT NULL,
     "columnId" INTEGER NOT NULL,
 
@@ -55,6 +56,7 @@ CREATE TABLE "Label" (
     "id" SERIAL NOT NULL,
     "title" TEXT NOT NULL,
     "color" TEXT NOT NULL,
+    "boardId" INTEGER NOT NULL,
 
     CONSTRAINT "Label_pkey" PRIMARY KEY ("id")
 );
@@ -102,13 +104,19 @@ CREATE UNIQUE INDEX "_CardToLabel_AB_unique" ON "_CardToLabel"("A", "B");
 CREATE INDEX "_CardToLabel_B_index" ON "_CardToLabel"("B");
 
 -- AddForeignKey
-ALTER TABLE "Board" ADD CONSTRAINT "Board_workSpaceId_fkey" FOREIGN KEY ("workSpaceId") REFERENCES "WorkSpace"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "WorkSpace" ADD CONSTRAINT "WorkSpace_ownerId_fkey" FOREIGN KEY ("ownerId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "Column" ADD CONSTRAINT "Column_boardId_fkey" FOREIGN KEY ("boardId") REFERENCES "Board"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "Board" ADD CONSTRAINT "Board_workSpaceId_fkey" FOREIGN KEY ("workSpaceId") REFERENCES "WorkSpace"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "Card" ADD CONSTRAINT "Card_columnId_fkey" FOREIGN KEY ("columnId") REFERENCES "Column"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "Column" ADD CONSTRAINT "Column_boardId_fkey" FOREIGN KEY ("boardId") REFERENCES "Board"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Card" ADD CONSTRAINT "Card_columnId_fkey" FOREIGN KEY ("columnId") REFERENCES "Column"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Label" ADD CONSTRAINT "Label_boardId_fkey" FOREIGN KEY ("boardId") REFERENCES "Board"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "_UserToWorkSpace" ADD CONSTRAINT "_UserToWorkSpace_A_fkey" FOREIGN KEY ("A") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;

@@ -10,7 +10,9 @@ type Body = {
 
 export const post: RequestHandler = async ({ request, locals }) => {
 	try {
-		if (!locals.user) { return { status: 401, body: { message: 'Unauthorized' } }; }
+		if (!locals.user) {
+			return { status: 401, body: { message: 'Unauthorized' } };
+		}
 
 		const json: Body = await request.json();
 		const validateTitle = Validators.validateTitle(json.title);
@@ -23,17 +25,29 @@ export const post: RequestHandler = async ({ request, locals }) => {
 		}
 
 		const user = await prisma.user.findUnique({ where: { email: locals.user?.email } });
-		const workSpace = await prisma.workSpace.create({
-			data: {
-				title: json.title,
-				type: json.type,
-				description: json.description,
-				users: { connect: { id: user?.id } }
-			}
-		});
+
+		if (user) {
+			const workSpace = await prisma.workSpace.create({
+				data: {
+					title: json.title,
+					type: json.type,
+					description: json.description,
+					users: { connect: { id: user?.id } },
+					ownerId: user?.id
+				}
+			});
+
+			return {
+				status: 201,
+				body: workSpace || []
+			};
+		}
+
 		return {
-			status: 201,
-			body: workSpace || {}
+			status: 400,
+			body: { errors: ['An unexpected error occured'] }
 		};
-	} catch (error) { return { status: 500, body: { message: 'Server error occured' } }; }
+	} catch (error) {
+		return { status: 500, body: { message: 'Server error occured' } };
+	}
 };

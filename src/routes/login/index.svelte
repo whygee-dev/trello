@@ -3,7 +3,7 @@
 		if (session.user) {
 			return {
 				status: 302,
-				redirect: '/boards'
+				redirect: '/board'
 			};
 		}
 		return {};
@@ -29,7 +29,7 @@
 
 				toast.push('Authentification success');
 
-				goto('/boards');
+				goto('/board');
 			}
 		} catch (error: any) {
 			toast.push(

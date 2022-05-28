@@ -11,12 +11,13 @@ datasource db {
 }
 
 model User {
-  id         Int         @id @unique @default(autoincrement())
-  email      String      @unique
-  password   String
-  username   String
-  fullname   String
-  workSpaces WorkSpace[]
+  id              Int         @id @unique @default(autoincrement())
+  email           String      @unique
+  password        String
+  username        String
+  fullname        String
+  workSpaces      WorkSpace[]
+  ownedWorkspaces WorkSpace[] @relation("owner")
 }
 
 model WorkSpace {
@@ -25,6 +26,8 @@ model WorkSpace {
   type        String
   description String?
   users       User[]
+  owner       User    @relation("owner", fields: [ownerId], references: [id])
+  ownerId     Int
   boards      Board[]
 }
 
@@ -61,7 +64,7 @@ model Label {
   id      Int    @id @unique @default(autoincrement())
   title   String
   color   String
-  board   Board @relation(fields: [boardId], references: [id], onDelete: Cascade)
+  board   Board  @relation(fields: [boardId], references: [id], onDelete: Cascade)
   boardId Int
   cards   Card[]
 }

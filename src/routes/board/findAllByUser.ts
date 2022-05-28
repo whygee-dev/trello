@@ -3,7 +3,9 @@ import { prisma } from '../../db';
 
 export const post: RequestHandler = async ({ locals }) => {
 	try {
-		if (!locals.user) { return { status: 401, body: { message: 'Unauthorized' } }; }
+		if (!locals.user) {
+			return { status: 401, body: { message: 'Unauthorized' } };
+		}
 
 		const user = await prisma.user.findUnique({
 			where: { email: locals.user.email },
@@ -16,10 +18,18 @@ export const post: RequestHandler = async ({ locals }) => {
 			}
 		});
 
-		const boards = user?.workSpaces;
+		if (user) {
+			const boards = user.workSpaces;
+			return {
+				status: 200,
+				body: boards || []
+			};
+		}
 		return {
-			status: 200,
-			body: boards || []
+			status: 401,
+			body: ['User not found']
 		};
-	} catch (error) { return { status: 500, body: { message: 'Server error occured' } }; }
+	} catch (error) {
+		return { status: 500, body: { message: 'Server error occured' } };
+	}
 };

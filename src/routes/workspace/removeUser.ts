@@ -8,9 +8,12 @@ type Body = {
 
 export const patch: RequestHandler = async ({ request, locals }) => {
 	try {
-		if (!locals.user) { return { status: 401, body: { message: 'Unauthorized' } }; }
+		if (!locals.user) {
+			return { status: 401, body: { message: 'Unauthorized' } };
+		}
 
 		const json: Body = await request.json();
+
 		if (!json.userId || typeof json.userId !== 'number') {
 			return {
 				status: 400,
@@ -24,21 +27,26 @@ export const patch: RequestHandler = async ({ request, locals }) => {
 		}
 
 		const user = await prisma.user.findUnique({ where: { id: json.userId } });
-        if (user) {
-            const workSpace = await prisma.workSpace.update({
-                where: { id: json.workSpaceId },
+		const workSpace = await prisma.workSpace.findUnique({ where: { id: json.workSpaceId } });
+
+		if (user && workSpace && user.id === workSpace.ownerId) {
+			const updatedWorkSpace = await prisma.workSpace.update({
+				where: { id: workSpace.id },
 				include: { users: true },
-                data: { users: { disconnect: { id: user.id } } }
-            });
-            return {
-                status: 200,
-                body: workSpace || {}
-            };
-        } else {
+				data: { users: { disconnect: { id: user.id } } }
+			});
+
 			return {
-				status: 400,
-				body: { errors: ['Undefined user'] }
+				status: 200,
+				body: updatedWorkSpace || []
 			};
 		}
-	} catch (error) { return { status: 500, body: { message: 'Server error occured' } }; }
+
+		return {
+			status: 400,
+			body: { errors: ['Unauthorized operation '] }
+		};
+	} catch (error) {
+		return { status: 500, body: { message: 'Server error occured' } };
+	}
 };
