@@ -3,7 +3,7 @@ import { prisma } from '../../db';
 import { Validators } from '../../utils/validators';
 
 type Body = {
-	id: number;
+	id: string;
 	title: string;
 	description: string;
 	image: string;

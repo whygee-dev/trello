@@ -9,7 +9,9 @@ type Body = {
 
 export const post: RequestHandler = async ({ request, locals }) => {
 	try {
-		if (!locals.user) { return { status: 401, body: { message: 'Unauthorized' } }; }
+		if (!locals.user) {
+			return { status: 401, body: { message: 'Unauthorized' } };
+		}
 
 		const json: Body = await request.json();
 		const validateTitle = Validators.validateTitle(json.title);
@@ -43,5 +45,7 @@ export const post: RequestHandler = async ({ request, locals }) => {
 				body: { errors: ['Undefined board'] }
 			};
 		}
-	} catch (error) { return { status: 500, body: { message: 'Server error occured' } }; }
+	} catch (error) {
+		return { status: 500, body: { message: 'Server error occured' } };
+	}
 };

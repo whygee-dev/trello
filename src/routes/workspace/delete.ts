@@ -1,7 +1,7 @@
 import type { RequestHandler } from '@sveltejs/kit';
 import { prisma } from '../../db';
 
-type Body = { id: number };
+type Body = { id: number; workSpaceId: number };
 
 export const del: RequestHandler = async ({ request, locals }) => {
 	try {
@@ -18,7 +18,7 @@ export const del: RequestHandler = async ({ request, locals }) => {
 			};
 		}
 
-		const workSpace = await prisma.workSpace.findUnique({ where: { id: json.id } });
+		const workSpace = await prisma.workSpace.findUnique({ where: { id: json.workSpaceId } });
 		const user = await prisma.user.findUnique({ where: { email: locals.user.email } });
 
 		if (workSpace && user && user.id === workSpace.ownerId) {

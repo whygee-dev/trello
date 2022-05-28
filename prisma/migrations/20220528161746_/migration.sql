@@ -1,6 +1,6 @@
 -- CreateTable
 CREATE TABLE "User" (
-    "id" SERIAL NOT NULL,
+    "id" TEXT NOT NULL,
     "email" TEXT NOT NULL,
     "password" TEXT NOT NULL,
     "username" TEXT NOT NULL,
@@ -11,66 +11,66 @@ CREATE TABLE "User" (
 
 -- CreateTable
 CREATE TABLE "WorkSpace" (
-    "id" SERIAL NOT NULL,
+    "id" TEXT NOT NULL,
     "title" TEXT NOT NULL,
     "type" TEXT NOT NULL,
     "description" TEXT,
-    "ownerId" INTEGER NOT NULL,
+    "ownerId" TEXT NOT NULL,
 
     CONSTRAINT "WorkSpace_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
 CREATE TABLE "Board" (
-    "id" SERIAL NOT NULL,
+    "id" TEXT NOT NULL,
     "title" TEXT NOT NULL,
     "description" TEXT,
     "image" TEXT,
-    "workSpaceId" INTEGER NOT NULL,
+    "workSpaceId" TEXT NOT NULL,
 
     CONSTRAINT "Board_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
 CREATE TABLE "Column" (
-    "id" SERIAL NOT NULL,
+    "id" TEXT NOT NULL,
     "title" TEXT NOT NULL,
-    "boardId" INTEGER NOT NULL,
+    "boardId" TEXT NOT NULL,
 
     CONSTRAINT "Column_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
 CREATE TABLE "Card" (
-    "id" SERIAL NOT NULL,
+    "id" TEXT NOT NULL,
     "title" TEXT NOT NULL,
     "description" TEXT,
     "date" TIMESTAMP(3) NOT NULL,
-    "columnId" INTEGER NOT NULL,
+    "columnId" TEXT NOT NULL,
 
     CONSTRAINT "Card_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
 CREATE TABLE "Label" (
-    "id" SERIAL NOT NULL,
+    "id" TEXT NOT NULL,
     "title" TEXT NOT NULL,
     "color" TEXT NOT NULL,
-    "boardId" INTEGER NOT NULL,
+    "boardId" TEXT NOT NULL,
 
     CONSTRAINT "Label_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
 CREATE TABLE "_UserToWorkSpace" (
-    "A" INTEGER NOT NULL,
-    "B" INTEGER NOT NULL
+    "A" TEXT NOT NULL,
+    "B" TEXT NOT NULL
 );
 
 -- CreateTable
 CREATE TABLE "_CardToLabel" (
-    "A" INTEGER NOT NULL,
-    "B" INTEGER NOT NULL
+    "A" TEXT NOT NULL,
+    "B" TEXT NOT NULL
 );
 
 -- CreateIndex

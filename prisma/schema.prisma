@@ -11,7 +11,7 @@ datasource db {
 }
 
 model User {
-  id              Int         @id @unique @default(autoincrement())
+  id              String      @id @unique @default(cuid())
   email           String      @unique
   password        String
   username        String
@@ -21,50 +21,50 @@ model User {
 }
 
 model WorkSpace {
-  id          Int     @id @default(autoincrement())
+  id          String  @id @default(cuid())
   title       String
   type        String
   description String?
   users       User[]
   owner       User    @relation("owner", fields: [ownerId], references: [id])
-  ownerId     Int
+  ownerId     String
   boards      Board[]
 }
 
 model Board {
-  id          Int       @id @unique @default(autoincrement())
+  id          String    @id @unique @default(cuid())
   title       String
   description String?
   image       String?
   workSpace   WorkSpace @relation(fields: [workSpaceId], references: [id], onDelete: Cascade)
-  workSpaceId Int
+  workSpaceId String
   columns     Column[]
   labels      Label[]
 }
 
 model Column {
-  id      Int    @id @unique @default(autoincrement())
+  id      String @id @unique @default(cuid())
   title   String
   board   Board  @relation(fields: [boardId], references: [id], onDelete: Cascade)
-  boardId Int
+  boardId String
   cards   Card[]
 }
 
 model Card {
-  id          Int      @id @unique @default(autoincrement())
+  id          String    @id @unique @default(cuid())
   title       String
   description String?
-  date        DateTime
+  date        DateTime? @default(now())
   labels      Label[]
-  column      Column   @relation(fields: [columnId], references: [id], onDelete: Cascade)
-  columnId    Int
+  column      Column    @relation(fields: [columnId], references: [id], onDelete: Cascade)
+  columnId    String
 }
 
 model Label {
-  id      Int    @id @unique @default(autoincrement())
+  id      String @id @unique @default(cuid())
   title   String
   color   String
-  board   Board  @relation(fields: [boardId], references: [id], onDelete: Cascade)
-  boardId Int
+  card    Board  @relation(fields: [boardId], references: [id], onDelete: Cascade)
+  boardId String
   cards   Card[]
 }

@@ -6,7 +6,7 @@ const prisma = new PrismaClient();
 async function main() {
 	const password = await argon2.hash('secret');
 
-	await prisma.user.create({
+	const user = await prisma.user.create({
 		data: {
 			email: 'John@doe.com',
 			username: 'John',
@@ -27,15 +27,7 @@ async function main() {
 									cards: {
 										create: {
 											title: 'Card Seed',
-											description: 'Card description',
-											date: '1997-07-16T19:20:30.451Z',
-											labels: {
-												create: {
-													title: 'card title',
-													color: '#FF0000',
-													boardId: 1
-												}
-											}
+											description: 'Card description'
 										}
 									}
 								}
@@ -43,12 +35,16 @@ async function main() {
 						}
 					}
 				}
-			},
-			workSpaces: {
-				connect: {
-					id: 1
-				}
 			}
+		}
+	});
+
+	const workSpaces = await prisma.workSpace.findFirst();
+
+	await prisma.user.update({
+		where: { id: user.id },
+		data: {
+			workSpaces: { connect: { id: workSpaces?.id } }
 		}
 	});
 }

@@ -8,7 +8,9 @@ type Body = {
 
 export const patch: RequestHandler = async ({ request, locals }) => {
 	try {
-		if (!locals.user) { return { status: 401, body: { message: 'Unauthorized' } }; }
+		if (!locals.user) {
+			return { status: 401, body: { message: 'Unauthorized' } };
+		}
 
 		const json: Body = await request.json();
 		if (!json.labelId || typeof json.labelId !== 'number') {
@@ -39,5 +41,7 @@ export const patch: RequestHandler = async ({ request, locals }) => {
 				body: { errors: ['Undefined card'] }
 			};
 		}
-	} catch (error) { return { status: 500, body: { message: 'Server error occured' } }; }
+	} catch (error) {
+		return { status: 500, body: { message: 'Server error occured' } };
+	}
 };

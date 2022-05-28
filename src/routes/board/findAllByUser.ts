@@ -19,7 +19,7 @@ export const post: RequestHandler = async ({ locals }) => {
 		});
 
 		if (user) {
-			const boards = user.workSpaces;
+			const boards = user.workSpaces.map((workSpace) => workSpace.boards);
 			return {
 				status: 200,
 				body: boards || []

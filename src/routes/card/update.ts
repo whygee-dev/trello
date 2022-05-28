@@ -11,7 +11,9 @@ type Body = {
 
 export const patch: RequestHandler = async ({ request, locals }) => {
 	try {
-		if (!locals.user) { return { status: 401, body: { message: 'Unauthorized' } }; }
+		if (!locals.user) {
+			return { status: 401, body: { message: 'Unauthorized' } };
+		}
 
 		const json: Body = await request.json();
 		const validateTitle = Validators.validateTitle(json.title);
@@ -26,7 +28,7 @@ export const patch: RequestHandler = async ({ request, locals }) => {
 				body: { errors: [validateTitle.message] }
 			};
 		}
-		
+
 		const card = await prisma.card.update({
 			where: { id: json.id },
 			data: {
