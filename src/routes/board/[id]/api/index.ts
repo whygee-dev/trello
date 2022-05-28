@@ -1,24 +1,22 @@
 import type { RequestHandler } from '@sveltejs/kit';
-import { prisma } from '../../db';
+import { prisma } from '../../../../db';
 
-type Body = { id: number };
-
-export const post: RequestHandler = async ({ request, locals }) => {
+export const get: RequestHandler = async ({ request, locals, params }) => {
 	try {
 		if (!locals.user) {
 			return { status: 401, body: { message: 'Unauthorized' } };
 		}
 
-		const json: Body = await request.json();
+		const id = params.id;
 
-		if (!json.id || typeof json.id !== 'number') {
+		if (!id || typeof id !== 'number') {
 			return {
 				status: 400,
 				body: { errors: ['Invalid board ID'] }
 			};
 		}
 
-		const board = await prisma.board.findUnique({ where: { id: json.id } });
+		const board = await prisma.board.findUnique({ where: { id } });
 
 		if (board) {
 			return {

@@ -3,7 +3,7 @@
 		if (session.user) {
 			return {
 				status: 302,
-				redirect: '/board'
+				redirect: '/boards'
 			};
 		}
 
@@ -30,7 +30,7 @@
 
 				toast.push('Authentification success');
 
-				goto('/board');
+				goto('/boards');
 			}
 		} catch (error: any) {
 			toast.push(
@@ -101,17 +101,6 @@
 				display: flex;
 				flex-direction: column;
 
-				input {
-					&.field-danger {
-						outline-color: red;
-						border-color: red;
-					}
-
-					&.field-success {
-						outline-color: #4c9aff;
-						border-color: #4c9aff;
-					}
-				}
 				input,
 				button {
 					width: 80%;
