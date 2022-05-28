@@ -2,8 +2,8 @@ import type { RequestHandler } from '@sveltejs/kit';
 import { prisma } from '../../db';
 
 type Body = {
-	cardId: number;
-	columnId: number;
+	cardId: string;
+	columnId: string;
 };
 
 export const patch: RequestHandler = async ({ request, locals }) => {

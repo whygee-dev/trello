@@ -22,7 +22,7 @@ export const del: RequestHandler = async ({ request, locals, params }) => {
 			const workSpace = await prisma.workSpace.findUnique({ where: { id } });
 			const user = await prisma.user.findUnique({ where: { email: locals.user.email } });
 
-			if (workSpace && user && workSpace.id === user.id) {
+			if (workSpaceId && user && workSpaceId === user.id) {
 				await prisma.board.delete({ where: { id: board.id } });
 
 				return {
