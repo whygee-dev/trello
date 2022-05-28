@@ -1,7 +1,7 @@
 import type { RequestHandler } from '@sveltejs/kit';
 import { prisma } from '../../db';
 
-type Body = { id: number };
+type Body = { id: string };
 
 export const post: RequestHandler = async ({ request, locals }) => {
 	try {
