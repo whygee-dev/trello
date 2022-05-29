@@ -35,6 +35,7 @@ CREATE TABLE "Board" (
 CREATE TABLE "Column" (
     "id" TEXT NOT NULL,
     "title" TEXT NOT NULL,
+    "yIndex" INTEGER NOT NULL,
     "boardId" TEXT NOT NULL,
 
     CONSTRAINT "Column_pkey" PRIMARY KEY ("id")
@@ -45,7 +46,8 @@ CREATE TABLE "Card" (
     "id" TEXT NOT NULL,
     "title" TEXT NOT NULL,
     "description" TEXT,
-    "date" TIMESTAMP(3) NOT NULL,
+    "date" TIMESTAMP(3) DEFAULT CURRENT_TIMESTAMP,
+    "xIndex" INTEGER NOT NULL,
     "columnId" TEXT NOT NULL,
 
     CONSTRAINT "Card_pkey" PRIMARY KEY ("id")
