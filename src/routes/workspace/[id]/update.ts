@@ -17,7 +17,6 @@ export const patch: RequestHandler = async ({ request, locals, params }) => {
 		const json: Body = await request.json();
 		const validateTitle = Validators.validateTitle(json.title);
 		const validateType = Validators.validateWorkSpaceType(json.type);
-		const workspaceId = params.id;
 
 		if (!validateTitle.pass || !validateType.pass) {
 			return {
@@ -26,14 +25,20 @@ export const patch: RequestHandler = async ({ request, locals, params }) => {
 			};
 		}
 
-		const user = await prisma.user.findUnique({ where: { email: locals.user.email } });
-		const workSpace = await prisma.workSpace.findUnique({ where: { id: workspaceId } });
+		const workSpace = await prisma.workSpace.findUnique({ where: { id: params.id } });
 
-		if (user && workSpace && user.id === workSpace.ownerId) {
-			const updatedWorkSpace = await prisma.workSpace.update({
-				where: { id: workspaceId },
+		if (!workSpace) {
+			return {
+				status: 401,
+				body: ['Undefined WorkSpace']
+			};
+		}
+
+		if (workSpace && locals.user.id === workSpace.ownerId) {
+			await prisma.workSpace.update({
+				where: { id: params.id },
 				data: {
-					title: json?.title,
+					title: json.title,
 					type: json.type,
 					description: json.description
 				}
@@ -41,7 +46,7 @@ export const patch: RequestHandler = async ({ request, locals, params }) => {
 
 			return {
 				status: 200,
-				body: updatedWorkSpace || {}
+				body: workSpace || {}
 			};
 		}
 

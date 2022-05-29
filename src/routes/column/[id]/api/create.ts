@@ -2,7 +2,7 @@ import type { RequestHandler } from '@sveltejs/kit';
 import { prisma } from '../../../../db';
 import { Validators } from '../../../../utils/validators';
 
-type Body = { title: string; };
+type Body = { title: string };
 
 export const post: RequestHandler = async ({ request, locals, params }) => {
 	try {
@@ -13,7 +13,7 @@ export const post: RequestHandler = async ({ request, locals, params }) => {
 		const id = params.id;
 		const json: Body = await request.json();
 		const validateTitle = Validators.validateTitle(json.title);
-		
+
 		if (!validateTitle.pass) {
 			return {
 				status: 400,
@@ -28,7 +28,7 @@ export const post: RequestHandler = async ({ request, locals, params }) => {
 				where: { boardId: id },
 				orderBy: { yIndex: 'desc' }
 			});
-			const yIndex = (columns.length > 0) ? ++columns[0].yIndex : 0;
+			const yIndex = columns.length > 0 ? ++columns[0].yIndex : 0;
 			const column = await prisma.column.create({
 				data: {
 					title: json.title,
@@ -41,12 +41,12 @@ export const post: RequestHandler = async ({ request, locals, params }) => {
 				status: 201,
 				body: column || {}
 			};
-		} else {
-			return {
-				status: 400,
-				body: { errors: ['Undefined board'] }
-			};
 		}
+
+		return {
+			status: 400,
+			body: { errors: ['Undefined board'] }
+		};
 	} catch (error) {
 		return { status: 500, body: { message: 'Server error occured' } };
 	}

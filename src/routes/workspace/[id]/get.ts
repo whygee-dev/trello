@@ -1,7 +1,7 @@
 import type { RequestHandler } from '@sveltejs/kit';
 import { prisma } from '../../../db';
 
-export const del: RequestHandler = async ({ request, locals, params }) => {
+export const get: RequestHandler = async ({ locals, params }) => {
 	try {
 		if (!locals.user) {
 			return { status: 401, body: { message: 'Unauthorized' } };
@@ -16,11 +16,7 @@ export const del: RequestHandler = async ({ request, locals, params }) => {
 			};
 		}
 
-		if (workSpace && workSpace.ownerId === locals.user.id) {
-			await prisma.workSpace.delete({
-				where: { id: workSpace.id }
-			});
-
+		if (workSpace && locals.user.id === workSpace.ownerId) {
 			return {
 				status: 200,
 				body: workSpace || {}

@@ -3,13 +3,12 @@ import { prisma } from '../../db';
 import { Validators } from '../../utils/validators';
 
 type Body = {
-	workspaceId: string;
 	title: string;
 	description: string;
 	image: string;
 };
 
-export const post: RequestHandler = async ({ request, locals }) => {
+export const post: RequestHandler = async ({ request, locals, params }) => {
 	try {
 		if (!locals.user) {
 			return { status: 401, body: { message: 'Unauthorized' } };
@@ -25,28 +24,37 @@ export const post: RequestHandler = async ({ request, locals }) => {
 			};
 		}
 
-		const workSpace = await prisma.workSpace.findUnique({ where: { id: json.workspaceId } });
-		const user = await prisma.user.findUnique({ where: { email: locals.user.email } });
+		const workSpace = await prisma.workSpace.findFirst({
+			where: { users: { some: { id: locals.user.id } } },
+			include: { users: true }
+		});
 
-		if (workSpace && user && workSpace.ownerId === user.id) {
+		if (!workSpace) {
+			return {
+				status: 400,
+				body: ['Unauthorized operation']
+			};
+		}
+
+		if (workSpace) {
 			const board = await prisma.board.create({
 				data: {
 					title: json.title,
 					image: json.image,
 					description: json.description,
-					workSpace: { connect: { id: workSpace?.id } }
+					workSpace: { connect: { id: workSpace.id } }
 				}
 			});
 
 			return {
 				status: 201,
-				body: board || []
+				body: board || {}
 			};
 		}
 
 		return {
 			status: 401,
-			body: { errors: ['Unauthorized operation'] }
+			body: ['Undefined workspace']
 		};
 	} catch (error) {
 		return { status: 500, body: { message: 'Server error occured' } };

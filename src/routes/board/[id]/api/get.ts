@@ -1,7 +1,7 @@
 import type { RequestHandler } from '@sveltejs/kit';
 import { prisma } from '../../../../db';
 
-export const del: RequestHandler = async ({ request, locals, params }) => {
+export const get: RequestHandler = async ({ request, locals, params }) => {
 	try {
 		if (!locals.user) {
 			return { status: 401, body: { message: 'Unauthorized' } };
@@ -19,12 +19,10 @@ export const del: RequestHandler = async ({ request, locals, params }) => {
 			};
 		}
 
-		if (workSpace && workSpace.ownerId === locals.user.id) {
+		if (workSpace) {
 			const board = await prisma.board.findUnique({ where: { id: params.id } });
 
 			if (board) {
-				await prisma.board.delete({ where: { id: board.id } });
-
 				return {
 					status: 200,
 					body: board || []
@@ -33,7 +31,7 @@ export const del: RequestHandler = async ({ request, locals, params }) => {
 		}
 
 		return {
-			status: 401,
+			status: 400,
 			body: ['Undefined Board']
 		};
 	} catch (error) {
