@@ -7,27 +7,32 @@ export const get: RequestHandler = async ({ request, locals, params }) => {
 			return { status: 401, body: { message: 'Unauthorized' } };
 		}
 
-		const id = params.id;
+		const workSpace = await prisma.workSpace.findFirst({
+			where: { users: { some: { id: locals.user.id } } },
+			include: { users: true }
+		});
 
-		if (!id || typeof id !== 'number') {
+		if (!workSpace) {
 			return {
-				status: 400,
-				body: { errors: ['Invalid board ID'] }
+				status: 401,
+				body: ['Unauthorized operation']
 			};
 		}
 
-		const board = await prisma.board.findUnique({ where: { id } });
+		if (workSpace) {
+			const board = await prisma.board.findUnique({ where: { id: params.id } });
 
-		if (board) {
-			return {
-				status: 200,
-				body: board || []
-			};
+			if (board) {
+				return {
+					status: 200,
+					body: board || []
+				};
+			}
 		}
 
 		return {
 			status: 400,
-			body: ['Board not found']
+			body: ['Undefined Board']
 		};
 	} catch (error) {
 		return { status: 500, body: { message: 'Server error occured' } };

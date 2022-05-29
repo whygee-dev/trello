@@ -1,18 +1,25 @@
 import type { RequestHandler } from '@sveltejs/kit';
 import { prisma } from '../../../db';
 
-export const del: RequestHandler = async ({ locals, params }) => {
+export const del: RequestHandler = async ({ request, locals, params }) => {
 	try {
 		if (!locals.user) {
 			return { status: 401, body: { message: 'Unauthorized' } };
 		}
 
-		const workspaceId = params.id;
-		const workSpace = await prisma.workSpace.findUnique({ where: { id: workspaceId } });
-		const user = await prisma.user.findUnique({ where: { email: locals.user.email } });
+		const workSpace = await prisma.workSpace.findUnique({ where: { id: params.id } });
 
-		if (workSpace && user && user.id === workSpace.ownerId) {
-			await prisma.workSpace.delete({ where: { id: workSpace.id } });
+		if (!workSpace) {
+			return {
+				status: 401,
+				body: ['Undefined WorkSpace']
+			};
+		}
+
+		if (workSpace && workSpace.ownerId === locals.user.id) {
+			await prisma.workSpace.delete({
+				where: { id: workSpace.id }
+			});
 
 			return {
 				status: 200,

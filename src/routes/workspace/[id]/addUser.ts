@@ -1,8 +1,9 @@
 import type { RequestHandler } from '@sveltejs/kit';
 import { prisma } from '../../../db';
+import { Validators } from './../../../utils/validators';
 
 type Body = {
-	userId: string;
+	email: string;
 };
 
 export const patch: RequestHandler = async ({ request, locals, params }) => {
@@ -11,24 +12,42 @@ export const patch: RequestHandler = async ({ request, locals, params }) => {
 			return { status: 401, body: { message: 'Unauthorized' } };
 		}
 
-		const workspaceId = params.id;
 		const json: Body = await request.json();
 
-		if (!json.userId || typeof json.userId !== 'number') {
+		const validateEmail = Validators.validateEmail(json.email);
+
+		if (!validateEmail.pass) {
 			return {
-				status: 400,
-				body: { errors: ['Invalid user ID'] }
+				status: 401,
+				body: {
+					errors: [validateEmail.message]
+				}
 			};
 		}
 
-		const user = await prisma.user.findUnique({ where: { id: json.userId } });
-		const workSpace = await prisma.workSpace.findUnique({ where: { id: workspaceId } });
+		const userToAdd = await prisma.user.findUnique({ where: { email: json.email } });
+		const workSpace = await prisma.workSpace.findUnique({ where: { id: params.id } });
 
-		if (user && workSpace && user.id === workSpace.ownerId) {
-			const workSpace = await prisma.workSpace.update({
-				where: { id: workspaceId },
-				include: { users: true },
-				data: { users: { connect: { id: user.id } } }
+		console.log(userToAdd, workSpace);
+
+		if (!workSpace) {
+			return {
+				status: 401,
+				body: ['Undefined WorkSpace']
+			};
+		}
+
+		if (userToAdd && workSpace.ownerId === locals.user.id) {
+			if (userToAdd.id === locals.user.id) {
+				return {
+					status: 400,
+					body: { errors: ['You cannot add yourself to the workspace'] }
+				};
+			}
+
+			await prisma.workSpace.update({
+				where: { id: workSpace.id },
+				data: { users: { connect: { id: userToAdd.id } } }
 			});
 
 			return {
@@ -39,7 +58,7 @@ export const patch: RequestHandler = async ({ request, locals, params }) => {
 
 		return {
 			status: 400,
-			body: { errors: ['Unauthorized operation'] }
+			body: ['Unauthorized operation']
 		};
 	} catch (error) {
 		return { status: 500, body: { message: 'Server error occured' } };

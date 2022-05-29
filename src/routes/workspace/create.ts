@@ -25,7 +25,7 @@ export const post: RequestHandler = async ({ request, locals }) => {
 			};
 		}
 
-		const user = await prisma.user.findUnique({ where: { email: locals.user?.email } });
+		const user = await prisma.user.findUnique({ where: { email: locals.user.email } });
 
 		if (user) {
 			const workSpace = await prisma.workSpace.create({
@@ -33,8 +33,8 @@ export const post: RequestHandler = async ({ request, locals }) => {
 					title: json.title,
 					type: json.type,
 					description: json.description,
-					users: { connect: { id: user?.id } },
-					ownerId: user?.id
+					users: { connect: { id: user.id } },
+					ownerId: user.id
 				}
 			});
 

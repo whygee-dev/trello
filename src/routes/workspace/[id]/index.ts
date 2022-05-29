@@ -1,26 +1,31 @@
 import type { RequestHandler } from '@sveltejs/kit';
 import { prisma } from '../../../db';
 
-export const post: RequestHandler = async ({ locals, params }) => {
+export const get: RequestHandler = async ({ locals, params }) => {
 	try {
 		if (!locals.user) {
 			return { status: 401, body: { message: 'Unauthorized' } };
 		}
 
-		const workspaceId = params.id;
+		const workSpace = await prisma.workSpace.findUnique({ where: { id: params.id } });
 
-		const workSpace = await prisma.workSpace.findUnique({ where: { id: workspaceId } });
+		if (!workSpace) {
+			return {
+				status: 401,
+				body: ['Undefined WorkSpace']
+			};
+		}
 
-		if (workSpace) {
+		if (workSpace && locals.user.id === workSpace.ownerId) {
 			return {
 				status: 200,
-				body: workSpace || []
+				body: workSpace || {}
 			};
 		}
 
 		return {
 			status: 400,
-			body: ['Workspace not found']
+			body: ['Unauthorized operation']
 		};
 	} catch (error) {
 		return { status: 500, body: { message: 'Server error occured' } };

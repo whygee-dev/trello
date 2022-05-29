@@ -15,28 +15,32 @@ export const patch: RequestHandler = async ({ request, locals, params }) => {
 			return { status: 401, body: { message: 'Unauthorized' } };
 		}
 
-		const id = params.id;
 		const json: Body = await request.json();
 		const validateTitle = Validators.validateTitle(json.title);
 
-		if (!id || typeof id !== 'number') {
-			return {
-				status: 400,
-				body: { errors: ['Invalid board ID'] }
-			};
-		} else if (!validateTitle.pass) {
+		if (!validateTitle.pass) {
 			return {
 				status: 400,
 				body: { errors: [validateTitle.message] }
 			};
 		}
 
-		const user = await prisma.user.findUnique({ where: { email: locals.user.email } });
-		const workSpace = await prisma.workSpace.findUnique({ where: { id } });
+		const workSpace = await prisma.workSpace.findFirst({
+			where: { users: { some: { id: locals.user.id } } },
+			include: { users: true }
+		});
 
-		if (user && workSpace && user.id === workSpace.ownerId) {
+		if (!workSpace) {
+			return {
+				status: 401,
+				body: ['Unauthorized operation']
+			};
+		}
+
+
+		if (workSpace) {
 			const board = await prisma.board.update({
-				where: { id: workSpace.id },
+				where: { id: params.id },
 				data: {
 					title: json.title,
 					description: json.description,
@@ -52,7 +56,7 @@ export const patch: RequestHandler = async ({ request, locals, params }) => {
 
 		return {
 			status: 400,
-			body: ['Unauthorized operation']
+			body: ['Undefined Board']
 		};
 	} catch (error) {
 		return { status: 500, body: { message: 'Server error occured' } };

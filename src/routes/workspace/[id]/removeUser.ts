@@ -1,45 +1,74 @@
 import type { RequestHandler } from '@sveltejs/kit';
 import { prisma } from '../../../db';
+import { Validators } from './../../../utils/validators';
 
 type Body = {
-	userId: number;
+	email: string;
 };
 
-export const patch: RequestHandler = async ({ request, locals, params }) => {
+export const del: RequestHandler = async ({ request, locals, params }) => {
 	try {
 		if (!locals.user) {
 			return { status: 401, body: { message: 'Unauthorized' } };
 		}
 
-		const workspaceId = params.id;
 		const json: Body = await request.json();
 
-		if (!json.userId || typeof json.userId !== 'number') {
+		const validateEmail = Validators.validateEmail(json.email);
+
+		if (!validateEmail.pass) {
 			return {
-				status: 400,
-				body: { errors: ['Invalid user ID'] }
+				status: 401,
+				body: {
+					errors: [validateEmail.message]
+				}
 			};
 		}
 
-		const user = await prisma.user.findUnique({ where: { id: workspaceId } });
-		const workSpace = await prisma.workSpace.findUnique({ where: { id: workspaceId } });
+		const userToRemove = await prisma.user.findUnique({ where: { email: json.email } });
+		const workSpace = await prisma.workSpace.findUnique({ where: { id: params.id } });
 
-		if (user && workSpace && user.id === workSpace.ownerId) {
-			const updatedWorkSpace = await prisma.workSpace.update({
+		if (!workSpace) {
+			return {
+				status: 401,
+				body: ['Undefined WorkSpace']
+			};
+		}
+
+		if (userToRemove && workSpace && workSpace.ownerId === locals.user.id) {
+			if (userToRemove.id === locals.user.id) {
+				return {
+					status: 400,
+					body: { errors: ['You cannot remove yourself from the workspace'] }
+				};
+			}
+
+			const workSpaceUsers = await prisma.workSpace.findFirst({
+				where: { users: { some: { id: userToRemove.id } } },
+				include: { users: true }
+			});
+
+			if (!workSpaceUsers) {
+				return {
+					status: 400,
+					body: ['The user is not a member of this workspace']
+				};
+			}
+
+			await prisma.workSpace.update({
 				where: { id: workSpace.id },
-				include: { users: true },
-				data: { users: { disconnect: { id: user.id } } }
+				data: { users: { disconnect: { id: userToRemove.id } } }
 			});
 
 			return {
 				status: 200,
-				body: updatedWorkSpace || []
+				body: workSpace || {}
 			};
 		}
 
 		return {
 			status: 400,
-			body: { errors: ['Unauthorized operation '] }
+			body: ['Unauthorized operation']
 		};
 	} catch (error) {
 		return { status: 500, body: { message: 'Server error occured' } };
