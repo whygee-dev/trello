@@ -4,7 +4,6 @@ import { Validators } from '../../../utils/validators';
 
 type Body = {
 	title: string;
-	type: string;
 	description: string;
 };
 
@@ -16,12 +15,11 @@ export const patch: RequestHandler = async ({ request, locals, params }) => {
 
 		const json: Body = await request.json();
 		const validateTitle = Validators.validateTitle(json.title);
-		const validateType = Validators.validateWorkSpaceType(json.type);
 
-		if (!validateTitle.pass || !validateType.pass) {
+		if (!validateTitle.pass) {
 			return {
 				status: 400,
-				body: { errors: [validateTitle.message, validateType.message] }
+				body: { errors: [validateTitle.message] }
 			};
 		}
 
@@ -39,7 +37,6 @@ export const patch: RequestHandler = async ({ request, locals, params }) => {
 				where: { id: params.id },
 				data: {
 					title: json.title,
-					type: json.type,
 					description: json.description
 				}
 			});
