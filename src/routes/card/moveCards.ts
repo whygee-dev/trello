@@ -2,8 +2,8 @@ import type { RequestHandler } from '@sveltejs/kit';
 import { prisma } from '../../db';
 
 type Body = {
-	draggedCardId: number;
-	switchedCardId: number
+	draggedCardId: string;
+	switchedCardId: string
 };
 
 export const patch: RequestHandler = async ({ request, locals }) => {
@@ -16,8 +16,8 @@ export const patch: RequestHandler = async ({ request, locals }) => {
 
 		if (!json.draggedCardId
             || !json.switchedCardId
-            || typeof json.draggedCardId !== 'number'
-            || typeof json.switchedCardId !== 'number') {
+            || typeof json.draggedCardId !== 'string'
+            || typeof json.switchedCardId !== 'string') {
 			return {
 				status: 400,
 				body: { errors: ['Invalid card ID'] }
@@ -27,19 +27,26 @@ export const patch: RequestHandler = async ({ request, locals }) => {
 		const draggedCard = await prisma.card.findUnique({ where: { id: json.draggedCardId } });
         const switchedCard = await prisma.card.findUnique({ where: { id: json.switchedCardId } });
 
-        const updatedCurrentCard = await prisma.card.update({
-			where: { id: json.draggedCardId },
-			data: { xIndex: switchedCard?.xIndex }
-		});
-        const updatedSwitchedCard = await prisma.card.update({
-			where: { id: json.switchedCardId },
-			data: { xIndex: draggedCard?.xIndex }
-		});
-
-		return {
-			status: 200,
-			body: [updatedCurrentCard, updatedSwitchedCard] || []
-		};
+		if (draggedCard && switchedCard) {
+			const updatedCurrentCard = await prisma.card.update({
+				where: { id: json.draggedCardId },
+				data: { xIndex: switchedCard?.xIndex }
+			});
+			const updatedSwitchedCard = await prisma.card.update({
+				where: { id: json.switchedCardId },
+				data: { xIndex: draggedCard?.xIndex }
+			});
+	
+			return {
+				status: 200,
+				body: [updatedCurrentCard, updatedSwitchedCard] || []
+			};
+		} else {
+			return {
+				status: 400,
+				body: { errors: ['One or Both cards are undefined'] }
+			}
+		}
 	} catch (error) {
 		return { status: 500, body: { message: 'Server error occured' } };
 	}

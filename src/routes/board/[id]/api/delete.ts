@@ -34,7 +34,7 @@ export const del: RequestHandler = async ({ request, locals, params }) => {
 
 		return {
 			status: 401,
-			body: ['Unauthorised operation']
+			body: ['Unauthorized operation']
 		};
 	} catch (error) {
 		return { status: 500, body: { message: 'Server error occured' } };

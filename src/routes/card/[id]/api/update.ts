@@ -1,26 +1,27 @@
 import type { RequestHandler } from '@sveltejs/kit';
-import { prisma } from '../../db';
-import { Validators } from '../../utils/validators';
+import { prisma } from '../../../../db';
+import { Validators } from '../../../../utils/validators';
 
 type Body = {
-	id: number;
 	title: string;
-	color: string;
+	description: string;
+	date: Date;
 };
 
-export const post: RequestHandler = async ({ request, locals }) => {
+export const patch: RequestHandler = async ({ request, locals, params }) => {
 	try {
 		if (!locals.user) {
 			return { status: 401, body: { message: 'Unauthorized' } };
 		}
 
+		const id = params.id;
 		const json: Body = await request.json();
 		const validateTitle = Validators.validateTitle(json.title);
 
-		if (!json.id || typeof json.id !== 'number') {
+		if (!json) {
 			return {
 				status: 400,
-				body: { errors: ['Invalid board ID'] }
+				body: { errors: ['Missing JSON in request body'] }
 			};
 		} else if (!validateTitle.pass) {
 			return {
@@ -29,25 +30,26 @@ export const post: RequestHandler = async ({ request, locals }) => {
 			};
 		}
 
-		const board = await prisma.board.findUnique({ where: { id: json.id } });
+		const card = await prisma.card.findUnique({ where: { id: id } });
 
-		if (board) {
-			const label = await prisma.label.create({
+		if (card) {
+			const updatedCard = await prisma.card.update({
+				where: { id: id },
 				data: {
 					title: json.title,
-					color: json.color,
-					board: { connect: { id: board.id } }
+					description: json.description,
+					date: json.date
 				}
 			});
-
+	
 			return {
-				status: 201,
-				body: label || {}
+				status: 200,
+				body: updatedCard || {}
 			};
 		} else {
 			return {
 				status: 400,
-				body: { errors: ['Undefined board'] }
+				body: { errors: ['Undefined card'] }
 			};
 		}
 	} catch (error) {
