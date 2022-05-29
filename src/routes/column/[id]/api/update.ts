@@ -10,6 +10,18 @@ export const patch: RequestHandler = async ({ request, locals, params }) => {
 			return { status: 401, body: { message: 'Unauthorized' } };
 		}
 
+		const workSpace = await prisma.workSpace.findFirst({
+			where: { users: { some: { id: locals.user.id } } },
+			include: { users: true }
+		});
+
+		if (!workSpace?.users[0]) {
+			return {
+				status: 403,
+				body: { errors: ['Unauthorized operation'] }
+			};
+		}
+
 		const id = params.id
 		const json: Body = await request.json();
 		const validateTitle = Validators.validateTitle(json.title);
@@ -23,22 +35,22 @@ export const patch: RequestHandler = async ({ request, locals, params }) => {
 
 		const column = await prisma.column.findUnique({ where: { id: id } });
 
-		if (column) {
-			const updatedColumn = await prisma.column.update({
-				where: { id: id },
-				data: { title: json.title }
-			});
-	
-			return {
-				status: 200,
-				body: updatedColumn || {}
-			};
-		} else {
+		if (!column) {
 			return {
 				status: 400,
 				body: { errors: ['Undefined column'] }
 			};
 		}
+
+		const updatedColumn = await prisma.column.update({
+			where: { id: id },
+			data: { title: json.title }
+		});
+
+		return {
+			status: 200,
+			body: updatedColumn || {}
+		};
 	} catch (error) {
 		return { status: 500, body: { message: 'Server error occured' } };
 	}
