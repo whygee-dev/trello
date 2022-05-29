@@ -96,24 +96,4 @@ export class Validators {
 			return b.pass || b.message;
 		};
 	}
-
-	static validateWorkSpaceType(u: string) {
-		const pass = // eslint-disable-next-line no-control-regex
-			/^[A-Za-z][A-Za-z ]\S.*[^.\s]$/.test(u);
-
-		return {
-			pass,
-			message: !pass
-				? 'Workspace type must start and end with an alphanumeric characters, it can only contain alphanumeric characters and spaces'
-				: undefined
-		};
-	}
-
-	static workSpaceTypeValidator() {
-		return (v: string) => {
-			const b = Validators.validateWorkSpaceType(v);
-
-			return b.pass || b.message;
-		};
-	}
 }
