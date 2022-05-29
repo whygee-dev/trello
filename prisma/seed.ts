@@ -16,7 +16,6 @@ async function main() {
 				create: {
 					title: 'Workspace Seed title',
 					description: 'Workspace Seed description',
-					type: 'Workspace Seed type',
 					boards: {
 						create: {
 							title: 'Board Seed',
