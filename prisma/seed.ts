@@ -54,12 +54,12 @@ async function main() {
 			include: { workSpaces: { include: { users: true } } }
 		});
 
-		await prisma.user.update({
+	/*	await prisma.user.update({
 			where: { id: user.id },
 			data: {
 				workSpaces: { connect: { id: workSpaces?.id } }
 			}
-		});
+		});*/
 	});
 }
 
