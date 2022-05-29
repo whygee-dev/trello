@@ -35,7 +35,7 @@ export const patch: RequestHandler = async ({ request, locals, params }) => {
 		}
 
 		if (workSpace && locals.user.id === workSpace.ownerId) {
-			await prisma.workSpace.update({
+			const updatedWorkSpace = await prisma.workSpace.update({
 				where: { id: params.id },
 				data: {
 					title: json.title,
@@ -46,7 +46,7 @@ export const patch: RequestHandler = async ({ request, locals, params }) => {
 
 			return {
 				status: 200,
-				body: workSpace || {}
+				body: updatedWorkSpace || {}
 			};
 		}
 

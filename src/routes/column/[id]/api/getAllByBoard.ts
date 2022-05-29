@@ -1,7 +1,7 @@
 import type { RequestHandler } from '@sveltejs/kit';
 import { prisma } from '../../../../db';
 
-export const del: RequestHandler = async ({ request, locals, params }) => {
+export const get: RequestHandler = async ({ request, locals, params }) => {
 	try {
 		if (!locals.user) {
 			return { status: 401, body: { message: 'Unauthorized' } };
@@ -20,20 +20,20 @@ export const del: RequestHandler = async ({ request, locals, params }) => {
 		}
 
 		const id = params.id;
-		const label = await prisma.label.findUnique({ where: { id: id } });
+		const board = await prisma.board.findUnique({ where: { id: id } });
 
-		if (!label) {
+		if (!board) {
 			return {
-				status: 400,
-				body: { errors: ['Undefined label'] }
+				status: 200,
+				body: { errors: ['Undefined board'] }
 			};
 		}
 
-		const deletedLabel = await prisma.label.delete({ where: { id: id } });
+		const columns = await prisma.column.findMany({ where: { boardId: id } });
 
 		return {
 			status: 200,
-			body: deletedLabel || {}
+			body: columns || []
 		};
 	} catch (error) {
 		return { status: 500, body: { message: 'Server error occured' } };

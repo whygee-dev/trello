@@ -28,10 +28,12 @@ export const patch: RequestHandler = async ({ request, locals, params }) => {
 		const userToAdd = await prisma.user.findUnique({ where: { email: json.email } });
 		const workSpace = await prisma.workSpace.findUnique({ where: { id: params.id } });
 
+		console.log(userToAdd, workSpace);
+
 		if (!workSpace) {
 			return {
 				status: 401,
-				body: ['Unauthorized operation']
+				body: ['Undefined WorkSpace']
 			};
 		}
 
@@ -40,18 +42,6 @@ export const patch: RequestHandler = async ({ request, locals, params }) => {
 				return {
 					status: 400,
 					body: { errors: ['You cannot add yourself to the workspace'] }
-				};
-			}
-
-			const workSpaceUsers = await prisma.workSpace.findFirst({
-				where: { users: { some: { id: userToAdd.id } } },
-				include: { users: true }
-			});
-
-			if (workSpaceUsers) {
-				return {
-					status: 400,
-					body: ['The user is already member of this workspace']
 				};
 			}
 
@@ -68,7 +58,7 @@ export const patch: RequestHandler = async ({ request, locals, params }) => {
 
 		return {
 			status: 400,
-			body: { errors: ['Undefined user'] }
+			body: ['Unauthorized operation']
 		};
 	} catch (error) {
 		return { status: 500, body: { message: 'Server error occured' } };

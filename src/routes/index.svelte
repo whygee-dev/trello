@@ -1,8 +1,22 @@
+<script context="module" lang="ts">
+	export const load: Load = async ({ session }) => {
+		if (session.user) {
+			return {
+				status: 302,
+				redirect: '/boards'
+			};
+		}
+
+		return {};
+	};
+</script>
+
 <script lang="ts">
 	import { afterNavigate, goto } from '$app/navigation';
 	import { fly } from 'svelte/transition';
 	// @ts-ignore
 	import { inview } from 'svelte-inview';
+	import type { Load } from '@sveltejs/kit';
 
 	let y: number;
 	let email = '';

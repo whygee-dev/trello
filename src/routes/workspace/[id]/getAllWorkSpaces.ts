@@ -9,7 +9,7 @@ export const get: RequestHandler = async ({ locals, params }) => {
 
 		const user = await prisma.user.findUnique({
 			where: { email: locals.user.email },
-			include: { workSpaces: true }
+			include: { workSpaces: { include: { boards: true, users: true } } }
 		});
 
 		const workSpace = await prisma.workSpace.findUnique({ where: { id: params.id } });

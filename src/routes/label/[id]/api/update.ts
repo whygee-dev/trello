@@ -13,6 +13,18 @@ export const patch: RequestHandler = async ({ request, locals, params }) => {
 			return { status: 401, body: { message: 'Unauthorized' } };
 		}
 
+		const workSpace = await prisma.workSpace.findFirst({
+			where: { users: { some: { id: locals.user.id } } },
+			include: { users: true }
+		});
+
+		if (!workSpace?.users[0]) {
+			return {
+				status: 403,
+				body: { errors: ['Unauthorized operation'] }
+			};
+		}
+
 		const id = params.id;
 		const json: Body = await request.json();
 		const validateTitle = Validators.validateTitle(json.title);
@@ -31,25 +43,25 @@ export const patch: RequestHandler = async ({ request, locals, params }) => {
 
 		const label = await prisma.label.findUnique({ where: { id: id } });
 		
-		if (label) {
-			const label = await prisma.label.update({
-				where: { id: id },
-				data: {
-					title: json.title,
-					color: json.color
-				}
-			});
-	
-			return {
-				status: 200,
-				body: label || {}
-			};
-		} else {
+		if (!label) {
 			return {
 				status: 400,
 				body: { errors: ['Undefined label'] }
 			};
 		}
+
+		const updatedLabel = await prisma.label.update({
+			where: { id: id },
+			data: {
+				title: json.title,
+				color: json.color
+			}
+		});
+
+		return {
+			status: 200,
+			body: updatedLabel || {}
+		};
 	} catch (error) {
 		return { status: 500, body: { message: 'Server error occured' } };
 	}

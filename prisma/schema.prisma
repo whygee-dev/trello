@@ -21,12 +21,12 @@ model User {
 }
 
 model WorkSpace {
-  id          String  @id @default(cuid())
+  id          String    @id @default(cuid())
   title       String
   type        String
   description String?
   users       User[]
-  owner       User    @relation("owner", fields: [ownerId], references: [id])
+  owner       User      @relation("owner", fields: [ownerId], references: [id])
   ownerId     String
   boards      Board[]
 }
@@ -43,10 +43,10 @@ model Board {
 }
 
 model Column {
-  id      String @id @unique @default(cuid())
+  id      String        @id @unique @default(cuid())
   title   String
   yIndex  Int
-  board   Board  @relation(fields: [boardId], references: [id], onDelete: Cascade)
+  board   Board         @relation(fields: [boardId], references: [id], onDelete: Cascade)
   boardId String
   cards   Card[]
 }
@@ -63,10 +63,10 @@ model Card {
 }
 
 model Label {
-  id      String @id @unique @default(cuid())
+  id      String        @id @unique @default(cuid())
   title   String
   color   String
-  board   Board  @relation(fields: [boardId], references: [id], onDelete: Cascade)
+  board   Board         @relation(fields: [boardId], references: [id], onDelete: Cascade)
   boardId String
   cards   Card[]
 }
