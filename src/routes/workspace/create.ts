@@ -4,7 +4,6 @@ import { Validators } from '../../utils/validators';
 
 type Body = {
 	title: string;
-	type: string;
 	description: string;
 };
 
@@ -16,12 +15,11 @@ export const post: RequestHandler = async ({ request, locals }) => {
 
 		const json: Body = await request.json();
 		const validateTitle = Validators.validateTitle(json.title);
-		const validateType = Validators.validateWorkSpaceType(json.type);
 
-		if (!validateTitle.pass || !validateType.pass) {
+		if (!validateTitle.pass) {
 			return {
 				status: 400,
-				body: { errors: [validateTitle.message, validateType.message] }
+				body: { errors: [validateTitle.message] }
 			};
 		}
 
@@ -31,7 +29,6 @@ export const post: RequestHandler = async ({ request, locals }) => {
 			const workSpace = await prisma.workSpace.create({
 				data: {
 					title: json.title,
-					type: json.type,
 					description: json.description,
 					users: { connect: { id: user.id } },
 					ownerId: user.id
