@@ -1,11 +1,11 @@
 import type { RequestHandler } from '@sveltejs/kit';
-import { prisma } from '../../../../db';
-import { Validators } from '../../../../utils/validators';
+import { prisma } from '../../db';
+import { Validators } from '../../utils/validators';
 
 type Body = {
+	boardId: string;
 	title: string;
-	description: string;
-	date: Date;
+	color: string;
 };
 
 export const post: RequestHandler = async ({ request, locals, params }) => {
@@ -26,44 +26,56 @@ export const post: RequestHandler = async ({ request, locals, params }) => {
 			};
 		}
 
-		const id = params.id;
 		const json: Body = await request.json();
 		const validateTitle = Validators.validateTitle(json.title);
 
-		if (!validateTitle.pass) {
+		if (!json.boardId || typeof json.boardId !== 'string') {
+			return {
+				status: 400,
+				body: { error: ['Invalid board ID'] }
+			};
+		} else if (!json.title) {
+			return {
+				status: 400,
+				body: { errors: ['Undefined title parameter'] }
+			};
+		} else if (!validateTitle.pass) {
 			return {
 				status: 400,
 				body: { errors: [validateTitle.message] }
 			};
-		}
-
-		const column = await prisma.column.findUnique({ where: { id: id } });
-
-		if (!column) {
+		} else if (!json.color) {
 			return {
 				status: 400,
-				body: { errors: ['Undefined column'] }
+				body: { errors: ['Undefined color parameter'] }
+			};
+		} else if (typeof json.color !== 'string') {
+			return {
+				status: 400,
+				body: { errors: ['Invalid color type parameter'] }
 			};
 		}
 
-		const cards = await prisma.card.findMany({
-			where: { columnId: id },
-			orderBy: { xIndex: 'desc' }
-		});
-		const xIndex = (cards.length > 0) ? ++cards[0].xIndex : 0;
-		const card = await prisma.card.create({
+		const board = await prisma.board.findUnique({ where: { id: json.boardId } });
+
+		if (!board) {
+			return {
+				status: 400,
+				body: { errors: ['Undefined board'] }
+			};
+		}
+
+		const label = await prisma.label.create({
 			data: {
 				title: json.title,
-				description: json.description,
-				date: json.date,
-				xIndex: xIndex,
-				column: { connect: { id: column?.id } }
+				color: json.color,
+				board: { connect: { id: board.id } }
 			}
 		});
 
 		return {
 			status: 201,
-			body: card || {}
+			body: label || {}
 		};
 	} catch (error) {
 		return { status: 500, body: { message: 'Server error occured' } };

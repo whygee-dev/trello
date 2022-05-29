@@ -20,11 +20,14 @@ export const get: RequestHandler = async ({ request, locals, params }) => {
 		}
 
 		const id = params.id;
-		const column = await prisma.column.findUnique({ where: { id: id } });
+		const card = await prisma.card.findUnique({
+			where: { id: id },
+			include: { labels: true }
+		});
 
 		return {
 			status: 200,
-			body: column || {}
+			body: card || {}
 		};
 	} catch (error) {
 		return { status: 500, body: { message: 'Server error occured' } };

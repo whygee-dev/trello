@@ -20,22 +20,20 @@ export const get: RequestHandler = async ({ request, locals, params }) => {
 		}
 
 		const id = params.id;
-		const card = await prisma.card.findUnique({ where: { id: id } });
-
-		if (!card) {
-			return {
-				status: 400,
-				body: { errors: ['Undefined card'] }
-			};
-		}
-
-		const labels = await prisma.label.findMany({
-			where: { cards: { some: { id: id } } }
+		const column = await prisma.column.findUnique({
+			where: { id: id },
+			include: {
+				cards: {
+					include: {
+						labels: true
+					}
+				}
+			}
 		});
 
 		return {
 			status: 200,
-			body: labels || []
+			body: column || {}
 		};
 	} catch (error) {
 		return { status: 500, body: { message: 'Server error occured' } };

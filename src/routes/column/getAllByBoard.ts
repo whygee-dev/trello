@@ -1,8 +1,7 @@
 import type { RequestHandler } from '@sveltejs/kit';
-import { prisma } from '../../../../db';
-import { Validators } from '../../../../utils/validators';
+import { prisma } from '../../db';
 
-type Body = { title: string; };
+type Body = { boardId: string; };
 
 export const post: RequestHandler = async ({ request, locals, params }) => {
 	try {
@@ -22,42 +21,40 @@ export const post: RequestHandler = async ({ request, locals, params }) => {
 			};
 		}
 
-		const id = params.id;
 		const json: Body = await request.json();
-		const validateTitle = Validators.validateTitle(json.title);
-		
-		if (!validateTitle.pass) {
+
+		if (!json.boardId || typeof json.boardId !== 'string') {
 			return {
 				status: 400,
-				body: { errors: [validateTitle.message] }
+				body: { error: ['Invalid board ID'] }
 			};
 		}
 
-		const board = await prisma.board.findUnique({ where: { id: id } });
+		const board = await prisma.board.findUnique({
+			where: { id: json.boardId }
+		});
 
 		if (!board) {
 			return {
-				status: 400,
+				status: 200,
 				body: { errors: ['Undefined board'] }
 			};
 		}
-		
+
 		const columns = await prisma.column.findMany({
-			where: { boardId: id },
-			orderBy: { yIndex: 'desc' }
-		});
-		const yIndex = (columns.length > 0) ? ++columns[0].yIndex : 0;
-		const column = await prisma.column.create({
-			data: {
-				title: json.title,
-				yIndex: yIndex,
-				board: { connect: { id: board.id } }
+			where: { boardId: json.boardId },
+			include: {
+				cards: {
+					include: {
+						labels: true
+					}
+				}
 			}
 		});
-		
+
 		return {
-			status: 201,
-			body: column || {}
+			status: 200,
+			body: columns || []
 		};
 	} catch (error) {
 		return { status: 500, body: { message: 'Server error occured' } };

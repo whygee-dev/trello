@@ -1,10 +1,12 @@
 import type { RequestHandler } from '@sveltejs/kit';
-import { prisma } from '../../../../db';
-import { Validators } from '../../../../utils/validators';
+import { prisma } from '../../db';
+import { Validators } from '../../utils/validators';
 
 type Body = {
+	columnId: string;
 	title: string;
-	color: string;
+	description: string;
+	date: Date;
 };
 
 export const post: RequestHandler = async ({ request, locals, params }) => {
@@ -25,52 +27,48 @@ export const post: RequestHandler = async ({ request, locals, params }) => {
 			};
 		}
 
-		const id = params.id;
 		const json: Body = await request.json();
 		const validateTitle = Validators.validateTitle(json.title);
 
-		if (!json.title) {
+		if (!json.columnId || typeof json.columnId !== 'string') {
 			return {
 				status: 400,
-				body: { errors: ['Undefined title parameter'] }
+				body: { error: ['Invalid column ID'] }
 			};
 		} else if (!validateTitle.pass) {
 			return {
 				status: 400,
 				body: { errors: [validateTitle.message] }
 			};
-		} else if (!json.color) {
+		}
+
+		const column = await prisma.column.findUnique({ where: { id: json.columnId } });
+
+		if (!column) {
 			return {
 				status: 400,
-				body: { errors: ['Undefined color parameter'] }
-			};
-		} else if (typeof json.color !== 'string') {
-			return {
-				status: 400,
-				body: { errors: ['Invalid color type parameter'] }
+				body: { errors: ['Undefined column'] }
 			};
 		}
 
-		const board = await prisma.board.findUnique({ where: { id: id } });
-
-		if (!board) {
-			return {
-				status: 400,
-				body: { errors: ['Undefined board'] }
-			};
-		}
-
-		const label = await prisma.label.create({
+		const cards = await prisma.card.findMany({
+			where: { columnId: json.columnId },
+			orderBy: { xIndex: 'desc' }
+		});
+		const xIndex = (cards.length > 0) ? ++cards[0].xIndex : 0;
+		const card = await prisma.card.create({
 			data: {
 				title: json.title,
-				color: json.color,
-				board: { connect: { id: board.id } }
+				description: json.description,
+				date: json.date,
+				xIndex: xIndex,
+				column: { connect: { id: column?.id } }
 			}
 		});
 
 		return {
 			status: 201,
-			body: label || {}
+			body: card || {}
 		};
 	} catch (error) {
 		return { status: 500, body: { message: 'Server error occured' } };

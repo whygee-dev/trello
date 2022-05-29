@@ -1,5 +1,7 @@
 import type { RequestHandler } from '@sveltejs/kit';
-import { prisma } from '../../../../db';
+import { prisma } from '../../db';
+
+type Body = { cardId: string; };
 
 export const get: RequestHandler = async ({ request, locals, params }) => {
 	try {
@@ -19,24 +21,31 @@ export const get: RequestHandler = async ({ request, locals, params }) => {
 			};
 		}
 
-		const id = params.id;
-		const column = await prisma.column.findUnique({ where: { id: id } });
+		const json: Body = await request.json();
 
-		if (!column) {
+		if (!json.cardId || typeof json.cardId !== 'string') {
 			return {
 				status: 400,
-				body: { errors: ['Undefined column'] }
+				body: { error: ['Invalid card ID'] }
 			};
 		}
 
-		const cards = await prisma.card.findMany({
-			where: { columnId: id },
-			orderBy: { xIndex: 'asc' }
+		const card = await prisma.card.findUnique({ where: { id: json.cardId } });
+
+		if (!card) {
+			return {
+				status: 400,
+				body: { errors: ['Undefined card'] }
+			};
+		}
+
+		const labels = await prisma.label.findMany({
+			where: { cards: { some: { id: json.cardId } } }
 		});
 
 		return {
 			status: 200,
-			body: cards || []
+			body: labels || []
 		};
 	} catch (error) {
 		return { status: 500, body: { message: 'Server error occured' } };
