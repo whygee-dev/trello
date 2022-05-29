@@ -5,31 +5,37 @@ const prisma = new PrismaClient();
 
 async function main() {
 	const password = await argon2.hash('secret');
+	const usersData = [
+		{ email: 'John@doe.com', username: 'John', fullname: 'John Smith', password, id: '' },
+		{ email: 'Zack@doe.com', username: 'Zack', fullname: 'Zack reetler', password, id: '' },
+		{ email: 'Rick@doe.com', username: 'Rick', fullname: 'Rick Astley', password, id: '' }
+	];
 
-	const user = await prisma.user.create({
-		data: {
-			email: 'John@doe.com',
-			username: 'John',
-			fullname: 'John Smith',
-			password,
-			ownedWorkspaces: {
-				create: {
-					title: 'Workspace Seed title',
-					description: 'Workspace Seed description',
-					type: 'Workspace Seed type',
-					boards: {
-						create: {
-							title: 'Board Seed',
-							description: 'Board Seed description',
-							columns: {
-								create: {
-									title: 'Column Seed',
-									yIndex: 0,
-									cards: {
-										create: {
-											title: 'Card Seed',
-											description: 'Card description',
-											xIndex: 0
+	const promises = usersData.map((userData) => {
+		return prisma.user.create({
+			data: {
+				email: userData.email,
+				username: userData.username,
+				fullname: userData.fullname,
+				password,
+				ownedWorkspaces: {
+					create: {
+						title: `workspace created by ${userData.username}`,
+						description: 'Workspace Seed description',
+						boards: {
+							create: {
+								title: 'Board Seed',
+								description: 'Board Seed description',
+								columns: {
+									create: {
+										title: 'Column Seed',
+										yIndex: 0,
+										cards: {
+											create: {
+												title: 'Card Seed',
+												description: 'Card description',
+												xIndex: 0
+											}
 										}
 									}
 								}
@@ -38,16 +44,22 @@ async function main() {
 					}
 				}
 			}
-		}
+		});
 	});
+	const users = await Promise.all(promises);
 
-	const workSpaces = await prisma.workSpace.findFirst();
+	users.forEach(async (user) => {
+		prisma.user.findUnique({
+			where: { id: user.id },
+			include: { workSpaces: { include: { users: true } } }
+		});
 
-	await prisma.user.update({
-		where: { id: user.id },
-		data: {
-			workSpaces: { connect: { id: workSpaces?.id } }
-		}
+		await prisma.user.update({
+			where: { id: user.id },
+			data: {
+				workSpaces: { connect: { id: workSpaces?.id } }
+			}
+		});
 	});
 }
 

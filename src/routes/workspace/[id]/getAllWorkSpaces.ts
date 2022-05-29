@@ -1,5 +1,5 @@
 import type { RequestHandler } from '@sveltejs/kit';
-import { prisma } from '../../../db';
+import { prisma } from '../../db';
 
 export const get: RequestHandler = async ({ locals, params }) => {
 	try {
