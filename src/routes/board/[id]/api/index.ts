@@ -7,32 +7,29 @@ export const get: RequestHandler = async ({ request, locals, params }) => {
 			return { status: 401, body: { message: 'Unauthorized' } };
 		}
 
-		const workSpace = await prisma.workSpace.findFirst({
-			where: { users: { some: { id: locals.user.id } } },
-			include: { users: true }
+		const board = await prisma.board.findUnique({
+			where: { id: params.id },
+			include: {
+				columns: { include: { cards: { include: { labels: true } } } },
+				workSpace: { include: { users: true } }
+			}
 		});
 
-		if (!workSpace) {
-			return {
-				status: 401,
-				body: ['Unauthorized operation']
-			};
+		if (!board) {
+			return { status: 400, body: { message: 'Forbidden' } };
 		}
 
-		if (workSpace) {
-			const board = await prisma.board.findUnique({ where: { id: params.id } });
+		const workSpace = board.workSpace;
 
-			if (board) {
-				return {
-					status: 200,
-					body: board || []
-				};
-			}
+		const member = workSpace.users.find((u) => u.id === locals.user!.id);
+
+		if (!member) {
+			return { status: 401, body: { message: 'Unauthorized' } };
 		}
 
 		return {
-			status: 400,
-			body: ['Undefined Board']
+			status: 200,
+			body: board || []
 		};
 	} catch (error) {
 		return { status: 500, body: { message: 'Server error occured' } };
