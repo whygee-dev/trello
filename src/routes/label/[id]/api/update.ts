@@ -1,12 +1,13 @@
 import type { RequestHandler } from '@sveltejs/kit';
-import { prisma } from '../../db';
+import { prisma } from '../../../../db';
+import { Validators } from '../../../../utils/validators';
 
 type Body = {
-	labelId: string;
-	cardId: string;
+	title: string;
+	color: string;
 };
 
-export const patch: RequestHandler = async ({ request, locals }) => {
+export const patch: RequestHandler = async ({ request, locals, params }) => {
 	try {
 		if (!locals.user) {
 			return { status: 401, body: { message: 'Unauthorized' } };
@@ -24,33 +25,37 @@ export const patch: RequestHandler = async ({ request, locals }) => {
 			};
 		}
 
+		const id = params.id;
 		const json: Body = await request.json();
-
-		if (!json.labelId || typeof json.labelId !== 'string') {
+		const validateTitle = Validators.validateTitle(json.title);
+		
+		if (!validateTitle.pass) {
 			return {
 				status: 400,
-				body: { errors: ['Invalid label ID'] }
+				body: { errors: [validateTitle.message] }
 			};
-		} else if (!json.cardId || typeof json.cardId !== 'string') {
+		} else if (json.color && typeof json.color !== 'string') {
 			return {
 				status: 400,
-				body: { errors: ['Invalid card ID'] }
+				body: { errors: ['Invalid color type parameter'] }
 			};
 		}
 
-		const card = await prisma.card.findUnique({ where: { id: json.cardId } });
-		const label = await prisma.label.findUnique({ where: { id: json.labelId } });
-
-		if (!label || !card) {
+		const label = await prisma.label.findUnique({ where: { id: id } });
+		
+		if (!label) {
 			return {
 				status: 400,
-				body: { errors: ['Undefined label or card'] }
+				body: { errors: ['Undefined label'] }
 			};
 		}
 
 		const updatedLabel = await prisma.label.update({
-			where: { id: json.labelId },
-			data: { cards: { disconnect: { id: card?.id } } }
+			where: { id: id },
+			data: {
+				title: json.title,
+				color: json.color
+			}
 		});
 
 		return {

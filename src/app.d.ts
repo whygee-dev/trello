@@ -4,6 +4,7 @@
 // for information about these interfaces
 
 type User = {
+	id: string;
 	email: string;
 	fullname: string;
 } | null;

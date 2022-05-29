@@ -46,7 +46,7 @@ export const post: RequestHandler = async ({ request, locals }) => {
 
 		return {
 			status: 401,
-			body: { errors: ['Unauthorised operation'] }
+			body: { errors: ['Unauthorized operation'] }
 		};
 	} catch (error) {
 		return { status: 500, body: { message: 'Server error occured' } };

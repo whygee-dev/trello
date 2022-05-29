@@ -24,10 +24,12 @@ async function main() {
 							columns: {
 								create: {
 									title: 'Column Seed',
+									yIndex: 0,
 									cards: {
 										create: {
 											title: 'Card Seed',
-											description: 'Card description'
+											description: 'Card description',
+											xIndex: 0
 										}
 									}
 								}
