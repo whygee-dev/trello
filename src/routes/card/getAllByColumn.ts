@@ -3,7 +3,7 @@ import { prisma } from '../../db';
 
 type Body = { columnId: string; };
 
-export const get: RequestHandler = async ({ request, locals, params }) => {
+export const get: RequestHandler = async ({ request, locals }) => {
 	try {
 		if (!locals.user) {
 			return { status: 401, body: { message: 'Unauthorized' } };

@@ -7,7 +7,7 @@ type Body = {
 	title: string;
 };
 
-export const post: RequestHandler = async ({ request, locals, params }) => {
+export const post: RequestHandler = async ({ request, locals }) => {
 	try {
 		if (!locals.user) {
 			return { status: 401, body: { message: 'Unauthorized' } };
