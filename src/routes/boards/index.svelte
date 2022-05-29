@@ -9,20 +9,18 @@
 		}
 
 		try {
-			const response = await fetch('/boards/api');
+			const response = await fetch('/workspace/findAllByUser');
 
 			const json = await response.json();
-
-			console.log(json);
 
 			return {
 				status: response.status,
 				props: {
-					boards: json ?? []
+					workspaces: json ?? []
 				}
 			};
 		} catch (error) {
-			//console.error('err', error);
+			console.error('err', error);
 		}
 
 		return {};
@@ -30,177 +28,138 @@
 </script>
 
 <script lang="ts">
-	import type { Board } from '@prisma/client';
-	export let boards: Board[] = [];
+	import type { Board, WorkSpace } from '@prisma/client';
+	import Avatar from '../../components/Avatar.svelte';
+	export let workspaces: (WorkSpace & {
+		users: User[];
+		boards: Board[];
+	})[] = [];
+
+	console.log(workspaces);
 </script>
 
 <svelte:head>
-	<title>Tableaux | Trullo</title>
+	<title>Boards | Trullo</title>
 </svelte:head>
-<section>
-	<div class="container">
-		<div class="nav-container">
-			<nav class="nav">
-				<div class="nav-board-content">
-					<ul class="nav-board">
-						<li>
-							<a href="#" class="nav-header nav-header-color">
-								<div>
-									<img class="icon-nav-left" src="/icon-board.svg" alt="Tableaux" />
-								</div>
-								Tableaux
-							</a>
-						</li>
-						<li class="nav-board-item">
-							<a href="#" class="nav-header-content">
-								<img class="icon-nav-left" src="/icon-modele.svg" alt="Modèles" />
-								Modèles
-							</a>
-						</li>
-						<li class="nav-board-item">
-							<a href="#" class="nav-header-content">
-								<img class="icon-nav-left" src="/icon-activity.svg" alt="Acceuil" />
-								Accueil
-							</a>
-						</li>
-					</ul>
-				</div>
-			</nav>
-			<div class="nav-container">
-				<ul class="nav-work">
-					<div class="nav-work-content">
-						<div class="nav-work-header">
-							Espace de travail <img class="icon-nav-right" src="/icon-plus.svg" alt="Plus" />
-						</div>
+<section class="container container-blue">
+	<section class="control">
+		<h3>All boards</h3>
+		<button>+ Add</button>
+	</section>
+
+	<section class="workspaces">
+		{#each workspaces as workspace}
+			<div class="workspace">
+				<div class="header">
+					<h4>
+						{workspace.title}
+					</h4>
+
+					<div class="members">
+						{#each workspace.users as user}
+							<div class="member">
+								<Avatar width={28} userFullName={user?.fullname ?? ''} />
+							</div>
+						{/each}
 					</div>
-				</ul>
-			</div>
-		</div>
-		<div class="all-boards">
-			<div style="font-weight:bold;">
-				<img src="/icon-clock.svg" class="icon-clock" alt="Horloge" />
-				Récemment consultés
-			</div>
-			<div>Vos espace de travail</div>
-			{#each boards as board}
-				<div style="width:250px;height:250px;margin:20px">
-					{board.title}
 				</div>
-			{/each}
-		</div>
-	</div>
+
+				<div class="boards">
+					{#each workspace.boards as board}
+						<a class="board" href={'/board/' + board.id}>
+							<img src={board.image ?? '/default-board.jpg'} alt="Board" />
+							<h5>{board.title}</h5>
+						</a>
+					{/each}
+				</div>
+			</div>
+		{/each}
+	</section>
 </section>
 
 <style lang="scss">
-	section {
-		height: 100%;
-	}
 	.container {
-		align-items: flex-start;
-		display: flex;
-		flex-direction: row;
-		justify-content: center;
-		align-content: space-around;
-	}
-	.nav-container {
-		position: sticky;
-		top: 0;
-		color: #172b4d;
-		font-size: 14px;
-		font-weight: 400;
-		line-height: 20px;
-	}
-	.nav-work {
-		display: flex;
-		margin-left: 15px;
-	}
-	.nav {
-		margin: 40px 0 0;
-		padding: 0 16px;
-		width: 240px;
-	}
-	.all-boards {
-		margin: 40px 16px 0;
-		max-width: 825px;
-		min-width: 288px;
 		width: 100%;
-	}
-	.icon-clock {
-		margin-left: 2px;
-		float: bottom;
-		margin-top: 4px;
-		width: 25px;
-		height: 25px;
-	}
-	.icon-nav-left {
-		float: left;
-		width: 25px;
-	}
-	.icon-nav-right {
-		float: right;
-		width: 25px;
-	}
-	.icon-nav-right:hover {
-		background-color: #e7e9ed;
-		border-radius: 4px;
-	}
+		max-width: 950px;
+		margin: auto;
+		padding: 0 20px;
 
-	ul {
-		list-style: none;
-		margin: 0;
-		padding: 0;
-	}
-	li {
-		display: list-item;
-		padding: 6px 8px 6px 0;
-		font-weight: bold;
-		background-color: #f9fafc;
-	}
-	li:last-child {
-		margin-bottom: 12px;
-	}
+		.control {
+			display: flex;
+			justify-content: space-between;
+			align-items: center;
+			padding-top: 50px;
 
-	.nav-header {
-		border-radius: 4px;
-		font-weight: bold;
-		color: #172b4d;
-		margin: 0;
-		min-height: 20px;
-		padding: 6px 8px 6px 0;
-		text-decoration: none;
-		width: 207px;
-	}
-	.nav-header-content {
-		border-radius: 4px;
-		font-weight: bold;
-		color: #172b4d;
-		margin: 0;
-		min-height: 20px;
-		padding: 0px 8px 6px 0;
-		text-decoration: none;
-		width: 207px;
-		height: 20px;
-	}
-	.nav-header-color {
-		background-color: #e4f0f6;
-		color: #0079bf;
-	}
-	.nav-board-item:hover {
-		background-color: #e7e9ed;
-		min-height: 20px;
-		padding: 6px 8px 6px 0;
-		border-radius: 4px;
-	}
-	.nav-work-header {
-		font-size: 12px;
-		font-weight: bold;
-		line-height: 20px;
-		margin: 0;
-		min-height: 20px;
-		overflow: hidden;
-		padding: 6px 8px 6px 0;
-		text-decoration: none;
-		color: #5e6c84;
-		width: 207px;
+			h3 {
+				margin: 0;
+			}
+
+			button {
+				margin: 0;
+				background-color: #2f80ed;
+				color: white;
+				border-radius: 8px;
+				padding: 8px 15px;
+				transition: all 0.3s;
+
+				&:hover {
+					background-color: darken(#2f80ed, 10%);
+				}
+			}
+		}
+
+		.workspaces {
+			display: flex;
+			flex-direction: column;
+
+			.header {
+				display: flex;
+				justify-content: space-between;
+				align-items: center;
+
+				.members {
+					display: flex;
+					.member {
+						margin-left: 5px;
+					}
+				}
+
+				:global(img) {
+					border-radius: 8px;
+				}
+			}
+			h4 {
+				margin: 50px 0;
+			}
+
+			.members {
+				position: 'relative';
+			}
+			.boards {
+				display: flex;
+				justify-content: space-between;
+				flex-wrap: wrap;
+
+				@media (max-width: 600px) {
+					justify-content: space-around;
+				}
+
+				.board {
+					text-decoration: none;
+					color: black;
+					background-color: white;
+					border-radius: 12px;
+					box-shadow: 0px 4px 12px 0px #0000000d;
+					width: 250px;
+					padding: 10px;
+					margin: 10px;
+
+					img {
+						width: 100%;
+						border-radius: 12px;
+					}
+				}
+			}
+		}
 	}
 </style>

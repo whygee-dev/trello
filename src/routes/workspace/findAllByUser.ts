@@ -1,7 +1,7 @@
 import type { RequestHandler } from '@sveltejs/kit';
 import { prisma } from '../../db';
 
-export const post: RequestHandler = async ({ locals }) => {
+export const get: RequestHandler = async ({ locals }) => {
 	try {
 		if (!locals.user) {
 			return { status: 401, body: { message: 'Unauthorized' } };
@@ -9,7 +9,7 @@ export const post: RequestHandler = async ({ locals }) => {
 
 		const user = await prisma.user.findUnique({
 			where: { email: locals.user.email },
-			include: { workSpaces: true }
+			include: { workSpaces: { include: { boards: true, users: true } } }
 		});
 
 		if (user) {

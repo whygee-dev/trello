@@ -9,14 +9,13 @@ export const get: RequestHandler = async ({ request, locals, params }) => {
 
 		const id = params.id;
 
-		if (!id || typeof id !== 'number') {
-			return {
-				status: 400,
-				body: { errors: ['Invalid board ID'] }
-			};
-		}
-
-		const board = await prisma.board.findUnique({ where: { id } });
+		const board = await prisma.board.findUnique({
+			where: { id },
+			include: {
+				columns: { include: { cards: { include: { labels: true } } } },
+				workSpace: { include: { users: true } }
+			}
+		});
 
 		if (board) {
 			return {
