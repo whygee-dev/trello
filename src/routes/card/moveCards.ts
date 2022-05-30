@@ -12,18 +12,6 @@ export const patch: RequestHandler = async ({ request, locals }) => {
 			return { status: 401, body: { message: 'Unauthorized' } };
 		}
 
-		const workSpace = await prisma.workSpace.findFirst({
-			where: { users: { some: { id: locals.user.id } } },
-			include: { users: true }
-		});
-
-		if (!workSpace?.users[0]) {
-			return {
-				status: 403,
-				body: { errors: ['Unauthorized operation'] }
-			};
-		}
-
 		const json: Body = await request.json();
 
 		if (!json.draggedCardId
@@ -36,14 +24,41 @@ export const patch: RequestHandler = async ({ request, locals }) => {
 			};
 		}
 
-		const draggedCard = await prisma.card.findUnique({ where: { id: json.draggedCardId } });
-        const switchedCard = await prisma.card.findUnique({ where: { id: json.switchedCardId } });
+		const draggedCard = await prisma.card.findFirst({
+			where: {
+				id: json.draggedCardId,
+				column: {
+					board: {
+						workSpace: {
+							users: {
+								some: { id: locals.user.id }
+							}
+						}
+					}
+				}
+			}
+		});
+
+		const switchedCard = await prisma.card.findFirst({
+			where: {
+				id: json.switchedCardId,
+				column: {
+					board: {
+						workSpace: {
+							users: {
+								some: { id: locals.user.id }
+							}
+						}
+					}
+				}
+			}
+		});
 
 		if (!draggedCard || !switchedCard) {
 			return {
-				status: 400,
-				body: { errors: ['One or Both cards are undefined'] }
-			}
+				status: 403,
+				body: { errors: ['Unauthorized operation'] }
+			};
 		}
 
 		const updatedCurrentCard = await prisma.card.update({

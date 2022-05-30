@@ -9,18 +9,6 @@ export const post: RequestHandler = async ({ request, locals }) => {
 			return { status: 401, body: { message: 'Unauthorized' } };
 		}
 
-		const workSpace = await prisma.workSpace.findFirst({
-			where: { users: { some: { id: locals.user.id } } },
-			include: { users: true }
-		});
-
-		if (!workSpace?.users[0]) {
-			return {
-				status: 403,
-				body: { errors: ['Unauthorized operation'] }
-			};
-		}
-
 		const json: Body = await request.json();
 
 		if (!json.boardId || typeof json.boardId !== 'string') {
@@ -30,14 +18,21 @@ export const post: RequestHandler = async ({ request, locals }) => {
 			};
 		}
 
-		const board = await prisma.board.findUnique({
-			where: { id: json.boardId }
+		const board =  await prisma.board.findFirst({
+			where: {
+				id: json.boardId,
+				workSpace: {
+					users: {
+						some: { id: locals.user.id }
+					}
+				}
+			},
 		});
 
 		if (!board) {
 			return {
-				status: 200,
-				body: { errors: ['Undefined board'] }
+				status: 403,
+				body: { errors: ['Unauthorized operation'] }
 			};
 		}
 

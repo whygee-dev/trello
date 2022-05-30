@@ -12,18 +12,6 @@ export const patch: RequestHandler = async ({ request, locals }) => {
 			return { status: 401, body: { message: 'Unauthorized' } };
 		}
 
-		const workSpace = await prisma.workSpace.findFirst({
-			where: { users: { some: { id: locals.user.id } } },
-			include: { users: true }
-		});
-
-		if (!workSpace?.users[0]) {
-			return {
-				status: 403,
-				body: { errors: ['Unauthorized operation'] }
-			};
-		}
-
 		const json: Body = await request.json();
 
 		if (!json.draggedColumnId
@@ -36,13 +24,36 @@ export const patch: RequestHandler = async ({ request, locals }) => {
 			};
 		}
 
-		const draggedColumn = await prisma.column.findUnique({ where: { id: json.draggedColumnId } });
-        const switchedColumn = await prisma.column.findUnique({ where: { id: json.switchedColumnId } });
+		const draggedColumn =  await prisma.column.findFirst({
+			where: {
+				id: json.draggedColumnId,
+				board: {
+					workSpace: {
+						users: {
+							some: { id: locals.user.id }
+						}
+					}
+				}
+			}
+		});
+
+		const switchedColumn =  await prisma.column.findFirst({
+			where: {
+				id: json.switchedColumnId,
+				board: {
+					workSpace: {
+						users: {
+							some: { id: locals.user.id }
+						}
+					}
+				}
+			}
+		});
 
 		if (!draggedColumn || !switchedColumn) {
 			return {
-				status: 400,
-				body: { errors: ['One or Both columns are undefined'] }
+				status: 403,
+				body: { errors: ['Unauthorized operation'] }
 			};
 		}
 

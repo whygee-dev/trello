@@ -12,18 +12,6 @@ export const patch: RequestHandler = async ({ request, locals }) => {
 			return { status: 401, body: { message: 'Unauthorized' } };
 		}
 
-		const workSpace = await prisma.workSpace.findFirst({
-			where: { users: { some: { id: locals.user.id } } },
-			include: { users: true }
-		});
-
-		if (!workSpace?.users[0]) {
-			return {
-				status: 403,
-				body: { errors: ['Unauthorized operation'] }
-			};
-		}
-
 		const json: Body = await request.json();
 
 		if (!json.labelId || typeof json.labelId !== 'string') {
@@ -38,13 +26,38 @@ export const patch: RequestHandler = async ({ request, locals }) => {
 			};
 		}
 
-		const card = await prisma.card.findUnique({ where: { id: json.cardId } });
-		const label = await prisma.label.findUnique({ where: { id: json.labelId } });
+		const card = await prisma.card.findFirst({
+			where: {
+				id: json.cardId,
+				column: {
+					board: {
+						workSpace: {
+							users: {
+								some: { id: locals.user.id }
+							}
+						}
+					}
+				}
+			}
+		});
+
+		const label = await prisma.label.findFirst({
+			where: {
+				id: json.labelId,
+				board: {
+					workSpace: {
+						users: {
+							some: { id: locals.user.id }
+						}
+					}
+				}
+			}
+		});
 
 		if (!label || !card) {
 			return {
-				status: 400,
-				body: { errors: ['Undefined label or card'] }
+				status: 403,
+				body: { errors: ['Unauthorized operation'] }
 			};
 		}
 
