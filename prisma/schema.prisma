@@ -25,7 +25,6 @@ model User {
 model WorkSpace {
   id          String    @id @default(cuid())
   title       String
-  type        String
   description String?
   users       User[]
   owner       User      @relation("owner", fields: [ownerId], references: [id])
