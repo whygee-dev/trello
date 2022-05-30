@@ -6,9 +6,9 @@ const prisma = new PrismaClient();
 async function main() {
 	const password = await argon2.hash('secret');
 	const usersData = [
-		{ email: 'John@doe.com', username: 'John', fullname: 'John Smith', password, id: '' },
-		{ email: 'Zack@doe.com', username: 'Zack', fullname: 'Zack reetler', password, id: '' },
-		{ email: 'Rick@doe.com', username: 'Rick', fullname: 'Rick Astley', password, id: '' }
+		{ email: 'John@doe.com', username: 'John', fullname: 'John Smith', password },
+		{ email: 'Zack@doe.com', username: 'Zack', fullname: 'Zack reetler', password },
+		{ email: 'Rick@doe.com', username: 'Rick', fullname: 'Rick Astley', password }
 	];
 
 	const promises = usersData.map((userData) => {
@@ -48,19 +48,19 @@ async function main() {
 	});
 	const users = await Promise.all(promises);
 
-	users.forEach(async (user) => {
+	const workSpaces = users.forEach(async (user) => {
 		prisma.user.findUnique({
 			where: { id: user.id },
 			include: { workSpaces: { include: { users: true } } }
 		});
-
-	/*	await prisma.user.update({
-			where: { id: user.id },
-			data: {
-				workSpaces: { connect: { id: workSpaces?.id } }
-			}
-		});*/
 	});
+
+	/*await prisma.user.update({
+		where: { id: user.id },
+		data: {
+			workSpaces: { connect: { id: workSpaces?.id } }
+		}
+	})*/
 }
 
 main()
