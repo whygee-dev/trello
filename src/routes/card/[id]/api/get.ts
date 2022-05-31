@@ -7,24 +7,32 @@ export const get: RequestHandler = async ({ request, locals, params }) => {
 			return { status: 401, body: { message: 'Unauthorized' } };
 		}
 
-		const workSpace = await prisma.workSpace.findFirst({
-			where: { users: { some: { id: locals.user.id } } },
-			include: { users: true }
+		const id = params.id;
+		const card =  await prisma.card.findFirst({
+			where: {
+				id: id,
+				column: {
+					board: {
+						workSpace: {
+							users: {
+								some: { id: locals.user.id }
+							}
+						}
+					}
+				}
+			},
 		});
 
-		if (!workSpace?.users[0]) {
+		if (!card) {
 			return {
 				status: 403,
 				body: { errors: ['Unauthorized operation'] }
 			};
 		}
 
-		const id = params.id;
-		const column = await prisma.column.findUnique({ where: { id: id } });
-
 		return {
 			status: 200,
-			body: column || {}
+			body: card || {}
 		};
 	} catch (error) {
 		return { status: 500, body: { message: 'Server error occured' } };

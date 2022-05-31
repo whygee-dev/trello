@@ -7,25 +7,24 @@ export const del: RequestHandler = async ({ request, locals, params }) => {
 			return { status: 401, body: { message: 'Unauthorized' } };
 		}
 
-		const workSpace = await prisma.workSpace.findFirst({
-			where: { users: { some: { id: locals.user.id } } },
-			include: { users: true }
-		});
-
-		if (!workSpace?.users[0]) {
-			return {
-				status: 403,
-				body: { errors: ['Unauthorized operation'] }
-			};
-		}
-
 		const id = params.id;
-		const label = await prisma.label.findUnique({ where: { id: id } });
+		const label =  await prisma.label.findFirst({
+			where: {
+				id: id,
+				board: {
+					workSpace: {
+						users: {
+							some: { id: locals.user.id }
+						}
+					}
+				}
+			},
+		});
 
 		if (!label) {
 			return {
-				status: 400,
-				body: { errors: ['Undefined label'] }
+				status: 403,
+				body: { errors: ['Unauthorized operation'] }
 			};
 		}
 

@@ -1,35 +1,28 @@
 import type { RequestHandler } from '@sveltejs/kit';
-import { prisma } from '../../../../db';
-import { Validators } from '../../../../utils/validators';
+import { prisma } from '../../db';
+import { Validators } from '../../utils/validators';
 
 type Body = {
+	boardId: string;
 	title: string;
 	color: string;
 };
 
-export const post: RequestHandler = async ({ request, locals, params }) => {
+export const post: RequestHandler = async ({ request, locals }) => {
 	try {
 		if (!locals.user) {
 			return { status: 401, body: { message: 'Unauthorized' } };
 		}
 
-		const workSpace = await prisma.workSpace.findFirst({
-			where: { users: { some: { id: locals.user.id } } },
-			include: { users: true }
-		});
-
-		if (!workSpace?.users[0]) {
-			return {
-				status: 403,
-				body: { errors: ['Unauthorized operation'] }
-			};
-		}
-
-		const id = params.id;
 		const json: Body = await request.json();
 		const validateTitle = Validators.validateTitle(json.title);
 
-		if (!json.title) {
+		if (!json.boardId || typeof json.boardId !== 'string') {
+			return {
+				status: 400,
+				body: { error: ['Invalid board ID'] }
+			};
+		} else if (!json.title) {
 			return {
 				status: 400,
 				body: { errors: ['Undefined title parameter'] }
@@ -51,12 +44,21 @@ export const post: RequestHandler = async ({ request, locals, params }) => {
 			};
 		}
 
-		const board = await prisma.board.findUnique({ where: { id: id } });
+		const board = await prisma.board.findFirst({
+			where: {
+				id: json.boardId,
+				workSpace: {
+					users: {
+						some: { id: locals.user.id }
+					}
+				}
+			}
+		});
 
 		if (!board) {
 			return {
-				status: 400,
-				body: { errors: ['Undefined board'] }
+				status: 403,
+				body: { errors: ['Unauthorized operation'] }
 			};
 		}
 

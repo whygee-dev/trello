@@ -1,16 +1,26 @@
 import type { RequestHandler } from '@sveltejs/kit';
-import { prisma } from '../../../../db';
+import { prisma } from '../../db';
 
-export const del: RequestHandler = async ({ request, locals, params }) => {
+type Body = { columnId: string; };
+
+export const get: RequestHandler = async ({ request, locals }) => {
 	try {
 		if (!locals.user) {
 			return { status: 401, body: { message: 'Unauthorized' } };
 		}
 
-		const id = params.id;
+		const json: Body = await request.json();
+
+		if (!json.columnId || typeof json.columnId !== 'string') {
+			return {
+				status: 400,
+				body: { error: ['Invalid column ID'] }
+			};
+		}
+
 		const column =  await prisma.column.findFirst({
 			where: {
-				id: id,
+				id: json.columnId,
 				board: {
 					workSpace: {
 						users: {
@@ -28,11 +38,14 @@ export const del: RequestHandler = async ({ request, locals, params }) => {
 			};
 		}
 
-		const deletedColumn = await prisma.column.delete({ where: { id: id } });
+		const cards = await prisma.card.findMany({
+			where: { columnId: json.columnId },
+			orderBy: { xIndex: 'asc' }
+		});
 
 		return {
 			status: 200,
-			body: deletedColumn || {}
+			body: cards || []
 		};
 	} catch (error) {
 		return { status: 500, body: { message: 'Server error occured' } };

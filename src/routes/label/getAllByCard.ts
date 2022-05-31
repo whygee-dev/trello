@@ -1,16 +1,26 @@
 import type { RequestHandler } from '@sveltejs/kit';
-import { prisma } from '../../../../db';
+import { prisma } from '../../db';
 
-export const del: RequestHandler = async ({ request, locals, params }) => {
+type Body = { cardId: string; };
+
+export const get: RequestHandler = async ({ request, locals }) => {
 	try {
 		if (!locals.user) {
 			return { status: 401, body: { message: 'Unauthorized' } };
 		}
 
-		const id = params.id;
-		const card =  await prisma.card.findFirst({
+		const json: Body = await request.json();
+
+		if (!json.cardId || typeof json.cardId !== 'string') {
+			return {
+				status: 400,
+				body: { error: ['Invalid card ID'] }
+			};
+		}
+
+		const card = await prisma.card.findFirst({
 			where: {
-				id: id,
+				id: json.cardId,
 				column: {
 					board: {
 						workSpace: {
@@ -20,7 +30,7 @@ export const del: RequestHandler = async ({ request, locals, params }) => {
 						}
 					}
 				}
-			},
+			}
 		});
 
 		if (!card) {
@@ -30,11 +40,13 @@ export const del: RequestHandler = async ({ request, locals, params }) => {
 			};
 		}
 
-		const deletedCard = await prisma.card.delete({ where: { id: id } });
+		const labels = await prisma.label.findMany({
+			where: { cards: { some: { id: json.cardId } } }
+		});
 
 		return {
 			status: 200,
-			body: deletedCard || {}
+			body: labels || []
 		};
 	} catch (error) {
 		return { status: 500, body: { message: 'Server error occured' } };

@@ -10,18 +10,6 @@ export const patch: RequestHandler = async ({ request, locals, params }) => {
 			return { status: 401, body: { message: 'Unauthorized' } };
 		}
 
-		const workSpace = await prisma.workSpace.findFirst({
-			where: { users: { some: { id: locals.user.id } } },
-			include: { users: true }
-		});
-
-		if (!workSpace?.users[0]) {
-			return {
-				status: 403,
-				body: { errors: ['Unauthorized operation'] }
-			};
-		}
-
 		const id = params.id
 		const json: Body = await request.json();
 		const validateTitle = Validators.validateTitle(json.title);
@@ -33,12 +21,23 @@ export const patch: RequestHandler = async ({ request, locals, params }) => {
 			};
 		}
 
-		const column = await prisma.column.findUnique({ where: { id: id } });
+		const column =  await prisma.column.findFirst({
+			where: {
+				id: id,
+				board: {
+					workSpace: {
+						users: {
+							some: { id: locals.user.id }
+						}
+					}
+				}
+			},
+		});
 
 		if (!column) {
 			return {
-				status: 400,
-				body: { errors: ['Undefined column'] }
+				status: 403,
+				body: { errors: ['Unauthorized operation'] }
 			};
 		}
 

@@ -18,6 +18,8 @@ model User {
   fullname        String
   workSpaces      WorkSpace[]
   ownedWorkspaces WorkSpace[] @relation("owner")
+  Card            Card?       @relation(fields: [cardId], references: [id])
+  cardId          String?
 }
 
 model WorkSpace {
@@ -56,6 +58,7 @@ model Card {
   description String?
   date        DateTime? @default(now())
   xIndex      Int
+  users       User[]
   labels      Label[]
   column      Column    @relation(fields: [columnId], references: [id], onDelete: Cascade)
   columnId    String
