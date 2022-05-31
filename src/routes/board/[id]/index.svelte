@@ -43,9 +43,14 @@
 				status: res.status,
 				props: { board: board ?? null }
 			};
-		} catch (error) {}
+		} catch (error) {
+			console.log(error);
+		}
 
-		return {};
+		return {
+			status: 401,
+			props: { board: [] }
+		};
 	};
 </script>
 

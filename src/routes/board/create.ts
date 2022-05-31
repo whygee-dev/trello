@@ -1,62 +1,96 @@
 import type { RequestHandler } from '@sveltejs/kit';
+import { writeFileSync } from 'fs';
 import { prisma } from '../../db';
 import { Validators } from '../../utils/validators';
 
 type Body = {
+	workspaceId: string;
 	title: string;
-	description: string;
 	image: string;
+	description: string;
 };
 
-export const post: RequestHandler = async ({ request, locals, params }) => {
+export const post: RequestHandler = async ({ request, locals }) => {
 	try {
 		if (!locals.user) {
 			return { status: 401, body: { message: 'Unauthorized' } };
 		}
 
+		if (!request.body) return { status: 403, body: { message: 'Forbidden' } };
+
 		const json: Body = await request.json();
 		const validateTitle = Validators.validateTitle(json.title);
+		const validateDescription = Validators.validateTitle(json.description);
+		const validateImage = Validators.validateImage(json.image);
 
-		if (!validateTitle.pass) {
+		if (!validateTitle.pass || !validateDescription.pass || !validateImage.pass) {
 			return {
 				status: 400,
-				body: { errors: [validateTitle.message] }
+				body: {
+					errors: [validateTitle.message, validateDescription.message, validateImage.message]
+				}
 			};
 		}
 
-		const workSpace = await prisma.workSpace.findFirst({
-			where: { users: { some: { id: locals.user.id } } },
+		if (!json.workspaceId) {
+			return {
+				status: 400,
+				body: { errors: ['Workspace required'] }
+			};
+		}
+
+		const workSpace = await prisma.workSpace.findUnique({
+			where: { id: json.workspaceId },
 			include: { users: true }
 		});
 
-		if (!workSpace) {
+		if (!workSpace || workSpace.ownerId !== locals.user.id) {
 			return {
 				status: 400,
 				body: ['Unauthorized operation']
 			};
 		}
 
-		if (workSpace) {
-			const board = await prisma.board.create({
-				data: {
-					title: json.title,
-					image: json.image,
-					description: json.description,
-					workSpace: { connect: { id: workSpace.id } }
+		const board = await prisma.board.create({
+			data: {
+				title: json.title,
+				image: null,
+				description: json.description,
+				workSpaceId: workSpace.id,
+				columns: {
+					create: {
+						title: 'To Do',
+						yIndex: 0,
+						cards: {
+							create: {
+								title: 'Hello World!',
+								description: 'Hello World!',
+								xIndex: 0
+							}
+						}
+					}
 				}
-			});
+			}
+		});
 
-			return {
-				status: 201,
-				body: board || {}
-			};
+		if (json.image) {
+			console.log('yh');
+
+			writeFileSync(`static/board-${board.id}.png`, json.image, 'base64');
+
+			await prisma.board.update({
+				where: { id: board.id },
+				data: { image: `board-${board.id}.png` }
+			});
 		}
 
 		return {
-			status: 401,
-			body: ['Undefined workspace']
+			status: 201,
+			body: board || {}
 		};
 	} catch (error) {
+		console.log(error);
+
 		return { status: 500, body: { message: 'Server error occured' } };
 	}
 };

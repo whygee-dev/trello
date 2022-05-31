@@ -18,7 +18,6 @@
 	};
 
 	const onLogout = async () => {
-		console.log('login out');
 		try {
 			const res = await axios.post('/auth/logout');
 

@@ -78,20 +78,51 @@ export class Validators {
 	}
 
 	static validateTitle(u: string) {
-		const pass = // eslint-disable-next-line no-control-regex
-			/^[A-Za-z][A-Za-z0-9_]/.test(u);
+		const pass = u && u.length <= 50 && u.length >= 5;
 
 		return {
 			pass,
-			message: !pass
-				? 'The title must start and end with an alphanumeric characters, it can only contain alphanumeric characters, spaces, numbers and special characters'
-				: undefined
+			message: !pass ? 'Title length must be between 5 and 50 ' : undefined
 		};
 	}
 
 	static titleValidator() {
 		return (v: string) => {
 			const b = Validators.validateTitle(v);
+
+			return b.pass || b.message;
+		};
+	}
+
+	static validateDescription(u: string) {
+		const pass = u && u.length <= 200 && u.length >= 20;
+
+		return {
+			pass,
+			message: !pass ? 'Description length must be between 20 and 200 ' : undefined
+		};
+	}
+
+	static descriptionValidator() {
+		return (v: string) => {
+			const b = Validators.validateDescription(v);
+
+			return b.pass || b.message;
+		};
+	}
+
+	static validateImage(u?: string) {
+		const pass = !u || /^([0-9a-zA-Z+/]{4})*(([0-9a-zA-Z+/]{2}==)|([0-9a-zA-Z+/]{3}=))?$/.test(u);
+
+		return {
+			pass,
+			message: !pass ? 'Invalide image encoding. Must be in base64 ' : undefined
+		};
+	}
+
+	static imageValidator() {
+		return (v: string) => {
+			const b = Validators.validateImage(v);
 
 			return b.pass || b.message;
 		};
