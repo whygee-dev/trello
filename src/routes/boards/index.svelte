@@ -40,10 +40,10 @@
 	import { toast } from '@zerodevx/svelte-toast';
 	import { handleError } from '../../utils/errorHandler';
 	import { invalidate } from '$app/navigation';
-	import Fa from 'svelte-fa/src/fa.svelte';
-	import { faTrash, faClose } from '@fortawesome/free-solid-svg-icons';
+	import trashO from 'svelte-awesome/icons/trashO';
+	import edit from 'svelte-awesome/icons/edit';
 	import { session } from '$app/stores';
-	import { now } from 'svelte/internal';
+	import Icon from 'svelte-awesome';
 
 	export let workspaces: (WorkSpace & {
 		users: User[];
@@ -222,13 +222,20 @@
 				<div class="header">
 					<h4>
 						{workspace.title}
-						<span on:click={() => deleteWorkspace(workspace.id)}><Fa icon={faTrash} /></span>
+
+						{#if workspace.owner?.email === $session.user?.email}
+							<span on:click={() => deleteWorkspace(workspace.id)}><Icon data={trashO} /></span>
+						{/if}
 					</h4>
 
 					<div class="members">
 						{#each workspace.users as user}
 							<div class="member">
-								<Avatar width={28} userFullName={user?.fullname ?? ''} />
+								<Avatar
+									starred={user?.id === workspace.ownerId}
+									width={28}
+									userFullName={user?.fullname ?? ''}
+								/>
 							</div>
 						{/each}
 					</div>
@@ -247,7 +254,7 @@
 							</a>
 
 							{#if workspace.owner && workspace.owner.email === $session.user?.email}
-								<div>
+								<div class="buttons">
 									<button
 										class="edit blue-btn"
 										on:click={() => {
@@ -256,10 +263,10 @@
 											boardDescription = board.description;
 											image = board.image;
 											boardModalOpen = true;
-										}}><Fa icon={faTrash} /> Edit</button
+										}}><Icon data={edit} /> Edit</button
 									>
 									<button class="delete blue-btn" on:click={() => deleteBoard(board.id)}>
-										<Fa icon={faTrash} />Delete</button
+										<Icon data={trashO} />Delete</button
 									>
 								</div>
 							{/if}
@@ -350,6 +357,13 @@
 			}
 		}
 
+		:global(svg) {
+			width: 24px;
+			height: 24px;
+			cursor: pointer;
+			margin-left: 5px;
+		}
+
 		.workspaces {
 			display: flex;
 			flex-direction: column;
@@ -375,13 +389,14 @@
 				}
 			}
 			h4 {
-				margin: 0;
-				margin-bottom: 20px;
-
 				:global(svg) {
 					color: red;
-					cursor: pointer;
 				}
+
+				display: flex;
+				align-items: center;
+				margin: 0;
+				margin-bottom: 20px;
 			}
 
 			.members {
@@ -404,6 +419,13 @@
 					border-radius: 12px;
 					box-shadow: 0px 4px 12px 0px #0000000d;
 
+					.buttons,
+					button {
+						display: flex;
+						align-items: center;
+						justify-content: space-between;
+					}
+
 					.delete {
 						background-color: red;
 
@@ -414,6 +436,8 @@
 
 					:global(svg) {
 						margin-right: 5px;
+						width: 20px;
+						height: 20px;
 					}
 				}
 

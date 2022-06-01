@@ -40,8 +40,8 @@
 	},
 	"type": "module",
 	"dependencies": {
+		"@faker-js/faker": "^7.1.0",
 		"@fontsource/fira-mono": "^4.5.0",
-		"@fortawesome/free-solid-svg-icons": "^6.1.1",
 		"@lukeed/uuid": "^2.0.0",
 		"@prisma/client": "^3.14.0",
 		"@zerodevx/svelte-toast": "^0.7.1",
@@ -52,7 +52,7 @@
 		"node-sass": "^7.0.1",
 		"prisma": "^3.14.0",
 		"remove": "^0.1.5",
-		"svelte-fa": "^2.4.0",
+		"svelte-awesome": "^3.0.0",
 		"svelte-inview": "^3.0.0"
 	}
 }

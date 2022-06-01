@@ -21,7 +21,7 @@ export const get: RequestHandler = async ({ request, locals, params }) => {
 
 		const workSpace = board.workSpace;
 
-		const member = workSpace.users.find((u) => u.id === locals.user!.id);
+		const member = workSpace.users.find((u) => u.id === locals.user?.id);
 
 		if (!member) {
 			return { status: 401, body: { message: 'Unauthorized' } };

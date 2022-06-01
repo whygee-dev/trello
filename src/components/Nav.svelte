@@ -45,7 +45,7 @@
 		{$layout.boardName}
 	</span>
 
-	{#if $layout.boardName}
+	{#if $layout.searchBarVisible}
 		<div>
 			<input type="text" />
 		</div>
