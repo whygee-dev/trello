@@ -18,7 +18,7 @@ export const patch: RequestHandler = async ({ request, locals, params }) => {
 		const json: Body = await request.json();
 		const validateTitle = Validators.validateTitle(json.title);
 		const validateDescription = Validators.validateTitle(json.description);
-		const validateImage = Validators.validateImage(json.image);
+		const validateImage = Validators.validateImage(json.image?.split(',')[1]);
 
 		if (!validateTitle.pass || !validateDescription.pass || !validateImage.pass) {
 			return {
@@ -52,13 +52,9 @@ export const patch: RequestHandler = async ({ request, locals, params }) => {
 			data: {
 				title: json.title,
 				description: json.description,
-				image: json.image ? `board-${board.id}.png` : board.image
+				image: json.image ?? board.image
 			}
 		});
-
-		if (json.image) {
-			writeFileSync(`static/board-${board.id}.png`, json.image, 'base64');
-		}
 
 		return {
 			status: 200,

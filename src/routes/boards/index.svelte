@@ -78,12 +78,12 @@
 		if (!workspace) return;
 
 		try {
-			const imgData = image?.toString().split(',');
+			const imgData = image;
 
 			const res = await axios.post('/board/create', {
 				title: boardTitle,
 				description: boardDescription,
-				image: imgData ? imgData[1] : null,
+				image: image,
 				workspaceId: workspace
 			});
 
@@ -147,7 +147,7 @@
 			const res = await axios.patch(`/board/${id}/api/update`, {
 				title: boardTitle,
 				description: boardDescription,
-				image: imgData ? imgData[1] : null
+				image: image
 			});
 
 			toast.push('Board updated successfully');
@@ -180,7 +180,7 @@
 			class="hidden"
 			id="file-upload"
 			type="file"
-			accept=".png,.jpg"
+			accept=".png,.jpg,.jpeg"
 			bind:files
 			bind:this={imageInput}
 			on:change={() => getBase64(files[0])}
@@ -193,7 +193,7 @@
 					? image + '?' + Date.now()
 					: image.toString()
 				: '/default-board.jpg'}
-			alt="avatar"
+			alt="Uploaded"
 		/>
 	</div>
 </Modal>
@@ -245,10 +245,7 @@
 					{#each workspace.boards as board}
 						<div class="board">
 							<a class="board-link" href={'/board/' + board.id}>
-								<img
-									src={board.image ? board.image + '?' + Date.now() : '/default-board.jpg'}
-									alt="Board"
-								/>
+								<img src={board.image ? board.image : '/default-board.jpg'} alt="Board" />
 
 								<h5>{board.title}</h5>
 							</a>

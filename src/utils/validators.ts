@@ -111,12 +111,25 @@ export class Validators {
 		};
 	}
 
-	static validateImage(u?: string) {
-		const pass = !u || /^([0-9a-zA-Z+/]{4})*(([0-9a-zA-Z+/]{2}==)|([0-9a-zA-Z+/]{3}=))?$/.test(u);
+	static validateImage(base64?: string) {
+		const sizeInBytes = 4 * Math.ceil(base64?.length || 0 / 3) * 0.5624896334383812;
+		const sizeInKb = sizeInBytes / 1024;
+
+		const passSize = sizeInKb < 2024;
+		let passReg = false;
+
+		if (passSize) {
+			passReg =
+				!base64 || /^([0-9a-zA-Z+/]{4})*(([0-9a-zA-Z+/]{2}==)|([0-9a-zA-Z+/]{3}=))?$/.test(base64);
+		}
 
 		return {
-			pass,
-			message: !pass ? 'Invalide image encoding. Must be in base64 ' : undefined
+			pass: passReg && passReg,
+			message: !passSize
+				? 'Image too big, max 2MB'
+				: !passReg
+				? 'Invalide image encoding. Must be in base64 '
+				: undefined
 		};
 	}
 
