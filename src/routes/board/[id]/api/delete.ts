@@ -1,4 +1,5 @@
 import type { RequestHandler } from '@sveltejs/kit';
+import { unlink, unlinkSync } from 'fs';
 import { prisma } from '../../../../db';
 
 export const del: RequestHandler = async ({ request, locals, params }) => {
@@ -7,36 +8,37 @@ export const del: RequestHandler = async ({ request, locals, params }) => {
 			return { status: 401, body: { message: 'Unauthorized' } };
 		}
 
-		const workSpace = await prisma.workSpace.findFirst({
-			where: { users: { some: { id: locals.user.id } } },
-			include: { users: true }
+		const board = await prisma.board.findUnique({
+			where: { id: params.id },
+			include: {
+				columns: { include: { cards: { include: { labels: true } } } },
+				workSpace: { include: { users: true } }
+			}
 		});
 
-		if (!workSpace) {
-			return {
-				status: 401,
-				body: ['Unauthorized operation']
-			};
+		if (!board) {
+			return { status: 400, body: { message: 'Forbidden' } };
 		}
 
-		if (workSpace && workSpace.ownerId === locals.user.id) {
-			const board = await prisma.board.findUnique({ where: { id: params.id } });
+		const workSpace = board.workSpace;
 
-			if (board) {
-				await prisma.board.delete({ where: { id: board.id } });
-
-				return {
-					status: 200,
-					body: board || []
-				};
-			}
+		if (!workSpace || workSpace.ownerId !== locals.user.id) {
+			return { status: 401, body: { message: 'Unauthorized' } };
 		}
+
+		if (board.image) {
+			unlinkSync(`static/board-${board.id}.png`);
+		}
+
+		await prisma.board.delete({ where: { id: board.id } });
 
 		return {
-			status: 401,
-			body: ['Undefined Board']
+			status: 200,
+			body: board || []
 		};
 	} catch (error) {
+		console.log(error);
+
 		return { status: 500, body: { message: 'Server error occured' } };
 	}
 };

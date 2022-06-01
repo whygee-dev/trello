@@ -43,16 +43,23 @@
 				status: res.status,
 				props: { board: board ?? null }
 			};
-		} catch (error) {}
+		} catch (error) {
+			console.log(error);
+		}
 
-		return {};
+		return {
+			status: 401,
+			props: { board: [] }
+		};
 	};
 </script>
 
 <script lang="ts">
 	import type { Board, Card, Column, Label, WorkSpace } from '@prisma/client';
 	import Avatar from '../../../components/Avatar.svelte';
-	import { flip } from 'svelte/animate';
+	import { afterNavigate } from '$app/navigation';
+	import layout from '../../../stores/layout';
+
 	export let board: Board & {
 		workSpace: WorkSpace & {
 			users: User[];
@@ -131,7 +138,6 @@
 		clearTimeout(dragTimeout);
 
 		dragTimeout = setTimeout(() => {
-			console.log('pass');
 			hoveringCard = i;
 			hoveringColumn = j;
 			hoveringBottom = e.clientY > lastMousePost.y && i !== board.columns[j].cards.length;
@@ -140,21 +146,33 @@
 			lastMousePost = { y: e.clientY, x: e.clientX };
 		}, 100);
 	};
+
+	afterNavigate(() => {
+		layout.set({
+			searchBarVisible: false,
+			boardName: board.title,
+			allBoardsButtonVisible: false
+		});
+	});
 </script>
 
 <svelte:head>
 	<title>Board | {board.title}</title>
 </svelte:head>
 
-<section class="container">
+<section class="container" style={`background-image: url(${board.image ?? '/default-board.jpg'});`}>
 	<div class="users">
 		{#each board.workSpace.users as user}
 			{#if user}
-				<Avatar width={32} round={false} userFullName={user.fullname} />
+				<Avatar
+					starred={user.id === board.workSpace.ownerId}
+					width={32}
+					round={false}
+					userFullName={user.fullname}
+				/>
 			{/if}
-
-			<button class="add">+</button>
 		{/each}
+		<button class="add">+</button>
 	</div>
 
 	<div class="columns scrollable">
@@ -246,8 +264,6 @@
 
 <style lang="scss">
 	.container {
-		padding: 1rem 0 0;
-
 		.add {
 			display: flex;
 			align-items: center;
@@ -268,7 +284,8 @@
 		.users {
 			display: flex;
 			align-items: center;
-			padding: 0 1rem;
+			align-items: center;
+			padding: 1.5rem;
 
 			:global(img),
 			button {
@@ -280,12 +297,20 @@
 			padding-top: 30px;
 			display: flex;
 			overflow-x: auto;
-			height: calc(100vh - 70px - 30px - 20px);
+			height: calc(100vh - 70px - 30px - 20px - 2rem);
 
 			.column {
 				width: 250px;
 				min-width: 250px;
 				margin: 0 30px;
+				padding: 10px;
+				background-color: #ebecf0;
+				border-radius: 8px;
+				height: fit-content;
+
+				h4 {
+					color: $black;
+				}
 
 				ul {
 					padding: 0;
@@ -297,9 +322,9 @@
 
 					li,
 					.preview-drop {
-						background-color: white;
+						background-color: rgba(255, 255, 255, 0.9);
 						list-style: none;
-						padding: 100px 10px;
+						padding: 30px 10px;
 						border-radius: 8px;
 						box-shadow: 0px 4px 12px 0px #0000000d;
 						cursor: move;

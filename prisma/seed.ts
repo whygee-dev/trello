@@ -1,5 +1,6 @@
 import { PrismaClient } from '@prisma/client';
 import * as argon2 from 'argon2';
+import { faker } from '@faker-js/faker';
 
 const prisma = new PrismaClient();
 
@@ -7,12 +8,23 @@ async function main() {
 	const password = await argon2.hash('secret');
 	const usersData = [
 		{ email: 'John@doe.com', username: 'John', fullname: 'John Smith', password },
-		{ email: 'Zack@doe.com', username: 'Zack', fullname: 'Zack reetler', password },
-		{ email: 'Rick@doe.com', username: 'Rick', fullname: 'Rick Astley', password }
+		{
+			email: faker.internet.email(),
+			username: faker.internet.userName(),
+			fullname: faker.name.findName(),
+			password
+		},
+		{
+			email: faker.internet.email(),
+			username: faker.internet.userName(),
+			fullname: faker.name.findName(),
+			password
+		}
 	];
 
 	const promises = usersData.map((userData) => {
 		return prisma.user.create({
+			include: { ownedWorkspaces: true },
 			data: {
 				email: userData.email,
 				username: userData.username,
@@ -20,24 +32,37 @@ async function main() {
 				password,
 				ownedWorkspaces: {
 					create: {
-						title: `workspace created by ${userData.username}`,
-						description: 'Workspace Seed description',
+						title: faker.lorem.lines(1),
+						description: faker.lorem.lines(3),
 						boards: {
 							create: {
-								title: 'Board Seed',
-								description: 'Board Seed description',
+								title: faker.lorem.lines(1),
+								description: faker.lorem.lines(3),
 								columns: {
-									create: {
-										title: 'Column Seed',
-										yIndex: 0,
-										cards: {
-											create: {
-												title: 'Card Seed',
-												description: 'Card description',
-												xIndex: 0
+									create: [
+										{
+											title: 'To Do',
+											yIndex: 0,
+											cards: {
+												create: {
+													title: faker.lorem.lines(1),
+													description: faker.lorem.lines(2),
+													xIndex: 0
+												}
+											}
+										},
+										{
+											title: 'Done',
+											yIndex: 0,
+											cards: {
+												create: {
+													title: faker.lorem.lines(1),
+													description: faker.lorem.lines(2),
+													xIndex: 0
+												}
 											}
 										}
-									}
+									]
 								}
 							}
 						}
@@ -48,12 +73,21 @@ async function main() {
 	});
 	const users = await Promise.all(promises);
 
-	const workSpaces = users.forEach(async (user) => {
-		prisma.user.findUnique({
-			where: { id: user.id },
-			include: { workSpaces: { include: { users: true } } }
-		});
-	});
+	await Promise.all(
+		users.map((user) => {
+			return prisma.workSpace.update({
+				where: { id: user.ownedWorkspaces[0].id },
+
+				data: {
+					users: {
+						connect: users.map((u) => {
+							return { id: u.id };
+						})
+					}
+				}
+			});
+		})
+	);
 
 	/*await prisma.user.update({
 		where: { id: user.id },

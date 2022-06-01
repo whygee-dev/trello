@@ -1,9 +1,9 @@
 import type { RequestHandler } from '@sveltejs/kit';
+import { writeFileSync } from 'fs';
 import { prisma } from '../../../../db';
 import { Validators } from '../../../../utils/validators';
 
 type Body = {
-	id: number;
 	title: string;
 	description: string;
 	image: string;
@@ -17,48 +17,52 @@ export const patch: RequestHandler = async ({ request, locals, params }) => {
 
 		const json: Body = await request.json();
 		const validateTitle = Validators.validateTitle(json.title);
+		const validateDescription = Validators.validateTitle(json.description);
+		const validateImage = Validators.validateImage(json.image?.split(',')[1]);
 
-		if (!validateTitle.pass) {
+		if (!validateTitle.pass || !validateDescription.pass || !validateImage.pass) {
 			return {
 				status: 400,
-				body: { errors: [validateTitle.message] }
+				body: {
+					errors: [validateTitle.message, validateDescription.message, validateImage.message]
+				}
 			};
 		}
 
-		const workSpace = await prisma.workSpace.findFirst({
-			where: { users: { some: { id: locals.user.id } } },
-			include: { users: true }
+		const board = await prisma.board.findUnique({
+			where: { id: params.id },
+			include: {
+				columns: { include: { cards: { include: { labels: true } } } },
+				workSpace: { include: { users: true } }
+			}
 		});
 
-		if (!workSpace) {
-			return {
-				status: 401,
-				body: ['Unauthorized operation']
-			};
+		if (!board) {
+			return { status: 400, body: { message: 'Forbidden' } };
 		}
 
+		const workSpace = board.workSpace;
 
-		if (workSpace) {
-			const board = await prisma.board.update({
-				where: { id: params.id },
-				data: {
-					title: json.title,
-					description: json.description,
-					image: json.image
-				}
-			});
-
-			return {
-				status: 200,
-				body: board || []
-			};
+		if (!workSpace || workSpace.ownerId !== locals.user.id) {
+			return { status: 401, body: { message: 'Unauthorized' } };
 		}
+
+		const updated = await prisma.board.update({
+			where: { id: params.id },
+			data: {
+				title: json.title,
+				description: json.description,
+				image: json.image ?? board.image
+			}
+		});
 
 		return {
-			status: 400,
-			body: ['Undefined Board']
+			status: 200,
+			body: board || []
 		};
 	} catch (error) {
+		console.log(error);
+
 		return { status: 500, body: { message: 'Server error occured' } };
 	}
 };

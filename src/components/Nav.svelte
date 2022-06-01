@@ -18,7 +18,6 @@
 	};
 
 	const onLogout = async () => {
-		console.log('login out');
 		try {
 			const res = await axios.post('/auth/logout');
 
@@ -46,7 +45,7 @@
 		{$layout.boardName}
 	</span>
 
-	{#if $layout.boardName}
+	{#if $layout.searchBarVisible}
 		<div>
 			<input type="text" />
 		</div>

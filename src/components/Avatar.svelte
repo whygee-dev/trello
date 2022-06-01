@@ -26,6 +26,7 @@
 	export let width = 32;
 	export let round = true;
 	export let src = '';
+	export let starred: boolean | undefined = false;
 	let avatarImage: { src?: string };
 
 	/*
@@ -87,13 +88,31 @@
 	});
 </script>
 
-<img bind:this={avatarImage} class:round {width} height={width} alt={userFullName} />
+<div class="avatar-container" title={userFullName}>
+	<img bind:this={avatarImage} class:round {width} height={width} alt={userFullName} />
+	{#if starred}
+		<img src="/star.png" alt="Star" class="star" />
+	{/if}
+</div>
 
 <style>
+	.avatar-container {
+		display: flex;
+		align-items: center;
+		position: relative;
+	}
+
 	img {
 		border-radius: 8px;
 	}
 
+	.star {
+		position: absolute;
+		top: -2px;
+		right: 0;
+		width: 12px;
+		height: 12px;
+	}
 	.round {
 		border-radius: 50% !important;
 	}

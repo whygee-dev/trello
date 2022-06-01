@@ -4,6 +4,7 @@
 	import PreloadingIndicator from '../components/LoadingIndicator.svelte';
 	import { SvelteToast } from '@zerodevx/svelte-toast';
 	import { afterNavigate } from '$app/navigation';
+	import layout from '../stores/layout';
 
 	const options = {
 		pausable: true,
@@ -43,8 +44,7 @@
 <style lang="scss">
 	.app-main {
 		background-color: #f9fafc;
-		height: 100vh;
-		width: 100%;
+		min-height: 100vh;
 
 		&.with-nav {
 			padding-top: 72px;
