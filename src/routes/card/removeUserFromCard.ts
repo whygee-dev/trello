@@ -38,10 +38,30 @@ export const patch: RequestHandler = async ({ request, locals }) => {
 						}
 					}
 				}
+			},
+			select: {
+				column: {
+					select: {
+						board: {
+							include: {
+								workSpace: true
+							}
+						}
+					}
+				}
 			}
 		});
 
-		const user = await prisma.user.findUnique({ where: { id: json.userId } });
+		const user = await prisma.user.findFirst({
+			where: {
+				id: json.userId,
+				workSpaces: {
+					some: {
+						id: card?.column.board.workSpaceId
+					}
+				}
+			}
+		});
 
 		if (!card || !user) {
 			return {

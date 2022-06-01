@@ -18,16 +18,16 @@ model User {
   fullname        String
   workSpaces      WorkSpace[]
   ownedWorkspaces WorkSpace[] @relation("owner")
-  Card            Card?       @relation(fields: [cardId], references: [id])
+  Card            Card[]
   cardId          String?
 }
 
 model WorkSpace {
-  id          String    @id @default(cuid())
+  id          String  @id @default(cuid())
   title       String
   description String?
   users       User[]
-  owner       User      @relation("owner", fields: [ownerId], references: [id])
+  owner       User    @relation("owner", fields: [ownerId], references: [id])
   ownerId     String
   boards      Board[]
 }
@@ -44,10 +44,10 @@ model Board {
 }
 
 model Column {
-  id      String        @id @unique @default(cuid())
+  id      String @id @unique @default(cuid())
   title   String
   yIndex  Int
-  board   Board         @relation(fields: [boardId], references: [id], onDelete: Cascade)
+  board   Board  @relation(fields: [boardId], references: [id], onDelete: Cascade)
   boardId String
   cards   Card[]
 }
@@ -59,16 +59,14 @@ model Card {
   date        DateTime? @default(now())
   xIndex      Int
   users       User[]
-  labels      Label[]
   column      Column    @relation(fields: [columnId], references: [id], onDelete: Cascade)
   columnId    String
 }
 
 model Label {
-  id      String        @id @unique @default(cuid())
-  title   String
-  color   String
-  board   Board         @relation(fields: [boardId], references: [id], onDelete: Cascade)
-  boardId String
-  cards   Card[]
+  id     String @id @unique @default(cuid())
+  title  String
+  color  String
+  card   Board  @relation(fields: [cardId], references: [id], onDelete: Cascade)
+  cardId String
 }
