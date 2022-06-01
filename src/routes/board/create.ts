@@ -20,8 +20,8 @@ export const post: RequestHandler = async ({ request, locals }) => {
 
 		const json: Body = await request.json();
 		const validateTitle = Validators.validateTitle(json.title);
-		const validateDescription = Validators.validateTitle(json.description);
-		const validateImage = Validators.validateImage(json.image);
+		const validateDescription = Validators.validateDescription(json.description);
+		const validateImage = Validators.validateImage(json.image?.split(',')[1]);
 
 		if (!validateTitle.pass || !validateDescription.pass || !validateImage.pass) {
 			return {
@@ -54,9 +54,9 @@ export const post: RequestHandler = async ({ request, locals }) => {
 		const board = await prisma.board.create({
 			data: {
 				title: json.title,
-				image: null,
 				description: json.description,
 				workSpaceId: workSpace.id,
+				image: json.image ?? null,
 				columns: {
 					create: {
 						title: 'To Do',
@@ -73,16 +73,14 @@ export const post: RequestHandler = async ({ request, locals }) => {
 			}
 		});
 
-		if (json.image) {
-			console.log('yh');
+		// if (json.image) {
+		// 	writeFileSync(`static/board-${board.id}.png`, json.image, 'base64');
 
-			writeFileSync(`static/board-${board.id}.png`, json.image, 'base64');
-
-			await prisma.board.update({
-				where: { id: board.id },
-				data: { image: `board-${board.id}.png` }
-			});
-		}
+		// 	await prisma.board.update({
+		// 		where: { id: board.id },
+		// 		data: { image: `board-${board.id}.png` }
+		// 	});
+		// }
 
 		return {
 			status: 201,
