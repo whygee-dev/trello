@@ -1,5 +1,4 @@
 import type { RequestHandler } from '@sveltejs/kit';
-import { unlink, unlinkSync } from 'fs';
 import { prisma } from '../../../../db';
 
 export const del: RequestHandler = async ({ request, locals, params }) => {
@@ -24,10 +23,6 @@ export const del: RequestHandler = async ({ request, locals, params }) => {
 
 		if (!workSpace || workSpace.ownerId !== locals.user.id) {
 			return { status: 401, body: { message: 'Unauthorized' } };
-		}
-
-		if (board.image) {
-			unlinkSync(`static/board-${board.id}.png`);
 		}
 
 		await prisma.board.delete({ where: { id: board.id } });
