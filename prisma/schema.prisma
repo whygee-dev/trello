@@ -40,7 +40,6 @@ model Board {
   workSpace   WorkSpace @relation(fields: [workSpaceId], references: [id], onDelete: Cascade)
   workSpaceId String
   columns     Column[]
-  labels      Label[]
 }
 
 model Column {
@@ -61,12 +60,13 @@ model Card {
   users       User[]
   column      Column    @relation(fields: [columnId], references: [id], onDelete: Cascade)
   columnId    String
+  labels      Label[]
 }
 
 model Label {
   id     String @id @unique @default(cuid())
   title  String
   color  String
-  card   Board  @relation(fields: [cardId], references: [id], onDelete: Cascade)
+  card   Card   @relation(fields: [cardId], references: [id], onDelete: Cascade)
   cardId String
 }
