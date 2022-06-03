@@ -3,7 +3,7 @@ import { prisma } from '../../db';
 
 type Body = { cardId: string; };
 
-export const get: RequestHandler = async ({ request, locals }) => {
+export const post: RequestHandler = async ({ request, locals }) => {
 	try {
 		if (!locals.user) {
 			return { status: 401, body: { message: 'Unauthorized' } };
@@ -41,7 +41,7 @@ export const get: RequestHandler = async ({ request, locals }) => {
 		}
 
 		const labels = await prisma.label.findMany({
-			where: { cards: { some: { id: json.cardId } } }
+			where: { cardId: json.cardId }
 		});
 
 		return {

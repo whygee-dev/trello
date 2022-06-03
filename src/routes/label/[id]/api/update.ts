@@ -1,6 +1,5 @@
 import type { RequestHandler } from '@sveltejs/kit';
 import { prisma } from '../../../../db';
-import { Validators } from '../../../../utils/validators';
 
 type Body = {
 	title: string;
@@ -15,14 +14,8 @@ export const patch: RequestHandler = async ({ request, locals, params }) => {
 
 		const id = params.id;
 		const json: Body = await request.json();
-		const validateTitle = Validators.validateTitle(json.title);
 		
-		if (!validateTitle.pass) {
-			return {
-				status: 400,
-				body: { errors: [validateTitle.message] }
-			};
-		} else if (json.color && typeof json.color !== 'string') {
+		if (json.color && typeof json.color !== 'string') {
 			return {
 				status: 400,
 				body: { errors: ['Invalid color type parameter'] }
@@ -32,10 +25,14 @@ export const patch: RequestHandler = async ({ request, locals, params }) => {
 		const label =  await prisma.label.findFirst({
 			where: {
 				id: id,
-				board: {
-					workSpace: {
-						users: {
-							some: { id: locals.user.id }
+				card: {
+					column: {
+						board: {
+							workSpace: {
+								users: {
+									some: { id: locals.user.id }
+								}
+							}
 						}
 					}
 				}
