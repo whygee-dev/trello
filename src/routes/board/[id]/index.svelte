@@ -23,6 +23,8 @@
 				})[];
 			} = await res.json();
 
+			console.log(board);
+
 			for (let i = 0; i < 3; i++) {
 				board.columns[0].cards.push(
 					...board.columns[0].cards.map((c: any) => {
@@ -75,13 +77,20 @@
 	let hoveringColumn = -1;
 	let hoveringBottom = false;
 	let hoveringTop = false;
+	let hoveringLeft = false;
+	let hoveringRight = false;
+	let cardDraggable = true;
 	let lastMousePost = { x: -1, y: -1 };
+	let draggedColumn = -1;
+	let draggedCard = -1;
+	let draggedCardColumn = -1;
 
-	const drop = (event: any, cardTarget: number, columnTarget: number, bottom: boolean) => {
+	const cardDrop = (event: any, cardTarget: number, columnTarget: number, bottom: boolean) => {
 		event.dataTransfer.dropEffect = 'move';
 		const data = JSON.parse(event.dataTransfer.getData('text/plain'));
 
 		if (!data) return;
+		console.log(data);
 
 		if (typeof data.card === 'undefined' || typeof data.column === 'undefined') {
 			console.log('returned');
@@ -110,31 +119,22 @@
 		board.columns[columnTarget].cards = newTargetColumn;
 		board = { ...board };
 
-		hoveringCard = -1;
-		hoveringColumn = -1;
-		hoveringBottom = false;
-		hoveringTop = false;
+		reset();
 	};
 
-	const dragstart = (event: any, i: number, j: number) => {
+	const cardDragStart = (event: any, i: number, j: number) => {
 		event.dataTransfer.effectAllowed = 'move';
 		event.dataTransfer.dropEffect = 'move';
 		const card = i;
 		const column = j;
+		console.log('carddrag');
+		draggedCard = i;
+		draggedCardColumn = j;
 
 		event.dataTransfer.setData('text/plain', JSON.stringify({ card, column }));
 	};
 
-	const reset = () => {
-		hoveringBottom = false;
-		hoveringTop = false;
-		hoveringCard = -1;
-		hoveringColumn = -1;
-	};
-
-	let dragTimeout: NodeJS.Timeout;
-
-	const dragenter = (e: any, i: number, j: number) => {
+	const cardDragEnter = (e: any, i: number, j: number) => {
 		clearTimeout(dragTimeout);
 
 		dragTimeout = setTimeout(() => {
@@ -147,6 +147,21 @@
 		}, 100);
 	};
 
+	const reset = () => {
+		console.log('resett');
+		hoveringBottom = false;
+		hoveringTop = false;
+		hoveringLeft = false;
+		hoveringRight = false;
+		hoveringCard = -1;
+		hoveringColumn = -1;
+		draggedColumn = -1;
+		draggedCard = -1;
+		draggedCardColumn = -1;
+	};
+
+	let dragTimeout: NodeJS.Timeout;
+
 	afterNavigate(() => {
 		layout.set({
 			searchBarVisible: false,
@@ -154,6 +169,55 @@
 			allBoardsButtonVisible: false
 		});
 	});
+
+	const columnDragEnter = (e: any, j: number) => {
+		clearTimeout(dragTimeout);
+
+		dragTimeout = setTimeout(() => {
+			hoveringColumn = j;
+			hoveringRight = e.clientX > lastMousePost.x;
+			hoveringLeft = e.clientX < lastMousePost.x;
+
+			lastMousePost = { y: e.clientY, x: e.clientX };
+		}, 100);
+	};
+
+	const columnDrop = (event: any, target: number) => {
+		event.dataTransfer.dropEffect = 'move';
+		const data = JSON.parse(event.dataTransfer.getData('text/plain'));
+
+		if (!data || cardDraggable) return;
+
+		if (typeof data.column === 'undefined') {
+			return;
+		}
+
+		const column = data.column;
+		const columns = board.columns;
+
+		if (column < target) {
+			columns.splice(target + 1, 0, columns[column]);
+			columns.splice(column, 1);
+		} else {
+			columns.splice(target, 0, columns[column]);
+			columns.splice(column + 1, 1);
+		}
+
+		board.columns = columns;
+		board = { ...board };
+
+		reset();
+	};
+
+	const columnDragStart = (event: any, j: number) => {
+		event.dataTransfer.effectAllowed = 'move';
+		event.dataTransfer.dropEffect = 'move';
+		const column = j;
+		console.log('coldrag');
+		draggedColumn = j;
+
+		event.dataTransfer.setData('text/plain', JSON.stringify({ column }));
+	};
 </script>
 
 <svelte:head>
@@ -177,30 +241,61 @@
 
 	<div class="columns scrollable">
 		{#each board.columns as column, j}
-			<div class="column">
+			{#if !cardDraggable && hoveringColumn === j && hoveringLeft && draggedColumn !== j && draggedColumn !== j - 1}
+				<div
+					class="preview-drop column"
+					draggable={true}
+					on:dragstart={(event) => columnDragStart(event, j)}
+					on:drop|preventDefault={(event) => columnDrop(event, j)}
+					on:dragover={(ev) => {
+						ev.preventDefault();
+					}}
+					on:dragenter={(e) => columnDragEnter(e, j)}
+					on:dragend={reset}
+				/>
+			{/if}
+
+			<div
+				class="column"
+				draggable={!cardDraggable}
+				on:dragstart={!cardDraggable ? (event) => columnDragStart(event, j) : undefined}
+				on:drop|preventDefault={!cardDraggable ? (event) => columnDrop(event, j) : undefined}
+				on:dragover={(ev) => {
+					if (!cardDraggable) return;
+					ev.preventDefault();
+				}}
+				on:dragenter={!cardDraggable ? (e) => columnDragEnter(e, j) : undefined}
+				on:dragend={reset}
+			>
 				<h4>{column.title}</h4>
 				<ul>
 					{#each column.cards as card, i (card.id + i)}
-						{#if hoveringCard === i && hoveringColumn === j && hoveringTop}
-							<div
-								class="preview-drop top"
-								on:drop|preventDefault={(event) => drop(event, i, j, hoveringBottom)}
+						{#if cardDraggable && hoveringCard === i && hoveringColumn === j && hoveringTop && (draggedCard !== i || j !== draggedCardColumn)}
+							<li
+								class="preview-drop"
+								on:drop|preventDefault={(event) => cardDrop(event, i, j, hoveringBottom)}
 								on:dragover={(ev) => {
 									ev.preventDefault();
 								}}
-								on:dragenter={(e) => dragenter(e, i, j)}
+								on:dragenter={(e) => cardDragEnter(e, i, j)}
 								on:dragend={reset}
 							/>
 						{/if}
 						<li
-							draggable={true}
-							on:dragstart={(event) => dragstart(event, i, j)}
-							on:drop|preventDefault={(event) => drop(event, i, j, hoveringBottom)}
+							draggable={cardDraggable}
+							on:dragstart={cardDraggable ? (event) => cardDragStart(event, i, j) : null}
+							on:drop|preventDefault={cardDraggable
+								? (event) => cardDrop(event, i, j, hoveringBottom)
+								: null}
 							on:dragover={(ev) => {
+								if (cardDraggable) return;
 								ev.preventDefault();
 							}}
-							on:dragenter={(e) => dragenter(e, i, j)}
+							on:dragenter={cardDraggable ? (e) => cardDragEnter(e, i, j) : null}
 							on:dragend={reset}
+							on:mouseover={() => (cardDraggable = true)}
+							on:focus={() => (cardDraggable = true)}
+							on:mouseleave={() => (cardDraggable = draggedCard !== -1)}
 						>
 							<h5>
 								{card.title}
@@ -212,28 +307,28 @@
 							{/each}
 						</li>
 
-						{#if hoveringCard === i && hoveringColumn === j && hoveringBottom}
-							<div
-								class="preview-drop bottom"
-								on:drop|preventDefault={(event) => drop(event, i, j, hoveringBottom)}
+						{#if cardDraggable && hoveringCard === i && hoveringColumn === j && hoveringBottom && (draggedCard !== i || j !== draggedCardColumn)}
+							<li
+								class="preview-drop"
+								on:drop|preventDefault={(event) => cardDrop(event, i, j, hoveringBottom)}
 								on:dragover={(ev) => {
 									ev.preventDefault();
 								}}
-								on:dragenter={(e) => dragenter(e, i, j)}
+								on:dragenter={(e) => cardDragEnter(e, i, j)}
 								on:dragend={reset}
 							/>
 						{/if}
 					{/each}
 
-					{#if hoveringCard === board.columns[j].cards.length && hoveringColumn === j && hoveringTop}
-						<div
+					{#if hoveringCard === board.columns[j].cards.length && hoveringColumn === j && hoveringTop && (board.columns[j].cards.length - 1 !== draggedCard || j !== draggedCardColumn)}
+						<li
 							class="preview-drop bottom"
 							on:drop|preventDefault={(event) =>
-								drop(event, board.columns[j].cards.length, j, hoveringBottom)}
+								cardDrop(event, board.columns[j].cards.length, j, hoveringBottom)}
 							on:dragover={(ev) => {
 								ev.preventDefault();
 							}}
-							on:dragenter={(e) => dragenter(e, board.columns[j].cards.length, j)}
+							on:dragenter={(e) => cardDragEnter(e, board.columns[j].cards.length, j)}
 							on:dragend={reset}
 						/>
 					{/if}
@@ -242,11 +337,11 @@
 						class="empty"
 						draggable={false}
 						on:drop|preventDefault={(event) =>
-							drop(event, board.columns[j].cards.length, j, hoveringBottom)}
+							cardDrop(event, board.columns[j].cards.length, j, hoveringBottom)}
 						on:dragover={(ev) => {
 							ev.preventDefault();
 						}}
-						on:dragenter={(e) => dragenter(e, board.columns[j].cards.length, j)}
+						on:dragenter={(e) => cardDragEnter(e, board.columns[j].cards.length, j)}
 						on:dragend={reset}
 						class:is-active={hoveringCard === board.columns[j].cards.length && hoveringColumn === j}
 						class:hovering-top={hoveringCard === board.columns[j].cards.length &&
@@ -258,6 +353,20 @@
 					</li>
 				</ul>
 			</div>
+
+			{#if !cardDraggable && hoveringColumn === j && hoveringRight && draggedColumn !== j && draggedColumn !== j + 1}
+				<div
+					class="preview-drop column"
+					draggable={true}
+					on:dragstart={(event) => columnDragStart(event, j)}
+					on:drop|preventDefault={(event) => columnDrop(event, j)}
+					on:dragover={(ev) => {
+						ev.preventDefault();
+					}}
+					on:dragenter={(e) => columnDragEnter(e, j)}
+					on:dragend={reset}
+				/>
+			{/if}
 		{/each}
 	</div>
 </section>
@@ -307,6 +416,12 @@
 				background-color: #ebecf0;
 				border-radius: 8px;
 				height: fit-content;
+				cursor: move;
+
+				&.preview-drop {
+					background-color: rgba(0, 0, 0, 0.5);
+					height: 300px;
+				}
 
 				h4 {
 					color: $black;
@@ -329,6 +444,7 @@
 						box-shadow: 0px 4px 12px 0px #0000000d;
 						cursor: move;
 						margin-bottom: 20px;
+						min-height: 150px;
 					}
 
 					.preview-drop {
