@@ -90,10 +90,8 @@
 		const data = JSON.parse(event.dataTransfer.getData('text/plain'));
 
 		if (!data) return;
-		console.log(data);
 
 		if (typeof data.card === 'undefined' || typeof data.column === 'undefined') {
-			console.log('returned');
 			return;
 		}
 
@@ -127,7 +125,6 @@
 		event.dataTransfer.dropEffect = 'move';
 		const card = i;
 		const column = j;
-		console.log('carddrag');
 		draggedCard = i;
 		draggedCardColumn = j;
 
@@ -148,7 +145,6 @@
 	};
 
 	const reset = () => {
-		console.log('resett');
 		hoveringBottom = false;
 		hoveringTop = false;
 		hoveringLeft = false;
@@ -213,7 +209,6 @@
 		event.dataTransfer.effectAllowed = 'move';
 		event.dataTransfer.dropEffect = 'move';
 		const column = j;
-		console.log('coldrag');
 		draggedColumn = j;
 
 		event.dataTransfer.setData('text/plain', JSON.stringify({ column }));
@@ -451,10 +446,6 @@
 						height: 50px;
 						padding: 0;
 						background-color: grey;
-
-						&.top {
-							margin-bottom: 0px;
-						}
 
 						&.bottom {
 							margin-top: -20px;
