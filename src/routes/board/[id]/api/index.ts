@@ -10,7 +10,7 @@ export const get: RequestHandler = async ({ request, locals, params }) => {
 		const board = await prisma.board.findUnique({
 			where: { id: params.id },
 			include: {
-				columns: { include: { cards: { include: { labels: true } } } },
+				columns: { include: { cards: { include: { labels: true }, orderBy: { index: 'asc' } } } },
 				workSpace: { include: { users: true } }
 			}
 		});
@@ -32,6 +32,8 @@ export const get: RequestHandler = async ({ request, locals, params }) => {
 			body: board || []
 		};
 	} catch (error) {
+		console.log(error);
+
 		return { status: 500, body: { message: 'Server error occured' } };
 	}
 };

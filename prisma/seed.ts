@@ -42,23 +42,46 @@ async function main() {
 									create: [
 										{
 											title: 'To Do',
-											yIndex: 0,
+											index: 0,
+											cards: {
+												create: [
+													{
+														title: faker.lorem.lines(1),
+														description: faker.lorem.lines(2),
+														index: 0
+													},
+													{
+														title: faker.lorem.lines(1),
+														description: faker.lorem.lines(2),
+														index: 1
+													},
+													{
+														title: faker.lorem.lines(1),
+														description: faker.lorem.lines(2),
+														index: 2
+													}
+												]
+											}
+										},
+										{
+											title: 'Review',
+											index: 1,
 											cards: {
 												create: {
 													title: faker.lorem.lines(1),
 													description: faker.lorem.lines(2),
-													xIndex: 0
+													index: 0
 												}
 											}
 										},
 										{
 											title: 'Done',
-											yIndex: 0,
+											index: 2,
 											cards: {
 												create: {
 													title: faker.lorem.lines(1),
 													description: faker.lorem.lines(2),
-													xIndex: 0
+													index: 0
 												}
 											}
 										}

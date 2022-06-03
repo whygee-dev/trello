@@ -30,7 +30,7 @@ export const post: RequestHandler = async ({ request, locals }) => {
 			};
 		}
 
-		const column =  await prisma.column.findFirst({
+		const column = await prisma.column.findFirst({
 			where: {
 				id: json.columnId,
 				board: {
@@ -40,7 +40,7 @@ export const post: RequestHandler = async ({ request, locals }) => {
 						}
 					}
 				}
-			},
+			}
 		});
 
 		if (!column) {
@@ -52,15 +52,15 @@ export const post: RequestHandler = async ({ request, locals }) => {
 
 		const cards = await prisma.card.findMany({
 			where: { columnId: json.columnId },
-			orderBy: { xIndex: 'desc' }
+			orderBy: { index: 'desc' }
 		});
-		const xIndex = (cards.length > 0) ? ++cards[0].xIndex : 0;
+		const index = cards.length > 0 ? ++cards[0].index : 0;
 		const card = await prisma.card.create({
 			data: {
 				title: json.title,
 				description: json.description,
 				date: json.date,
-				xIndex: xIndex,
+				index,
 				column: { connect: { id: column?.id } }
 			}
 		});

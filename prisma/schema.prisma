@@ -45,7 +45,7 @@ model Board {
 model Column {
   id      String @id @unique @default(cuid())
   title   String
-  yIndex  Int
+  index   Int    @default(0)
   board   Board  @relation(fields: [boardId], references: [id], onDelete: Cascade)
   boardId String
   cards   Card[]
@@ -56,7 +56,7 @@ model Card {
   title       String
   description String?
   date        DateTime? @default(now())
-  xIndex      Int
+  index       Int       @default(0)
   users       User[]
   column      Column    @relation(fields: [columnId], references: [id], onDelete: Cascade)
   columnId    String

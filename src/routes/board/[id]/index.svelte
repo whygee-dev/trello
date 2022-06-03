@@ -23,23 +23,21 @@
 				})[];
 			} = await res.json();
 
-			console.log(board);
+			// for (let i = 0; i < 3; i++) {
+			// 	board.columns[0].cards.push(
+			// 		...board.columns[0].cards.map((c: any) => {
+			// 			return { ...c, id: String(Math.floor(Math.random() * 100)) };
+			// 		})
+			// 	);
+			// }
 
-			for (let i = 0; i < 3; i++) {
-				board.columns[0].cards.push(
-					...board.columns[0].cards.map((c: any) => {
-						return { ...c, id: String(Math.floor(Math.random() * 100)) };
-					})
-				);
-			}
-
-			for (let i = 0; i < 3; i++) {
-				board.columns.push(
-					...board.columns.map((c) => {
-						return { ...c, cards: [...c.cards] };
-					})
-				);
-			}
+			// for (let i = 0; i < 3; i++) {
+			// 	board.columns.push(
+			// 		...board.columns.map((c) => {
+			// 			return { ...c, cards: [...c.cards] };
+			// 		})
+			// 	);
+			// }
 
 			return {
 				status: res.status,

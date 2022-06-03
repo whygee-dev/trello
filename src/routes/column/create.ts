@@ -15,7 +15,7 @@ export const post: RequestHandler = async ({ request, locals }) => {
 
 		const json: Body = await request.json();
 		const validateTitle = Validators.validateTitle(json.title);
-		
+
 		if (!json.boardId || typeof json.boardId !== 'string') {
 			return {
 				status: 400,
@@ -28,7 +28,7 @@ export const post: RequestHandler = async ({ request, locals }) => {
 			};
 		}
 
-		const board =  await prisma.board.findFirst({
+		const board = await prisma.board.findFirst({
 			where: {
 				id: json.boardId,
 				workSpace: {
@@ -36,7 +36,7 @@ export const post: RequestHandler = async ({ request, locals }) => {
 						some: { id: locals.user.id }
 					}
 				}
-			},
+			}
 		});
 
 		if (!board) {
@@ -45,20 +45,20 @@ export const post: RequestHandler = async ({ request, locals }) => {
 				body: { errors: ['Unauthorized operation'] }
 			};
 		}
-		
+
 		const columns = await prisma.column.findMany({
 			where: { boardId: json.boardId },
-			orderBy: { yIndex: 'desc' }
+			orderBy: { index: 'desc' }
 		});
-		const yIndex = (columns.length > 0) ? ++columns[0].yIndex : 0;
+		const index = columns.length > 0 ? ++columns[0].index : 0;
 		const column = await prisma.column.create({
 			data: {
 				title: json.title,
-				yIndex: yIndex,
+				index,
 				board: { connect: { id: board.id } }
 			}
 		});
-		
+
 		return {
 			status: 201,
 			body: column || {}
