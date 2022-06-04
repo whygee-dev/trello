@@ -60,6 +60,9 @@
 	import { afterNavigate } from '$app/navigation';
 	import layout from '../../../stores/layout';
 	import axios from 'axios';
+	import Modal from '../../../components/Modal.svelte';
+	import { handleError } from '../../../utils/errorHandler';
+	import { toast } from '@zerodevx/svelte-toast';
 
 	export let board: Board & {
 		workSpace: WorkSpace & {
@@ -83,6 +86,12 @@
 	let draggedColumn = -1;
 	let draggedCard = -1;
 	let draggedCardColumn = -1;
+
+	let cardModalOpen = false;
+	let cardTitle = "";
+	let cardDescription = ""
+	let editingCard: string | null = null;
+	let selectedColumn: string | null = null;
 
 	const cardDrop = async (
 		event: any,
@@ -244,11 +253,60 @@
 
 		event.dataTransfer.setData('text/plain', JSON.stringify({ column }));
 	};
+
+	const createCard = async (id: string | null) => {
+		try {
+			const res = await axios.post('/card/create', {
+				columnId: id,
+				title: cardTitle,
+				description: cardDescription,
+				date: new Date()
+			});
+
+			toast.push('Card created successfully');
+			cardModalOpen = false;
+			cardTitle = '';
+			cardDescription = '';
+		} catch (error) {
+			handleError(error);
+		}
+	};
+
+	const updateCard = async (id: string | null) => {
+		if (!id || !editingCard) return;
+
+		try {
+			const res = await axios.patch(`/board/${id}/api/update`, {
+				title: cardTitle,
+				description: cardDescription,
+				date: new Date()
+			});
+
+			toast.push('Card updated successfully');
+			cardModalOpen = false;
+		} catch (error) {
+			console.log(error);
+			handleError(error);
+		}
+	};
 </script>
 
 <svelte:head>
 	<title>Board | {board.title}</title>
 </svelte:head>
+
+<Modal
+	header={editingCard ? 'Update ' + cardTitle : 'Create a new Card'}
+	footerButton={editingCard ? 'Update' : '+ Create'}
+	open={cardModalOpen}
+	on:close={() => (cardModalOpen = false)}
+	on:create={() => (editingCard ? updateCard(editingCard) : createCard(selectedColumn))}
+>
+	<div class="card-modal">
+		<input type="text" bind:value={cardTitle} placeholder="Title" />
+		<input type="text" bind:value={cardDescription} placeholder="Description" />
+	</div>
+</Modal>
 
 <section class="container" style={`background-image: url(${board.image ?? '/default-board.png'});`}>
 	<div class="users">
@@ -485,6 +543,17 @@
 						}
 					}
 				}
+			}
+		}
+		.card-modal {
+			display: flex;
+			flex-direction: column;
+			padding: 40px 0;
+
+			input,
+			label {
+				width: 100%;
+				margin-top: 10px;
 			}
 		}
 	}
