@@ -60,12 +60,12 @@ export const post: RequestHandler = async ({ request, locals }) => {
 				columns: {
 					create: {
 						title: 'To Do',
-						yIndex: 0,
+						index: 0,
 						cards: {
 							create: {
 								title: 'Hello World!',
 								description: 'Hello World!',
-								xIndex: 0
+								index: 0
 							}
 						}
 					}

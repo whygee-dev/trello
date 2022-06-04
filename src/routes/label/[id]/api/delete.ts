@@ -11,14 +11,18 @@ export const del: RequestHandler = async ({ request, locals, params }) => {
 		const label =  await prisma.label.findFirst({
 			where: {
 				id: id,
-				board: {
-					workSpace: {
-						users: {
-							some: { id: locals.user.id }
+				card: {
+					column: {
+						board: {
+							workSpace: {
+								users: {
+									some: { id: locals.user.id }
+								}
+							}
 						}
 					}
 				}
-			},
+			}
 		});
 
 		if (!label) {

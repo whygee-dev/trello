@@ -3,21 +3,23 @@ import { prisma } from '../../db';
 
 type Body = {
 	draggedCardId: string;
-	switchedCardId: string
+	switchedCardId: string;
 };
 
 export const patch: RequestHandler = async ({ request, locals }) => {
 	try {
-        if (!locals.user) {
+		if (!locals.user) {
 			return { status: 401, body: { message: 'Unauthorized' } };
 		}
 
 		const json: Body = await request.json();
 
-		if (!json.draggedCardId
-            || !json.switchedCardId
-            || typeof json.draggedCardId !== 'string'
-            || typeof json.switchedCardId !== 'string') {
+		if (
+			!json.draggedCardId ||
+			!json.switchedCardId ||
+			typeof json.draggedCardId !== 'string' ||
+			typeof json.switchedCardId !== 'string'
+		) {
 			return {
 				status: 400,
 				body: { errors: ['Invalid card ID'] }
@@ -63,11 +65,11 @@ export const patch: RequestHandler = async ({ request, locals }) => {
 
 		const updatedCurrentCard = await prisma.card.update({
 			where: { id: json.draggedCardId },
-			data: { xIndex: switchedCard?.xIndex }
+			data: { index: switchedCard?.index }
 		});
 		const updatedSwitchedCard = await prisma.card.update({
 			where: { id: json.switchedCardId },
-			data: { xIndex: draggedCard?.xIndex }
+			data: { index: draggedCard?.index }
 		});
 
 		return {

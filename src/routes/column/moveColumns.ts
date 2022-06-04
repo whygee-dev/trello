@@ -8,23 +8,25 @@ type Body = {
 
 export const patch: RequestHandler = async ({ request, locals }) => {
 	try {
-        if (!locals.user) {
+		if (!locals.user) {
 			return { status: 401, body: { message: 'Unauthorized' } };
 		}
 
 		const json: Body = await request.json();
 
-		if (!json.draggedColumnId
-            || !json.switchedColumnId
-            || typeof json.draggedColumnId !== 'string'
-            || typeof json.switchedColumnId !== 'string') {
+		if (
+			!json.draggedColumnId ||
+			!json.switchedColumnId ||
+			typeof json.draggedColumnId !== 'string' ||
+			typeof json.switchedColumnId !== 'string'
+		) {
 			return {
 				status: 400,
 				body: { errors: ['Invalid column ID'] }
 			};
 		}
 
-		const draggedColumn =  await prisma.column.findFirst({
+		const draggedColumn = await prisma.column.findFirst({
 			where: {
 				id: json.draggedColumnId,
 				board: {
@@ -37,7 +39,7 @@ export const patch: RequestHandler = async ({ request, locals }) => {
 			}
 		});
 
-		const switchedColumn =  await prisma.column.findFirst({
+		const switchedColumn = await prisma.column.findFirst({
 			where: {
 				id: json.switchedColumnId,
 				board: {
@@ -59,11 +61,11 @@ export const patch: RequestHandler = async ({ request, locals }) => {
 
 		const updateddraggedColumn = await prisma.column.update({
 			where: { id: json.draggedColumnId },
-			data: { yIndex: switchedColumn?.yIndex }
+			data: { index: switchedColumn?.index }
 		});
 		const updatedSwitchedColumn = await prisma.column.update({
 			where: { id: json.switchedColumnId },
-			data: { yIndex: draggedColumn?.yIndex }
+			data: { index: draggedColumn?.index }
 		});
 
 		return {

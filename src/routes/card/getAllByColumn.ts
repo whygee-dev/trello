@@ -1,7 +1,7 @@
 import type { RequestHandler } from '@sveltejs/kit';
 import { prisma } from '../../db';
 
-type Body = { columnId: string; };
+type Body = { columnId: string };
 
 export const get: RequestHandler = async ({ request, locals }) => {
 	try {
@@ -18,7 +18,7 @@ export const get: RequestHandler = async ({ request, locals }) => {
 			};
 		}
 
-		const column =  await prisma.column.findFirst({
+		const column = await prisma.column.findFirst({
 			where: {
 				id: json.columnId,
 				board: {
@@ -28,7 +28,7 @@ export const get: RequestHandler = async ({ request, locals }) => {
 						}
 					}
 				}
-			},
+			}
 		});
 
 		if (!column) {
@@ -40,7 +40,7 @@ export const get: RequestHandler = async ({ request, locals }) => {
 
 		const cards = await prisma.card.findMany({
 			where: { columnId: json.columnId },
-			orderBy: { xIndex: 'asc' }
+			orderBy: { index: 'asc' }
 		});
 
 		return {
