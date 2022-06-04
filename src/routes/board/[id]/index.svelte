@@ -59,6 +59,7 @@
 	import Avatar from '../../../components/Avatar.svelte';
 	import { afterNavigate } from '$app/navigation';
 	import layout from '../../../stores/layout';
+	import axios from 'axios';
 
 	export let board: Board & {
 		workSpace: WorkSpace & {
@@ -83,13 +84,23 @@
 	let draggedCard = -1;
 	let draggedCardColumn = -1;
 
-	const cardDrop = (event: any, cardTarget: number, columnTarget: number, bottom: boolean) => {
+	const cardDrop = async (
+		event: any,
+		cardTarget: number,
+		columnTarget: number,
+		bottom: boolean
+	) => {
 		event.dataTransfer.dropEffect = 'move';
 		const data = JSON.parse(event.dataTransfer.getData('text/plain'));
 
 		if (!data) return;
 
-		if (typeof data.card === 'undefined' || typeof data.column === 'undefined') {
+		if (
+			typeof data.card === 'undefined' ||
+			typeof data.column === 'undefined' ||
+			typeof data.columnId === 'undefined' ||
+			typeof data.cardId === 'undefined'
+		) {
 			return;
 		}
 
@@ -106,9 +117,26 @@
 				newSourceColumn.splice(cardTarget + Number(bottom), 0, newSourceColumn[card]);
 				newSourceColumn.splice(card + 1, 1);
 			}
+
+			await axios.patch(`/card/moveCards`, {
+				cards: newSourceColumn,
+				sourceColumnId: data.columnId,
+				targetColumnId: data.columnId,
+				boardId: board.id
+			});
+
+			console.log(newSourceColumn.map((c) => c.title));
 		} else {
 			newTargetColumn.splice(cardTarget + Number(bottom), 0, newSourceColumn[card]);
 			newSourceColumn.splice(card, 1);
+
+			await axios.patch(`/card/moveCards`, {
+				cards: newTargetColumn,
+				sourceCards: newSourceColumn,
+				sourceColumnId: data.columnId,
+				targetColumnId: board.columns[columnTarget].id,
+				boardId: board.id
+			});
 		}
 
 		board.columns[column].cards = newSourceColumn;
@@ -118,7 +146,7 @@
 		reset();
 	};
 
-	const cardDragStart = (event: any, i: number, j: number) => {
+	const cardDragStart = (event: any, i: number, j: number, cardId: string, columnId: string) => {
 		event.dataTransfer.effectAllowed = 'move';
 		event.dataTransfer.dropEffect = 'move';
 		const card = i;
@@ -126,7 +154,7 @@
 		draggedCard = i;
 		draggedCardColumn = j;
 
-		event.dataTransfer.setData('text/plain', JSON.stringify({ card, column }));
+		event.dataTransfer.setData('text/plain', JSON.stringify({ card, column, cardId, columnId }));
 	};
 
 	const cardDragEnter = (e: any, i: number, j: number) => {
@@ -176,7 +204,7 @@
 		}, 100);
 	};
 
-	const columnDrop = (event: any, target: number) => {
+	const columnDrop = async (event: any, target: number) => {
 		event.dataTransfer.dropEffect = 'move';
 		const data = JSON.parse(event.dataTransfer.getData('text/plain'));
 
@@ -200,6 +228,11 @@
 		board.columns = columns;
 		board = { ...board };
 
+		await axios.patch(`/column/moveColumns`, {
+			columns,
+			boardId: board.id
+		});
+
 		reset();
 	};
 
@@ -217,7 +250,7 @@
 	<title>Board | {board.title}</title>
 </svelte:head>
 
-<section class="container" style={`background-image: url(${board.image ?? '/default-board.jpg'});`}>
+<section class="container" style={`background-image: url(${board.image ?? '/default-board.png'});`}>
 	<div class="users">
 		{#each board.workSpace.users as user}
 			{#if user}
@@ -263,7 +296,7 @@
 				<h4>{column.title}</h4>
 				<ul>
 					{#each column.cards as card, i (card.id + i)}
-						{#if cardDraggable && hoveringCard === i && hoveringColumn === j && hoveringTop && (draggedCard !== i || j !== draggedCardColumn)}
+						{#if cardDraggable && hoveringCard === i && hoveringColumn === j && hoveringTop && (draggedCard !== i || (j && draggedCard !== i - 1)) !== draggedCardColumn}
 							<li
 								class="preview-drop"
 								on:drop|preventDefault={(event) => cardDrop(event, i, j, hoveringBottom)}
@@ -276,7 +309,9 @@
 						{/if}
 						<li
 							draggable={cardDraggable}
-							on:dragstart={cardDraggable ? (event) => cardDragStart(event, i, j) : null}
+							on:dragstart={cardDraggable
+								? (event) => cardDragStart(event, i, j, card.id, column.id)
+								: null}
 							on:drop|preventDefault={cardDraggable
 								? (event) => cardDrop(event, i, j, hoveringBottom)
 								: null}
@@ -292,7 +327,7 @@
 						>
 							<h5>
 								{card.title}
-								{card.id}
+								{card.index}
 							</h5>
 
 							{#each card.labels as label}
@@ -300,7 +335,7 @@
 							{/each}
 						</li>
 
-						{#if cardDraggable && hoveringCard === i && hoveringColumn === j && hoveringBottom && (draggedCard !== i || j !== draggedCardColumn)}
+						{#if cardDraggable && hoveringCard === i && hoveringColumn === j && hoveringBottom && (draggedCard !== i || (j && draggedCard !== i + 1) || j !== draggedCardColumn)}
 							<li
 								class="preview-drop"
 								on:drop|preventDefault={(event) => cardDrop(event, i, j, hoveringBottom)}
