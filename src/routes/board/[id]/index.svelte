@@ -1,5 +1,7 @@
 <script context="module" lang="ts">
 	import type { Load } from '@sveltejs/kit';
+	import Modal from '../../../components/Modal.svelte';
+
 	export const load: Load = async ({ session, fetch, params }) => {
 		if (!session.user) {
 			return {
@@ -59,6 +61,10 @@
 	import Avatar from '../../../components/Avatar.svelte';
 	import { afterNavigate } from '$app/navigation';
 	import layout from '../../../stores/layout';
+	import { handleError } from '../../../utils/errorHandler';
+	import axios from 'axios';
+	import { goto } from '$app/navigation';
+	import { toast } from '@zerodevx/svelte-toast';
 
 	export let board: Board & {
 		workSpace: WorkSpace & {
@@ -76,6 +82,32 @@
 	let hoveringBottom = false;
 	let hoveringTop = false;
 	let lastMousePost = { x: -1, y: -1 };
+	let userToAdd: string;
+	let invitationModalOpen = false;
+	let linkModalOpen = false;
+	let modalLink: string;
+
+	const copyLink = async () => {
+		navigator.clipboard.writeText(modalLink);
+		linkModalOpen = false;
+		toast.push('Link succesfully copied !');
+	};
+
+	const createInvitation = async () => {
+		try {
+			const res = await axios.post('/invitation/create', {
+				email: userToAdd,
+				boardId: board.id
+			});
+
+			invitationModalOpen = false;
+			linkModalOpen = true;
+			userToAdd = '';
+			modalLink = res.data;
+		} catch (error) {
+			handleError(error);
+		}
+	};
 
 	const drop = (event: any, cardTarget: number, columnTarget: number, bottom: boolean) => {
 		event.dataTransfer.dropEffect = 'move';
@@ -160,6 +192,30 @@
 	<title>Board | {board.title}</title>
 </svelte:head>
 
+<Modal
+	footerButton="+ Create"
+	header="Create an invitation link"
+	open={invitationModalOpen}
+	on:close={() => (invitationModalOpen = false)}
+	on:create={createInvitation}
+>
+	<div class="invitation-modal">
+		<input type="email" bind:value={userToAdd} placeholder="Email" />
+	</div>
+</Modal>
+
+<Modal
+	footerButton="+ Copy"
+	header="Your invitation link"
+	open={linkModalOpen}
+	on:close={() => (linkModalOpen = false)}
+	on:create={copyLink}
+>
+	<div class="invitation-modal">
+		<input type="text" value={modalLink} placeholder="Link" />
+	</div>
+</Modal>
+
 <section class="container" style={`background-image: url(${board.image ?? '/default-board.jpg'});`}>
 	<div class="users">
 		{#each board.workSpace.users as user}
@@ -172,7 +228,12 @@
 				/>
 			{/if}
 		{/each}
-		<button class="add">+</button>
+		<button
+			class="add"
+			on:click={() => {
+				invitationModalOpen = true;
+			}}>+</button
+		>
 	</div>
 
 	<div class="columns scrollable">
@@ -263,6 +324,17 @@
 </section>
 
 <style lang="scss">
+	.invitation-modal {
+		display: flex;
+		flex-direction: column;
+		padding: 40px 0;
+
+		input,
+		label {
+			width: 100%;
+			margin-top: 10px;
+		}
+	}
 	.container {
 		.add {
 			display: flex;
