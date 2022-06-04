@@ -192,7 +192,7 @@
 				? image.toString().startsWith('board')
 					? image + '?' + Date.now()
 					: image.toString()
-				: '/default-board.jpg'}
+				: '/default-board.png'}
 			alt="Uploaded"
 		/>
 	</div>
@@ -245,7 +245,7 @@
 					{#each workspace.boards as board}
 						<div class="board">
 							<a class="board-link" href={'/board/' + board.id}>
-								<img src={board.image ? board.image : '/default-board.jpg'} alt="Board" />
+								<img src={board.image ? board.image : '/default-board.png'} alt="Board" />
 
 								<h5>{board.title}</h5>
 							</a>

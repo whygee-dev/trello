@@ -15,6 +15,8 @@
 	import { afterNavigate, goto } from '$app/navigation';
 	import { fly } from 'svelte/transition';
 	// @ts-ignore
+	import { typewriter } from '@svelteuidev/motion';
+	// @ts-ignore
 	import { inview } from 'svelte-inview';
 	import type { Load } from '@sveltejs/kit';
 
@@ -89,7 +91,7 @@
 		</nav>
 		<div class="hero" in:fly={{ duration, y: -50 }}>
 			<div class="text">
-				<h1>Thullo helps teams move work forward.</h1>
+				<h1 in:typewriter={{ speed: 2 }}>Thullo helps teams move work forward.</h1>
 
 				<p>
 					Collaborate, manage projects, and reach new productivity peaks. From high rises to the
