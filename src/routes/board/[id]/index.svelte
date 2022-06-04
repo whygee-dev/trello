@@ -23,6 +23,9 @@
 				})[];
 			} = await res.json();
 
+			const tokenRes = await fetch(`/pusher/auth`);
+
+			const token = (await tokenRes.json()).token;
 			// for (let i = 0; i < 3; i++) {
 			// 	board.columns[0].cards.push(
 			// 		...board.columns[0].cards.map((c: any) => {
@@ -41,7 +44,7 @@
 
 			return {
 				status: res.status,
-				props: { board: board ?? null }
+				props: { board: board ?? null, token, userId: session.user.id }
 			};
 		} catch (error) {
 			console.log(error);
@@ -57,12 +60,15 @@
 <script lang="ts">
 	import type { Board, Card, Column, Label, WorkSpace } from '@prisma/client';
 	import Avatar from '../../../components/Avatar.svelte';
-	import { afterNavigate } from '$app/navigation';
-	import layout from '../../../stores/layout';
+	import { afterNavigate, invalidate } from '$app/navigation';
+	import { layout } from '../../../stores/layout';
 	import axios from 'axios';
 	import Modal from '../../../components/Modal.svelte';
 	import { handleError } from '../../../utils/errorHandler';
 	import { toast } from '@zerodevx/svelte-toast';
+	import { onMount } from 'svelte';
+	import { Pusher } from '../../../pusher';
+	import type Pubnub from 'pubnub';
 
 	export let board: Board & {
 		workSpace: WorkSpace & {
@@ -74,6 +80,8 @@
 			})[];
 		})[];
 	};
+	export let token: string;
+	export let userId: string;
 
 	let hoveringCard = -1;
 	let hoveringColumn = -1;
@@ -152,6 +160,12 @@
 		board.columns[columnTarget].cards = newTargetColumn;
 		board = { ...board };
 
+		Pusher.getInstance().publish(
+			{ message: 'REQUEST_UPDATE', channel: 'board-' + board.id },
+			() => {
+				console.log('Update request sent');
+			}
+		);
 		reset();
 	};
 
@@ -242,6 +256,13 @@
 			boardId: board.id
 		});
 
+		Pusher.getInstance().publish(
+			{ message: 'REQUEST_UPDATE', channel: 'board-' + board.id },
+			() => {
+				console.log('Update request sent');
+			}
+		);
+
 		reset();
 	};
 
@@ -289,6 +310,35 @@
 			handleError(error);
 		}
 	};
+	let invalidateTimeout: NodeJS.Timeout | null = null;
+
+	onMount(() => {
+		const listener = {
+			status: function (statusEvent) {
+				if (statusEvent.category === 'PNConnectedCategory') {
+					console.log('sub connected');
+				}
+			},
+			message: function (data) {
+				if (data.message === 'REQUEST_UPDATE') {
+					console.log('invalidating');
+					invalidate(`/board/${board.id}/api`);
+				}
+			},
+			presence: function (presenceEvent) {
+				// This is where you handle presence. Not important for now :)
+			}
+		} as Pubnub.ListenerParameters;
+
+		Pusher.setInfos(
+			'pub-c-be25a5ac-e5c9-451f-9070-e27717cc1b26',
+			'sub-c-fda059c7-710d-4e8e-875d-08c257b7fb4b',
+			userId,
+			token,
+			{ channels: ['board-' + board.id] },
+			listener
+		);
+	});
 </script>
 
 <svelte:head>
