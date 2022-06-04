@@ -1,7 +1,7 @@
 <script>
 	import { session } from '$app/stores';
 
-	import layout from '../stores/layout';
+	import { layout } from '../stores/layout';
 	import Avatar from './Avatar.svelte';
 	import { clickOutside } from '../utils/clickOutside';
 	import axios from 'axios';
@@ -41,11 +41,13 @@
 		{/if}
 	</a>
 
-	<span>
-		{$layout.boardName}
-	</span>
+	{#if $layout?.boardName}
+		<span>
+			{$layout.boardName}
+		</span>
+	{/if}
 
-	{#if $layout.searchBarVisible}
+	{#if $layout?.searchBarVisible}
 		<div>
 			<input type="text" />
 		</div>
