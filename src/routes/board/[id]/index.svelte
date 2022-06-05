@@ -198,7 +198,7 @@
 
 	let dragTimeout: NodeJS.Timeout;
 
-	afterNavigate(() => {
+	onMount(() => {
 		layout.set({
 			searchBarVisible: false,
 			boardName: board.title,
