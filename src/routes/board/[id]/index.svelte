@@ -417,7 +417,7 @@
 		}
 	};
 
-	let invalidateTimeout: NodeJS.Timeout | null = null;
+	let members: string[] = [];
 
 	onMount(() => {
 		const listener = {
@@ -433,7 +433,15 @@
 				}
 			},
 			presence: function (presenceEvent) {
-				// This is where you handle presence. Not important for now :)
+				console.log('presenve', presenceEvent);
+
+				members.push(presenceEvent.uuid);
+			},
+			disconnect: function () {
+				console.log('disconnected');
+			},
+			reconnect: function () {
+				console.log('reconnected');
 			}
 		} as Pubnub.ListenerParameters;
 
@@ -442,24 +450,38 @@
 			'sub-c-fda059c7-710d-4e8e-875d-08c257b7fb4b',
 			userId,
 			token,
-			{ channels: ['board-' + board.id] },
+			{ channels: ['board-' + board.id], withPresence: true },
 			listener
 		);
 	});
 
+	let syncTimeout: NodeJS.Timeout | null = null;
+
 	const requestSync = () => {
-		Pusher.getInstance().publish(
-			{ message: 'REQUEST_UPDATE', channel: 'board-' + board.id },
-			() => {
-				console.log('Update request sent');
-			}
-		);
+		if (syncTimeout) clearTimeout(syncTimeout);
+
+		syncTimeout = setTimeout(() => {
+			Pusher.getInstance().publish(
+				{ message: 'REQUEST_UPDATE', channel: 'board-' + board.id },
+				() => {
+					console.log('Update request sent');
+				}
+			);
+		}, 1000);
+	};
+
+	const onWindowFocus = () => {
+		console.log('reconnecting');
+		Pusher.getInstance().reconnect();
+		invalidate(`/board/${board.id}/api`);
 	};
 </script>
 
 <svelte:head>
 	<title>Board | {board.title}</title>
 </svelte:head>
+
+<svelte:window on:focus={onWindowFocus} />
 
 <Modal
 	footerButton="+ Create"
