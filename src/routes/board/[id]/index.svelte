@@ -63,9 +63,15 @@
 	import { afterNavigate, invalidate } from '$app/navigation';
 	import { layout } from '../../../stores/layout';
 	import axios from 'axios';
+	import Modal from '../../../components/Modal.svelte';
+	import { handleError } from '../../../utils/errorHandler';
+	import { toast } from '@zerodevx/svelte-toast';
 	import { onMount } from 'svelte';
 	import { Pusher } from '../../../pusher';
 	import type Pubnub from 'pubnub';
+	import Icon from 'svelte-awesome';
+	import trashO from 'svelte-awesome/icons/trashO';
+	import edit from 'svelte-awesome/icons/edit';
 
 	export let board: Board & {
 		workSpace: WorkSpace & {
@@ -91,6 +97,22 @@
 	let draggedColumn = -1;
 	let draggedCard = -1;
 	let draggedCardColumn = -1;
+
+	let cardModalOpen = false;
+	let cardTitle: string | null = "";
+	let cardDescription: string | null = "";
+	let cardDate: Date | null = new Date();
+	let editingCard: string | null = null;
+	let selectedColumn: string | null = null;
+
+	let columnModalOpen = false;
+	let columnTitle: string | null = "";
+	let editingColumn: string | null = null;
+
+	let cardLabels: Label[] = [];
+	let labelModalOpen = false;
+	let labelTitle: string | null = "";
+	let labelColor: string | null = "";
 
 	const cardDrop = async (
 		event: any,
@@ -266,6 +288,132 @@
 		event.dataTransfer.setData('text/plain', JSON.stringify({ column }));
 	};
 
+	const createCard = async () => {
+		try {
+			const res = await axios.post('/card/create', {
+				columnId: selectedColumn,
+				title: cardTitle,
+				description: cardDescription,
+				date: new Date(cardDate)
+			});
+
+			toast.push('Card created successfully');
+			cardModalOpen = false;
+			cardTitle = '';
+			cardDescription = '';
+			cardDate = new Date();
+			
+			invalidate(`/board/${board.id}/api`);
+		} catch (error) {
+			handleError(error);
+		}
+	};
+
+	const updateCard = async (id: string | null) => {
+		if (!id || !editingCard) return;
+
+		try {
+			const res = await axios.patch(`/card/${id}/api/update`, {
+				title: cardTitle,
+				description: cardDescription,
+				date: new Date()
+			});
+
+			toast.push('Card updated successfully');
+			cardModalOpen = false;
+
+			invalidate(`/board/${board.id}/api`);
+		} catch (error) {
+			handleError(error);
+		}
+	};
+
+	const deleteCard = async (id: string) => {
+		try {
+			const res = await axios.delete(`/card/${id}/api/delete`);
+
+			toast.push('Card deleted successfully');
+
+			invalidate(`/board/${board.id}/api`);
+		} catch (error) {
+			handleError(error);
+		}
+	};
+
+	const createColumn = async () => {
+		try {
+			const res = await axios.post('/column/create', {
+				boardId: board.id,
+				title: columnTitle
+			});
+
+			toast.push('Column created successfully');
+			columnModalOpen = false;
+			cardTitle = '';
+			
+			invalidate(`/board/${board.id}/api`);
+		} catch (error) {
+			handleError(error);
+		}
+	};
+
+	const updateColumn = async (id: string | null) => {
+		if (!id || !editingColumn) return;
+
+		try {
+			const res = await axios.patch(`/column/${id}/api/update`, {
+				title: columnTitle
+			});
+
+			toast.push('Column updated successfully');
+			columnModalOpen = false;
+			
+			invalidate(`/board/${board.id}/api`);
+		} catch (error) {
+			handleError(error);
+		}
+	};
+
+	const createLabel = async () => {
+		try {
+			const res = await axios.post('/label/create', {
+				cardId: editingCard,
+				title: labelTitle,
+				color: labelColor
+			});
+
+			const labelsRes = await axios.post(`/label/getAllByCard`, {
+				cardId: editingCard
+			});
+			cardLabels = await labelsRes.data;
+
+			toast.push('Label created successfully');
+			labelTitle = '';
+			labelColor = '';
+			
+			invalidate(`/board/${board.id}/api`);
+		} catch (error) {
+			handleError(error);
+		}
+	};
+
+	const deleteLabel = async (id: string | null) => {
+		try {
+			const res = await axios.delete(`/label/${id}/api/delete`);
+
+			const labelsRes = await axios.post(`/label/getAllByCard`, {
+				cardId: editingCard
+			});
+			cardLabels = await labelsRes.data;
+
+			toast.push('Label deleted successfully');
+
+			invalidate(`/board/${board.id}/api`);
+		} catch (error) {
+			handleError(error);
+		}
+	};
+
 	let invalidateTimeout: NodeJS.Timeout | null = null;
 
 	onMount(() => {
@@ -300,6 +448,57 @@
 <svelte:head>
 	<title>Board | {board.title}</title>
 </svelte:head>
+
+<Modal
+	header={editingCard ? 'Update ' + cardTitle : 'Create a new Card'}
+	footerButton={editingCard ? 'Update' : '+ Create'}
+	open={cardModalOpen}
+	on:close={() => (cardModalOpen = false)}
+	on:create={() => (editingCard ? updateCard(editingCard) : createCard())}
+>
+	<div class="modal">
+		<input type="text" bind:value={cardTitle} placeholder="Title" />
+		<input type="text" bind:value={cardDescription} placeholder="Description" />
+		<input type="date" bind:value={cardDate} />
+	</div>
+</Modal>
+
+<Modal
+	header={editingColumn ? 'Update ' + columnTitle : 'Create a new Column'}
+	footerButton={editingColumn ? 'Update' : '+ Create'}
+	open={columnModalOpen}
+	on:close={() => (columnModalOpen = false)}
+	on:create={() => (editingColumn ? updateColumn(editingColumn) : createColumn())}
+>
+	<div class="modal">
+		<input type="text" bind:value={columnTitle} placeholder="Title" />
+	</div>
+</Modal>
+
+<Modal
+	header={'Labels'}
+	footerButton={'Create a new label'}
+	open={labelModalOpen}
+	on:close={() => (labelModalOpen = false)}
+	on:create={() => createLabel()}
+>
+	<ul>
+	{#each cardLabels as label}
+		<li>
+			<button
+				style="background-color: {label.color}; color: white;"
+				on:click={() => deleteLabel(label.id)}
+			>
+				{label.title}
+			</button>
+		</li>
+	{/each}
+	</ul>
+	<div class="modal">
+		<input type="text" bind:value={labelTitle} placeholder="Title" />
+		<input type="text" bind:value={labelColor} placeholder="Color" />
+	</div>
+</Modal>
 
 <section class="container" style={`background-image: url(${board.image ?? '/default-board.png'});`}>
 	<div class="users">
@@ -345,6 +544,18 @@
 				on:dragend={reset}
 			>
 				<h4>{column.title}</h4>
+
+				<div class="buttons">
+					<button
+						class="edit blue-btn"
+						on:click={() => {
+							editingColumn = column.id;
+							columnTitle = column.title;
+							columnModalOpen = true;
+						}}><Icon data={edit} /> Edit</button
+					>
+				</div>
+
 				<ul>
 					{#each column.cards as card, i (card.id + i)}
 						{#if cardDraggable && hoveringCard === i && hoveringColumn === j && hoveringTop && (draggedCard !== i || (j && draggedCard !== i - 1)) !== draggedCardColumn}
@@ -378,12 +589,33 @@
 						>
 							<h5>
 								{card.title}
-								{card.index}
+								{card.description}
 							</h5>
 
 							{#each card.labels as label}
-								<span class="label">{label}</span>
+								<span class="label" style="background-color: {label.color};">{label.title}</span>
 							{/each}
+
+							<div class="buttons">
+								<button
+									class="edit blue-btn"
+									on:click={() => {
+										editingCard = card.id;
+										cardTitle = card.title;
+										cardDescription = card.description;
+										cardDate = card.date;
+										cardModalOpen = true;
+									}}><Icon data={edit} /> Edit</button
+								>
+								<button class="delete blue-btn" on:click={() => deleteCard(card.id)}>
+									<Icon data={trashO} />Delete</button
+								>
+								<button class="blue-btn" on:click={() => {
+									editingCard = card.id;
+									cardLabels = card.labels;
+									labelModalOpen = true;
+								}}>Labels</button>
+							</div>
 						</li>
 
 						{#if cardDraggable && hoveringCard === i && hoveringColumn === j && hoveringBottom && (draggedCard !== i || (j && draggedCard !== i + 1) || j !== draggedCardColumn)}
@@ -413,7 +645,7 @@
 					{/if}
 
 					<li
-						class="empty"
+						class="create-card"
 						draggable={false}
 						on:drop|preventDefault={(event) =>
 							cardDrop(event, board.columns[j].cards.length, j, hoveringBottom)}
@@ -422,6 +654,13 @@
 						}}
 						on:dragenter={(e) => cardDragEnter(e, board.columns[j].cards.length, j)}
 						on:dragend={reset}
+						on:click={() => {
+							editingCard = null;
+							cardTitle = '';
+							cardDescription = '';
+							selectedColumn = column.id,
+							cardModalOpen = true
+						}}
 						class:is-active={hoveringCard === board.columns[j].cards.length && hoveringColumn === j}
 						class:hovering-top={hoveringCard === board.columns[j].cards.length &&
 							hoveringColumn === j &&
@@ -447,6 +686,16 @@
 				/>
 			{/if}
 		{/each}
+
+		<div class="column" >
+		<button class="blue-btn" on:click={() => {
+			editingColumn = null;
+			columnTitle = '';
+			columnModalOpen = true;
+		}}>
+			Add another column +</button
+		>
+		</div>
 	</div>
 </section>
 
@@ -535,8 +784,50 @@
 							margin-top: -20px;
 						}
 					}
+
+					.label {
+						color: white;
+						border-radius: 25px;
+						padding: 10px;
+						margin-right: 10px;
+					}
 				}
 			}
+		}
+		.create-card {
+			background-color: initial #2f80ed;
+			color: #2f80ed;
+			display: flex;
+			justify-content: space-between;
+			align-items: center;
+			width: 100%;
+		}
+	}
+
+	.buttons,
+		button {
+			display: flex;
+			align-items: center;
+			justify-content: space-between;
+		}
+
+		.delete {
+			background-color: red;
+
+			&:hover {
+				background-color: darken(red, 10%) !important;
+			}
+		}
+
+	.modal {
+		display: flex;
+		flex-direction: column;
+		padding: 40px 0;
+
+		input,
+		label {
+			width: 100%;
+			margin-top: 10px;
 		}
 	}
 </style>
