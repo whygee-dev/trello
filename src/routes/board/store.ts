@@ -1,3 +1,3 @@
 import { writable } from 'svelte/store';
 
-export let members = writable<string[]>([]);
+export const members = writable<string[]>([]);
