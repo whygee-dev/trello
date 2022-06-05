@@ -46,6 +46,7 @@
 	import { session } from '$app/stores';
 	import Icon from 'svelte-awesome';
 	import { resetLayout } from '../../stores/layout';
+	import { onMount } from 'svelte';
 
 	export let workspaces: (WorkSpace & {
 		users: User[];
@@ -174,7 +175,7 @@
 		}
 	};
 
-	afterNavigate(() => {
+	onMount(() => {
 		resetLayout();
 	});
 </script>

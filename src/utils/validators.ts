@@ -78,11 +78,11 @@ export class Validators {
 	}
 
 	static validateTitle(u: string) {
-		const pass = u && u.length <= 50 && u.length >= 5;
+		const pass = u && u.length <= 50 && u.length >= 2;
 
 		return {
 			pass,
-			message: !pass ? 'Title length must be between 5 and 50 ' : undefined
+			message: !pass ? 'Title length must be between 2 and 50 ' : undefined
 		};
 	}
 
@@ -95,11 +95,11 @@ export class Validators {
 	}
 
 	static validateDescription(u: string) {
-		const pass = u && u.length <= 200 && u.length >= 20;
+		const pass = u && u.length <= 200 && u.length >= 10;
 
 		return {
 			pass,
-			message: !pass ? 'Description length must be between 20 and 200 ' : undefined
+			message: !pass ? 'Description length must be between 10 and 200 ' : undefined
 		};
 	}
 
