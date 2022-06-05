@@ -592,9 +592,13 @@
 								{card.title}
 							</h5>
 
-							{#each card.labels as label}
-								<span class="label" style="background-color: {label.color};">{label.title}</span>
-							{/each}
+							<div class="labels">
+								{#each card.labels as label}
+									<span style="background-color: {label.color};">
+										<p style="color: white;">{label.title}</p>
+									</span>
+								{/each}
+							</div>
 						</li>
 
 						{#if cardDraggable && hoveringCard === i && hoveringColumn === j && hoveringBottom && (draggedCard !== i || (j && draggedCard !== i + 1) || j !== draggedCardColumn)}
@@ -804,11 +808,26 @@
 						}
 					}
 
-					.label {
-						color: white;
-						border-radius: 25px;
-						padding: 10px;
-						margin-right: 10px;
+					.labels {
+						display: flex;
+						flex-wrap: wrap;
+
+						span {
+							border-radius: 30px;
+							margin-right: 10px;
+							margin-top: 8px;
+							height: 20px;
+							padding-left: 10px;
+							padding-right: 10px;
+							
+							p {
+								font-size: 15px;
+								vertical-align: middle;
+								margin-top: auto;
+								text-align: center;
+								font-weight: 300;
+							}
+						}
 					}
 				}
 			}
