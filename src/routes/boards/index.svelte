@@ -39,11 +39,11 @@
 	import axios from 'axios';
 	import { toast } from '@zerodevx/svelte-toast';
 	import { handleError } from '../../utils/errorHandler';
-	import { afterNavigate, invalidate } from '$app/navigation';
+	import { afterNavigate, goto, invalidate } from '$app/navigation';
 	import trashO from 'svelte-awesome/icons/trashO';
 	import signOut from 'svelte-awesome/icons/signOut';
 	import edit from 'svelte-awesome/icons/edit';
-	import { session } from '$app/stores';
+	import { page, session } from '$app/stores';
 	import Icon from 'svelte-awesome';
 	import { resetLayout } from '../../stores/layout';
 	import { onMount } from 'svelte';
@@ -177,6 +177,12 @@
 
 	onMount(() => {
 		resetLayout();
+	});
+
+	afterNavigate(() => {
+		const _toast = $page.url.searchParams.get('toast');
+
+		_toast && toast.push(_toast) && goto('/boards');
 	});
 </script>
 

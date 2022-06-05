@@ -81,7 +81,7 @@
 	let hoveringRight = false;
 	let cardDraggable = true;
 	let lastMousePost = { x: -1, y: -1 };
-	let userToAdd: string;
+	let invitationDuration: Date | null;
 	let invitationModalOpen = false;
 	let linkModalOpen = false;
 	let modalLink: string;
@@ -95,13 +95,13 @@
 	const createInvitation = async () => {
 		try {
 			const res = await axios.post('/invitation/create', {
-				email: userToAdd,
+				duration: invitationDuration,
 				boardId: board.id
 			});
 
 			invitationModalOpen = false;
 			linkModalOpen = true;
-			userToAdd = '';
+			invitationDuration = null;
 			modalLink = res.data;
 		} catch (error) {
 			handleError(error);
@@ -491,7 +491,8 @@
 	on:create={createInvitation}
 >
 	<div class="invitation-modal">
-		<input type="email" bind:value={userToAdd} placeholder="Email" />
+		<h4>Please choose a time limite for the invitation :</h4>
+		<input type="datetime-local" bind:value={invitationDuration} placeholder="Days" />
 	</div>
 </Modal>
 <Modal
@@ -568,12 +569,14 @@
 				/>
 			{/if}
 		{/each}
-		<button
-			class="add"
-			on:click={() => {
-				invitationModalOpen = true;
-			}}>+</button
-		>
+		{#if board.workSpace.ownerId === userId}
+			<button
+				class="add"
+				on:click={() => {
+					invitationModalOpen = true;
+				}}>+</button
+			>
+		{/if}
 	</div>
 
 	<div class="columns scrollable">

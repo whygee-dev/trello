@@ -17,7 +17,7 @@
 		if (res.status !== 200) {
 			return {
 				status: 302,
-				redirect: '/'
+				redirect: '/boards?toast=Your invitation is no longer valid.'
 			};
 		}
 
@@ -41,6 +41,7 @@
 	const accept = async () => {
 		try {
 			await axios.patch(`${id}/accept`);
+			goto('/');
 		} catch (error) {
 			console.log(error);
 		}
@@ -49,7 +50,7 @@
 
 <Modal
 	footerButton="+ Accept"
-	header="Create an invitation link"
+	header="Invitation to join"
 	open={confirmModal}
 	on:close={() => ((confirmModal = false), goto('/'))}
 	on:create={accept}
