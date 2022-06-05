@@ -54,10 +54,8 @@
 	import { onMount } from 'svelte';
 	import { Pusher } from '../../../pusher';
 	import type Pubnub from 'pubnub';
-	import Icon from 'svelte-awesome';
-	import trashO from 'svelte-awesome/icons/trashO';
-	import edit from 'svelte-awesome/icons/edit';
 	import { clickOutside } from '../../../utils/clickOutside';
+	import CardModal from '../../../components/CardModal.svelte';
 
 	export let board: Board & {
 		workSpace: WorkSpace & {
@@ -84,21 +82,15 @@
 	let draggedCard = -1;
 	let draggedCardColumn = -1;
 
+	let createColumnModalOpen = false;
 	let cardModalOpen = false;
-	let cardTitle: string | null = '';
-	let cardDescription: string | null = '';
-	let cardDate: Date | null = new Date();
-	let editingCard: string | null = null;
+
+	let editingCard: Card | null = null;
+	let creatingCard: boolean = false;
 	let selectedColumn: string | null = null;
 
-	let columnModalOpen = false;
 	let columnTitle: string | null = '';
 	let editingColumn: Column | null = null;
-
-	let cardLabels: Label[] = [];
-	let labelModalOpen = false;
-	let labelTitle: string | null = '';
-	let labelColor: string | null = '';
 
 	const cardDrop = async (
 		event: any,
@@ -261,60 +253,6 @@
 		event.dataTransfer.setData('text/plain', JSON.stringify({ column }));
 	};
 
-	const createCard = async () => {
-		try {
-			const res = await axios.post('/card/create', {
-				columnId: selectedColumn,
-				title: cardTitle,
-				description: cardDescription,
-				date: new Date(cardDate!)
-			});
-
-			cardModalOpen = false;
-			cardTitle = '';
-			cardDescription = '';
-			cardDate = new Date();
-
-			requestSync();
-
-			toast.push('Card created successfully');
-		} catch (error) {
-			handleError(error);
-		}
-	};
-
-	const updateCard = async (id: string | null) => {
-		if (!id || !editingCard) return;
-
-		try {
-			const res = await axios.patch(`/card/${id}/api/update`, {
-				title: cardTitle,
-				description: cardDescription,
-				date: new Date()
-			});
-
-			cardModalOpen = false;
-
-			requestSync();
-
-			toast.push('Card updated successfully');
-		} catch (error) {
-			handleError(error);
-		}
-	};
-
-	const deleteCard = async (id: string) => {
-		try {
-			const res = await axios.delete(`/card/${id}/api/delete`);
-
-			requestSync();
-
-			toast.push('Card deleted successfully');
-		} catch (error) {
-			handleError(error);
-		}
-	};
-
 	const createColumn = async () => {
 		try {
 			const res = await axios.post('/column/create', {
@@ -322,8 +260,7 @@
 				title: columnTitle
 			});
 
-			columnModalOpen = false;
-			cardTitle = '';
+			createColumnModalOpen = false;
 
 			requestSync();
 
@@ -344,47 +281,6 @@
 			requestSync();
 
 			toast.push('Column updated successfully');
-		} catch (error) {
-			handleError(error);
-		}
-	};
-
-	const createLabel = async () => {
-		try {
-			const res = await axios.post('/label/create', {
-				cardId: editingCard,
-				title: labelTitle,
-				color: labelColor
-			});
-
-			const labelsRes = await axios.post(`/label/getAllByCard`, {
-				cardId: editingCard
-			});
-			cardLabels = await labelsRes.data;
-
-			labelTitle = '';
-			labelColor = '';
-
-			requestSync();
-
-			toast.push('Label created successfully');
-		} catch (error) {
-			handleError(error);
-		}
-	};
-
-	const deleteLabel = async (id: string | null) => {
-		try {
-			const res = await axios.delete(`/label/${id}/api/delete`);
-
-			const labelsRes = await axios.post(`/label/getAllByCard`, {
-				cardId: editingCard
-			});
-			cardLabels = await labelsRes.data;
-
-			requestSync();
-
-			toast.push('Label deleted successfully');
 		} catch (error) {
 			handleError(error);
 		}
@@ -434,54 +330,21 @@
 	<title>Board | {board.title}</title>
 </svelte:head>
 
-<Modal
-	header={editingCard ? 'Update ' + cardTitle : 'Create a new Card'}
-	footerButton={editingCard ? 'Update' : '+ Create'}
+<CardModal
 	open={cardModalOpen}
+    bind:card={editingCard}
 	on:close={() => (cardModalOpen = false)}
-	on:create={() => (editingCard ? updateCard(editingCard) : createCard())}
->
-	<div class="modal">
-		<input type="text" bind:value={cardTitle} placeholder="Title" />
-		<input type="text" bind:value={cardDescription} placeholder="Description" />
-		<input type="date" bind:value={cardDate} />
-	</div>
-</Modal>
+/>
 
 <Modal
-	header={editingColumn ? 'Update ' + columnTitle : 'Create a new Column'}
-	footerButton={editingColumn ? 'Update' : '+ Create'}
-	open={columnModalOpen}
-	on:close={() => (columnModalOpen = false)}
-	on:create={() => (editingColumn ? updateColumn(editingColumn.id) : createColumn())}
+	header={'Create a new column'}
+	footerButton={'+ Create'}
+	open={createColumnModalOpen}
+	on:close={() => (createColumnModalOpen = false)}
+	on:create={() => (createColumn())}
 >
 	<div class="modal">
 		<input type="text" bind:value={columnTitle} placeholder="Title" />
-	</div>
-</Modal>
-
-<Modal
-	header={'Labels'}
-	footerButton={'Create a new label'}
-	open={labelModalOpen}
-	on:close={() => (labelModalOpen = false)}
-	on:create={() => createLabel()}
->
-	<ul>
-		{#each cardLabels as label}
-			<li>
-				<button
-					style="background-color: {label.color}; color: white;"
-					on:click={() => deleteLabel(label.id)}
-				>
-					{label.title}
-				</button>
-			</li>
-		{/each}
-	</ul>
-	<div class="modal">
-		<input type="text" bind:value={labelTitle} placeholder="Title" />
-		<input type="text" bind:value={labelColor} placeholder="Color" />
 	</div>
 </Modal>
 
@@ -590,10 +453,8 @@
 							on:focus={() => (cardDraggable = true)}
 							on:mouseleave={() => (cardDraggable = draggedCard !== -1)}
 							on:click={() => {
-								editingCard = card.id;
-								cardTitle = card.title;
-								cardDescription = card.description;
-								cardDate = card.date;
+								editingCard = card;
+								selectedColumn = column.id;
 								cardModalOpen = true;
 							}}
 						>
@@ -604,20 +465,6 @@
 							{#each card.labels as label}
 								<span class="label" style="background-color: {label.color};">{label.title}</span>
 							{/each}
-
-							<div class="buttons">
-								<button class="delete blue-btn" on:click={() => deleteCard(card.id)}>
-									<Icon data={trashO} />Delete</button
-								>
-								<button
-									class="blue-btn"
-									on:click={() => {
-										editingCard = card.id;
-										cardLabels = card.labels;
-										labelModalOpen = true;
-									}}>Labels</button
-								>
-							</div>
 						</li>
 
 						{#if cardDraggable && hoveringCard === i && hoveringColumn === j && hoveringBottom && (draggedCard !== i || (j && draggedCard !== i + 1) || j !== draggedCardColumn)}
@@ -657,9 +504,10 @@
 						on:dragenter={(e) => cardDragEnter(e, board.columns[j].cards.length, j)}
 						on:dragend={reset}
 						on:click={() => {
-							editingCard = null;
-							cardTitle = '';
-							cardDescription = '';
+							editingCard.id = "";
+							editingCard.title = "";
+							editingCard.description = "";
+							editingCard.date = "";
 							(selectedColumn = column.id), (cardModalOpen = true);
 						}}
 						class:is-active={hoveringCard === board.columns[j].cards.length && hoveringColumn === j}
@@ -694,7 +542,7 @@
 				on:click={() => {
 					editingColumn = null;
 					columnTitle = '';
-					columnModalOpen = true;
+					createColumnModalOpen = true;
 				}}
 			>
 				+ Add a column
