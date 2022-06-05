@@ -417,8 +417,6 @@
 
 		lastFocus = Date.now();
 	};
-
-	console.log(members);
 </script>
 
 <svelte:head>
