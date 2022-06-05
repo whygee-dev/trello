@@ -54,10 +54,10 @@
 	import { toast } from '@zerodevx/svelte-toast';
 	import { onMount } from 'svelte';
 	import { Pusher } from '../../../pusher';
-	import type Pubnub from 'pubnub';
 	import { clickOutside } from '../../../utils/clickOutside';
 	import CardModal from '../../../components/CardModal.svelte';
 	import { members } from '../store';
+	import type Pubnub from 'pubnub';
 
 	export let board: Board & {
 		workSpace: WorkSpace & {
@@ -362,8 +362,7 @@
 					// @ts-ignore
 					if (presenceEvent.join) {
 						// @ts-ignore
-						members.push(...presenceEvent.join);
-						$members = [...new Set($members)];
+						$members = [...new Set([...$members, ...presenceEvent.join])];
 					} else {
 						checkPresence();
 					}
@@ -404,14 +403,8 @@
 		}, 1000);
 	};
 
-	let lastFocus = Date.now();
-
 	const onWindowFocus = () => {
-		if (Date.now() - lastFocus >= 100000) {
-			window.location.reload();
-		}
-
-		lastFocus = Date.now();
+		Pusher.getInstance().reconnect();
 	};
 </script>
 
