@@ -1,5 +1,7 @@
 <script context="module" lang="ts">
 	import type { Load } from '@sveltejs/kit';
+	import Modal from '../../../components/Modal.svelte';
+
 	export const load: Load = async ({ session, fetch, params }) => {
 		if (!session.user) {
 			return {
@@ -47,15 +49,16 @@
 	import Avatar from '../../../components/Avatar.svelte';
 	import { invalidate } from '$app/navigation';
 	import { layout } from '../../../stores/layout';
-	import axios from 'axios';
-	import Modal from '../../../components/Modal.svelte';
 	import { handleError } from '../../../utils/errorHandler';
+	import axios from 'axios';
 	import { toast } from '@zerodevx/svelte-toast';
 	import { onMount } from 'svelte';
 	import { Pusher } from '../../../pusher';
 	import type Pubnub from 'pubnub';
 	import { clickOutside } from '../../../utils/clickOutside';
 	import CardModal from '../../../components/CardModal.svelte';
+	import { writable } from 'svelte/store';
+	import { members } from '../store';
 
 	export let board: Board & {
 		workSpace: WorkSpace & {
@@ -78,6 +81,33 @@
 	let hoveringRight = false;
 	let cardDraggable = true;
 	let lastMousePost = { x: -1, y: -1 };
+	let invitationDuration: Date | null;
+	let invitationModalOpen = false;
+	let linkModalOpen = false;
+	let modalLink: string;
+	let min = new Date().toISOString().slice(0, 16);
+
+	const copyLink = async () => {
+		navigator.clipboard.writeText(modalLink);
+		linkModalOpen = false;
+		toast.push('Link succesfully copied !');
+	};
+
+	const createInvitation = async () => {
+		try {
+			const res = await axios.post('/invitation/create', {
+				duration: invitationDuration,
+				boardId: board.id
+			});
+
+			invitationModalOpen = false;
+			linkModalOpen = true;
+			invitationDuration = null;
+			modalLink = res.data;
+		} catch (error) {
+			handleError(error);
+		}
+	};
 	let draggedColumn = -1;
 	let draggedCard = -1;
 	let draggedCardColumn = -1;
@@ -288,11 +318,30 @@
 
 	let invalidateTimeout: NodeJS.Timeout | null = null;
 
+	const checkPresence = async () => {
+		if (Pusher.hasLoaded()) {
+			const here = await Pusher.getInstance().hereNow({
+				channels: ['board-' + board.id]
+			});
+
+			console.log(here);
+
+			$members = [
+				...new Set([
+					...here.channels['board-' + board.id].occupants.map((o) => o.uuid),
+					...$members
+				])
+			];
+
+			console.log($members);
+		}
+	};
+
 	onMount(() => {
 		const listener = {
 			status: function (statusEvent) {
 				if (statusEvent.category === 'PNConnectedCategory') {
-					console.log('sub connected');
+					checkPresence();
 				}
 			},
 			message: function (data) {
@@ -302,7 +351,33 @@
 				}
 			},
 			presence: function (presenceEvent) {
-				// This is where you handle presence. Not important for now :)
+				console.log('presenve', presenceEvent);
+
+				if (
+					(presenceEvent.action === 'timeout' || presenceEvent.action === 'leave') &&
+					presenceEvent.uuid !== userId
+				) {
+					$members = $members.filter((m) => m !== presenceEvent.uuid);
+				} else if (presenceEvent.action === 'join') {
+					$members.push(presenceEvent.uuid);
+					$members = [...new Set($members)];
+					// @ts-ignore
+				} else if (presenceEvent.action === 'interval') {
+					// @ts-ignore
+					if (presenceEvent.join) {
+						// @ts-ignore
+						members.push([...presenceEvent.join] as any);
+						$members = [...new Set($members)];
+					} else {
+						checkPresence();
+					}
+				}
+			},
+			disconnect: function () {
+				console.log('disconnected');
+			},
+			reconnect: function () {
+				console.log('reconnected');
 			}
 		} as Pubnub.ListenerParameters;
 
@@ -311,19 +386,39 @@
 			'sub-c-fda059c7-710d-4e8e-875d-08c257b7fb4b',
 			userId,
 			token,
-			{ channels: ['board-' + board.id] },
+			{ channels: ['board-' + board.id], withPresence: true },
 			listener
 		);
+
+		Pusher.getInstance();
 	});
 
+	let syncTimeout: NodeJS.Timeout | null = null;
+
 	const requestSync = () => {
-		Pusher.getInstance().publish(
-			{ message: 'REQUEST_UPDATE', channel: 'board-' + board.id },
-			() => {
-				console.log('Update request sent');
-			}
-		);
+		if (syncTimeout) clearTimeout(syncTimeout);
+
+		syncTimeout = setTimeout(() => {
+			Pusher.getInstance().publish(
+				{ message: 'REQUEST_UPDATE', channel: 'board-' + board.id },
+				() => {
+					console.log('Update request sent');
+				}
+			);
+		}, 1000);
 	};
+
+	let lastFocus = Date.now();
+
+	const onWindowFocus = () => {
+		if (Date.now() - lastFocus >= 1000000) {
+			window.location.reload();
+		}
+
+		lastFocus = Date.now();
+	};
+
+	console.log(members);
 </script>
 
 <svelte:head>
@@ -331,17 +426,38 @@
 </svelte:head>
 
 <CardModal
-	open={cardModalOpen}
-    bind:card={editingCard}
-	on:close={() => (cardModalOpen = false)}
-/>
+<svelte:window on:focus={onWindowFocus} />
 
 <Modal
-	header={'Create a new column'}
-	footerButton={'+ Create'}
+	footerButton="+ Create"
+	header="Create an invitation link"
+	open={invitationModalOpen}
+	on:close={() => (invitationModalOpen = false)}
+	on:create={createInvitation}
+>
+	<div class="invitation-modal">
+		<h4>Please choose a time limit for the invitation :</h4>
+		<input type="datetime-local" {min} bind:value={invitationDuration} placeholder="limit" />
+	</div>
+</Modal>
+
+<Modal
+	footerButton="+ Copy"
+	header="Your invitation link"
+	open={linkModalOpen}
+	on:close={() => (linkModalOpen = false)}
+	on:create={copyLink}
+>
+	<div class="invitation-modal">
+		<input type="text" value={modalLink} placeholder="Link" />
+	</div>
+</Modal>
+<Modal
+	header={editingColumn ? 'Update ' + columnTitle : 'Create a new Column'}
+	footerButton={editingColumn ? 'Update' : '+ Create'}
 	open={createColumnModalOpen}
 	on:close={() => (createColumnModalOpen = false)}
-	on:create={() => (createColumn())}
+	on:create={() => (editingColumn ? updateColumn(editingColumn.id) : createColumn())}
 >
 	<div class="modal">
 		<input type="text" bind:value={columnTitle} placeholder="Title" />
@@ -352,15 +468,29 @@
 	<div class="users">
 		{#each board.workSpace.users as user}
 			{#if user}
-				<Avatar
-					starred={user.id === board.workSpace.ownerId}
-					width={32}
-					round={false}
-					userFullName={user.fullname}
-				/>
+				<div>
+					<Avatar
+						starred={user.id === board.workSpace.ownerId}
+						width={32}
+						round={false}
+						userFullName={user.fullname}
+					/>
+					{#if $members.includes(user.id)}
+						<span class="online-indicator green" />
+					{:else}
+						<span class="online-indicator red" />
+					{/if}
+				</div>
 			{/if}
 		{/each}
-		<button class="add">+</button>
+		{#if board.workSpace.ownerId === userId}
+			<button
+				class="add"
+				on:click={() => {
+					invitationModalOpen = true;
+				}}>+</button
+			>
+		{/if}
 	</div>
 
 	<div class="columns scrollable">
@@ -552,6 +682,17 @@
 </section>
 
 <style lang="scss">
+	.invitation-modal {
+		display: flex;
+		flex-direction: column;
+		padding: 40px 0;
+
+		input {
+			width: 100%;
+			margin-top: 10px;
+		}
+	}
+
 	.container {
 		[draggable='true'] {
 			user-select: none;
@@ -585,6 +726,25 @@
 			:global(img),
 			button {
 				margin-right: 10px !important;
+			}
+
+			> div {
+				position: relative;
+				.online-indicator {
+					height: 12px;
+					width: 12px;
+					position: absolute;
+					bottom: -2px;
+					right: 10px;
+					border-radius: 50%;
+					&.green {
+						background-color: green;
+					}
+
+					&.red {
+						background-color: red;
+					}
+				}
 			}
 		}
 

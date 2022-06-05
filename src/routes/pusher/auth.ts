@@ -20,7 +20,15 @@ export const get: RequestHandler = async ({ request, locals }) => {
 
 		user?.workSpaces.forEach((workSpace) => {
 			workSpace.boards.forEach((board) => {
-				tokenParams.resources.channels['board-' + board.id] = { read: true, write: true };
+				tokenParams.resources.channels['board-' + board.id] = {
+					read: true,
+					write: true
+				};
+
+				tokenParams.resources.channels['board-' + board.id + '-pnpres'] = {
+					read: true,
+					write: true
+				};
 			});
 		});
 
