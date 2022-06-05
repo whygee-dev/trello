@@ -59,6 +59,8 @@
 	import trashO from 'svelte-awesome/icons/trashO';
 	import edit from 'svelte-awesome/icons/edit';
 	import { clickOutside } from '../../../utils/clickOutside';
+	import { writable } from 'svelte/store';
+	import { members } from '../store';
 
 	export let board: Board & {
 		workSpace: WorkSpace & {
@@ -417,13 +419,30 @@
 		}
 	};
 
-	let members: string[] = [];
+	const checkPresence = async () => {
+		if (Pusher.hasLoaded()) {
+			const here = await Pusher.getInstance().hereNow({
+				channels: ['board-' + board.id]
+			});
+
+			console.log(here);
+
+			$members = [
+				...new Set([
+					...here.channels['board-' + board.id].occupants.map((o) => o.uuid),
+					...$members
+				])
+			];
+
+			console.log($members);
+		}
+	};
 
 	onMount(() => {
 		const listener = {
 			status: function (statusEvent) {
 				if (statusEvent.category === 'PNConnectedCategory') {
-					console.log('sub connected');
+					checkPresence();
 				}
 			},
 			message: function (data) {
@@ -435,7 +454,25 @@
 			presence: function (presenceEvent) {
 				console.log('presenve', presenceEvent);
 
-				members.push(presenceEvent.uuid);
+				if (
+					(presenceEvent.action === 'timeout' || presenceEvent.action === 'leave') &&
+					presenceEvent.uuid !== userId
+				) {
+					$members = $members.filter((m) => m !== presenceEvent.uuid);
+				} else if (presenceEvent.action === 'join') {
+					$members.push(presenceEvent.uuid);
+					$members = [...new Set($members)];
+					// @ts-ignore
+				} else if (presenceEvent.action === 'interval') {
+					// @ts-ignore
+					if (presenceEvent.join) {
+						// @ts-ignore
+						members.push([...presenceEvent.join] as any);
+						$members = [...new Set($members)];
+					} else {
+						checkPresence();
+					}
+				}
 			},
 			disconnect: function () {
 				console.log('disconnected');
@@ -453,6 +490,8 @@
 			{ channels: ['board-' + board.id], withPresence: true },
 			listener
 		);
+
+		Pusher.getInstance();
 	});
 
 	let syncTimeout: NodeJS.Timeout | null = null;
@@ -470,11 +509,17 @@
 		}, 1000);
 	};
 
+	let lastFocus = Date.now();
+
 	const onWindowFocus = () => {
-		console.log('reconnecting');
-		Pusher.getInstance().reconnect();
-		invalidate(`/board/${board.id}/api`);
+		if (Date.now() - lastFocus >= 1000000) {
+			window.location.reload();
+		}
+
+		lastFocus = Date.now();
 	};
+
+	console.log(members);
 </script>
 
 <svelte:head>
@@ -561,12 +606,19 @@
 	<div class="users">
 		{#each board.workSpace.users as user}
 			{#if user}
-				<Avatar
-					starred={user.id === board.workSpace.ownerId}
-					width={32}
-					round={false}
-					userFullName={user.fullname}
-				/>
+				<div>
+					<Avatar
+						starred={user.id === board.workSpace.ownerId}
+						width={32}
+						round={false}
+						userFullName={user.fullname}
+					/>
+					{#if $members.includes(user.id)}
+						<span class="online-indicator green" />
+					{:else}
+						<span class="online-indicator red" />
+					{/if}
+				</div>
 			{/if}
 		{/each}
 		{#if board.workSpace.ownerId === userId}
@@ -788,12 +840,12 @@
 		flex-direction: column;
 		padding: 40px 0;
 
-		input,
-		label {
+		input {
 			width: 100%;
 			margin-top: 10px;
 		}
 	}
+
 	.container {
 		[draggable='true'] {
 			user-select: none;
@@ -827,6 +879,25 @@
 			:global(img),
 			button {
 				margin-right: 10px !important;
+			}
+
+			> div {
+				position: relative;
+				.online-indicator {
+					height: 12px;
+					width: 12px;
+					position: absolute;
+					bottom: -2px;
+					right: 10px;
+					border-radius: 50%;
+					&.green {
+						background-color: green;
+					}
+
+					&.red {
+						background-color: red;
+					}
+				}
 			}
 		}
 
