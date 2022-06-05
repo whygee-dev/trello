@@ -1,5 +1,4 @@
 <script lang="ts">
-    import type { Card } from '@prisma/client';
 	import { createEventDispatcher } from 'svelte';
 	import { clickOutside } from '../utils/clickOutside';
     import axios from 'axios';
@@ -11,8 +10,23 @@
     export let card = {
         title: "",
         description: "",
-        date: ""
+        date: "",
+		cover: ""
     };
+
+	let files: FileList;
+	let coverInput: HTMLInputElement | null = null;
+	let cover: string | ArrayBuffer | null = null;
+
+	function getBase64(_image: Blob) {
+		const reader = new FileReader();
+		reader.readAsDataURL(_image);
+		reader.onload = (e: ProgressEvent<FileReader>) => {
+			if (e.target) {
+				cover = e.target.result;
+			}
+		};
+	}
 
 	const dispatch = createEventDispatcher();
 
@@ -26,7 +40,8 @@
 				columnId: selectedColumn,
 				title: card.title,
 				description: card.description,
-				date: new Date(card.date!)
+				date: new Date(card.date!),
+				cover: cover
 			});
 
 			toast.push('Card created successfully');
@@ -42,7 +57,8 @@
 			const res = await axios.patch(`/card/${id}/api/update`, {
 				title: cardTitle,
 				description: cardDescription,
-				date: new Date()
+				date: new Date(),
+				cover: cover
 			});
 
 			cardModalOpen = false;
@@ -113,7 +129,7 @@
     <div class="backdrop" class:open />
     <section class="modal" use:clickOutside on:click_outside={handleClose} class:open>
 
-        {#if !card.title}
+        {#if !card.description}
             <div class="modal-header">
                 <h3>Create a new card</h3>
                 <button class="close blue-btn" on:click={handleClose}>
@@ -124,6 +140,26 @@
                 <input type="text" bind:value={card.title}  placeholder="Title" />
                 <input type="text" bind:value={card.description} placeholder="Description" />
                 <input type="date" bind:value={card.date} />
+				<label for="file-upload" class="custom-file-upload"> Upload a background image </label>
+				<input
+					class="hidden"
+					id="file-upload"
+					type="file"
+					accept=".png,.jpg,.jpeg"
+					bind:files
+					bind:this={coverInput}
+					on:change={() => getBase64(files[0])}
+				/>
+		
+				<img
+					class="uploaded-image"
+					src={cover
+						? cover.toString().startsWith('card')
+							? cover + '?' + Date.now()
+							: cover.toString()
+						: '/default-card.png'}
+					alt="Uploaded"
+				/>
             </div>
             <div class="modal-footer">
                 <button class="blue-btn" on:click={() => createCard()}>+ Create</button>
@@ -131,16 +167,20 @@
 
         {:else}
             <div class="modal-header">
-                <h3>{card.title}</h3>
+				<h3>{card.title}</h3>
+
                 <button class="close blue-btn" on:click={handleClose}>
                     <span>&times;</span>
                 </button>
             </div>
             <div class="modal-body">
-                <span>{card.date}</span>
-                
+				<img src={card.cover ? card.cover : '/default-card.png'} alt="Card" />
+
                 <h4>Description</h4>
-                <span>{card.description}</span>                
+                <span>{card.description}</span>    
+				
+				<span>{card.date}</span>
+
             </div>
         {/if}
     </section>

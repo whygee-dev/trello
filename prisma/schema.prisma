@@ -57,6 +57,7 @@ model Card {
   title       String
   description String?
   date        DateTime? @default(now())
+  cover       String?
   index       Int       @default(0)
   users       User[]
   column      Column    @relation(fields: [columnId], references: [id], onDelete: Cascade)

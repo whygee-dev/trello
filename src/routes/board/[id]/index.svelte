@@ -45,19 +45,20 @@
 </script>
 
 <script lang="ts">
-	import type { Board, Card, Column, Label, WorkSpace } from '@prisma/client';
-	import Avatar from '../../../components/Avatar.svelte';
-	import { invalidate } from '$app/navigation';
-	import { layout } from '../../../stores/layout';
-	import { handleError } from '../../../utils/errorHandler';
 	import axios from 'axios';
-	import { toast } from '@zerodevx/svelte-toast';
-	import { onMount } from 'svelte';
-	import { Pusher } from '../../../pusher';
-	import { clickOutside } from '../../../utils/clickOutside';
-	import CardModal from '../../../components/CardModal.svelte';
-	import { members } from '../store';
 	import type Pubnub from 'pubnub';
+	import { onMount } from 'svelte';
+	import { invalidate } from '$app/navigation';
+	import { toast } from '@zerodevx/svelte-toast';
+	import { handleError } from '../../../utils/errorHandler';
+	import { clickOutside } from '../../../utils/clickOutside';
+	import { members } from '../store';
+	import { layout } from '../../../stores/layout';
+	import { Pusher } from '../../../pusher';
+	import type { Board, Card, Column, Label, WorkSpace } from '@prisma/client';
+
+	import CardModal from '../../../components/CardModal.svelte';
+	import Avatar from '../../../components/Avatar.svelte';
 
 	export let board: Board & {
 		workSpace: WorkSpace & {
@@ -110,15 +111,6 @@
 	let draggedColumn = -1;
 	let draggedCard = -1;
 	let draggedCardColumn = -1;
-
-	let createColumnModalOpen = false;
-	let cardModalOpen = false;
-
-	let editingCard: Partial<Card> & { new?: boolean };
-	let selectedColumn: string | null = null;
-
-	let columnTitle: string | null = '';
-	let editingColumn: Column | null = null;
 
 	const cardDrop = async (
 		event: any,
@@ -281,6 +273,15 @@
 		event.dataTransfer.setData('text/plain', JSON.stringify({ column }));
 	};
 
+	let createColumnModalOpen = false;
+	let cardModalOpen = false;
+
+	let editingCard: Partial<Card> & { new?: boolean };
+	let selectedColumn: string | null = null;
+
+	let columnTitle: string | null = '';
+	let editingColumn: Column | null = null;
+
 	const createColumn = async () => {
 		try {
 			const res = await axios.post('/column/create', {
@@ -362,7 +363,8 @@
 					// @ts-ignore
 					if (presenceEvent.join) {
 						// @ts-ignore
-						$members = [...new Set([...$members, ...presenceEvent.join])];
+						members.push(...presenceEvent.join);
+						$members = [...new Set($members)];
 					} else {
 						checkPresence();
 					}
@@ -403,8 +405,14 @@
 		}, 1000);
 	};
 
+	let lastFocus = Date.now();
+
 	const onWindowFocus = () => {
-		Pusher.getInstance().reconnect();
+		if (Date.now() - lastFocus >= 100000) {
+			window.location.reload();
+		}
+
+		lastFocus = Date.now();
 	};
 </script>
 
