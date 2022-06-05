@@ -6,7 +6,7 @@ export class Pusher {
 	private static _uuid: string;
 	private static _token: string;
 	private static _sub: PubNub | null = null;
-	private static _channels: { channels: string[] } = { channels: [] };
+	private static _channels: PubNub.SubscribeParameters;
 	private static _listener: PubNub.ListenerParameters;
 
 	public static setInfos(
@@ -14,7 +14,7 @@ export class Pusher {
 		subKey: string,
 		uuid: string,
 		token: string,
-		channels: { channels: string[] },
+		channels: PubNub.SubscribeParameters,
 		listener: PubNub.ListenerParameters
 	) {
 		Pusher._pubKey = pubKey;
