@@ -10,7 +10,6 @@ export const get: RequestHandler = async ({ locals, params }) => {
 		const days = 24 * 60 * 60 * 1000;
 		const hours = 60 * 60 * 1000;
 		const minutes = 60 * 1000;
-		const seconds = 1000;
 
 		const invitation = await prisma.invitation.findUnique({
 			where: { id: params.id },
@@ -25,23 +24,20 @@ export const get: RequestHandler = async ({ locals, params }) => {
 		}
 
 		if (invitation) {
-			if (invitation.validFor === locals.user.id) {
-				const actualDate = new Date();
-				const createdDate = new Date(invitation.createdAt);
+			const actualDate = new Date();
+			const createdDate = new Date(invitation.createdAt);
 
-				const diff = Math.floor(actualDate.getTime() - createdDate.getTime());
+			const diff = Math.floor(actualDate.getTime() - createdDate.getTime());
+			const diffDays = Math.floor(diff / days);
+			const diffHours = Math.floor((diff % days) / hours);
+			const diffMinutes = Math.floor((diff % hours) / minutes);
 
-				const diffDays = Math.floor(diff / days);
-				const diffHours = Math.floor((diff % days) / hours);
-				//const diffMinutes = Math.floor((diff % hours) / minutes);
-				//const diffSeconds = Math.floor((diff % minutes) / seconds);
-
-				if (diffDays > 0 && diffHours > 5) {
-					return {
-						status: 400,
-						body: { message: 'Invitation expired' }
-					};
-				}
+			//verify if the invitation is expired
+			if (diffDays > 0 || diffHours > 0 || diffMinutes > 0) {
+				return {
+					status: 403,
+					body: ['The invitation is expired']
+				};
 			}
 		}
 
