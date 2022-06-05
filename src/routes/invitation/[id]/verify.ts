@@ -25,15 +25,16 @@ export const get: RequestHandler = async ({ locals, params }) => {
 
 		if (invitation) {
 			const actualDate = new Date();
-			const createdDate = new Date(invitation.createdAt);
+			const limitDate = new Date(invitation.validFor);
 
-			const diff = Math.floor(actualDate.getTime() - createdDate.getTime());
+			const diff = Math.floor(limitDate.getTime() - actualDate.getTime());
 			const diffDays = Math.floor(diff / days);
 			const diffHours = Math.floor((diff % days) / hours);
 			const diffMinutes = Math.floor((diff % hours) / minutes);
 
-			//verify if the invitation is expired
-			if (diffDays > 0 || diffHours > 0 || diffMinutes > 0) {
+			console.log(diffDays, diffHours, diffMinutes);
+
+			if (diffDays < 0 && diffHours < 0 && diffMinutes < 0) {
 				return {
 					status: 403,
 					body: ['The invitation is expired']

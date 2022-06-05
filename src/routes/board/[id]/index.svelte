@@ -87,6 +87,7 @@
 	let invitationModalOpen = false;
 	let linkModalOpen = false;
 	let modalLink: string;
+	let min = new Date().toISOString().slice(0, 16);
 
 	const copyLink = async () => {
 		navigator.clipboard.writeText(modalLink);
@@ -536,8 +537,8 @@
 	on:create={createInvitation}
 >
 	<div class="invitation-modal">
-		<h4>Please choose a time limite for the invitation :</h4>
-		<input type="datetime-local" bind:value={invitationDuration} placeholder="Days" />
+		<h4>Please choose a time limit for the invitation :</h4>
+		<input type="datetime-local" {min} bind:value={invitationDuration} placeholder="limit" />
 	</div>
 </Modal>
 <Modal
