@@ -37,17 +37,6 @@ export const post: RequestHandler = async ({ request, locals }) => {
 			return { status: 404, body: { message: 'Board not found' } };
 		}
 
-		const today = new Date();
-
-		const diff = Math.floor(limit.getTime() - today.getTime());
-		const diffDays = Math.floor(diff / days);
-		const diffHours = Math.floor((diff % days) / hours);
-		const diffMinutes = Math.floor((diff % hours) / minutes);
-
-		if (diffDays < 0 || diffHours < 0 || diffMinutes < 0) {
-			return { status: 403, body: { message: "You can't use a passed date as limit " } };
-		}
-
 		if (board) {
 			const invitation = await prisma.invitation.create({
 				data: {
