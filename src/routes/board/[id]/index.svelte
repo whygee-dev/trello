@@ -57,7 +57,6 @@
 	import type Pubnub from 'pubnub';
 	import { clickOutside } from '../../../utils/clickOutside';
 	import CardModal from '../../../components/CardModal.svelte';
-	import { writable } from 'svelte/store';
 	import { members } from '../store';
 
 	export let board: Board & {
@@ -115,8 +114,7 @@
 	let createColumnModalOpen = false;
 	let cardModalOpen = false;
 
-	let editingCard: Card | null = null;
-	let creatingCard: boolean = false;
+	let editingCard: Partial<Card> & { new?: boolean };
 	let selectedColumn: string | null = null;
 
 	let columnTitle: string | null = '';
@@ -316,8 +314,6 @@
 		}
 	};
 
-	let invalidateTimeout: NodeJS.Timeout | null = null;
-
 	const checkPresence = async () => {
 		if (Pusher.hasLoaded()) {
 			const here = await Pusher.getInstance().hereNow({
@@ -366,7 +362,7 @@
 					// @ts-ignore
 					if (presenceEvent.join) {
 						// @ts-ignore
-						members.push([...presenceEvent.join] as any);
+						members.push(...presenceEvent.join);
 						$members = [...new Set($members)];
 					} else {
 						checkPresence();
@@ -411,7 +407,7 @@
 	let lastFocus = Date.now();
 
 	const onWindowFocus = () => {
-		if (Date.now() - lastFocus >= 1000000) {
+		if (Date.now() - lastFocus >= 100000) {
 			window.location.reload();
 		}
 
@@ -423,8 +419,17 @@
 	<title>Board | {board.title}</title>
 </svelte:head>
 
-<CardModal
 <svelte:window on:focus={onWindowFocus} />
+
+<CardModal
+	{selectedColumn}
+	open={cardModalOpen}
+	bind:card={editingCard}
+	on:close={() => {
+		cardModalOpen = false;
+		requestSync();
+	}}
+/>
 
 <Modal
 	footerButton="+ Create"
@@ -632,10 +637,12 @@
 						on:dragenter={(e) => cardDragEnter(e, board.columns[j].cards.length, j)}
 						on:dragend={reset}
 						on:click={() => {
-							editingCard.id = "";
-							editingCard.title = "";
-							editingCard.description = "";
-							editingCard.date = "";
+							editingCard = {
+								title: '',
+								description: '',
+								date: new Date(),
+								new: true
+							};
 							(selectedColumn = column.id), (cardModalOpen = true);
 						}}
 						class:is-active={hoveringCard === board.columns[j].cards.length && hoveringColumn === j}
@@ -818,21 +825,6 @@
 			cursor: pointer !important;
 			min-height: 0 !important;
 			padding: 10px !important;
-		}
-	}
-
-	.buttons,
-	button {
-		display: flex;
-		align-items: center;
-		justify-content: space-between;
-	}
-
-	.delete {
-		background-color: red;
-
-		&:hover {
-			background-color: darken(red, 10%) !important;
 		}
 	}
 
