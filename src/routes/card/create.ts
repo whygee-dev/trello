@@ -50,11 +50,9 @@ export const post: RequestHandler = async ({ request, locals }) => {
 			};
 		}
 
-		const cards = await prisma.card.findMany({
-			where: { columnId: json.columnId },
-			orderBy: { index: 'desc' }
-		});
-		const index = cards.length > 0 ? ++cards[0].index : 0;
+		const count = await prisma.card.count({ where: { column: { id: json.columnId } } });
+		const index = count + 1;
+
 		const card = await prisma.card.create({
 			data: {
 				title: json.title,
@@ -70,6 +68,8 @@ export const post: RequestHandler = async ({ request, locals }) => {
 			body: card || {}
 		};
 	} catch (error) {
+		console.log(error);
+
 		return { status: 500, body: { message: 'Server error occured' } };
 	}
 };

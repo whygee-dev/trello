@@ -42,9 +42,9 @@
 	</a>
 
 	{#if $layout?.boardName}
-		<span>
+		<h3 class="board-name">
 			{$layout.boardName}
-		</span>
+		</h3>
 	{/if}
 
 	{#if $layout?.searchBarVisible}
@@ -88,6 +88,17 @@
 		position: fixed;
 		top: 0;
 		background-color: #fff;
+
+		.board-name {
+			margin: 0;
+			font-size: clamp(0.5rem, 2vw, 1.5rem);
+		}
+
+		@media (max-width: 568px) {
+			.board-name {
+				display: none;
+			}
+		}
 
 		.dropdown-avatar {
 			position: relative;

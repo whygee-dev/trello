@@ -46,6 +46,7 @@
 		"@lukeed/uuid": "^2.0.0",
 		"@prisma/client": "^3.14.0",
 		"@svelteuidev/actions": "^0.6.3-next.4",
+		"@svelteuidev/composables": "^0.6.5",
 		"@svelteuidev/core": "^0.6.3-next.5",
 		"@svelteuidev/motion": "^0.6.3-next.5",
 		"@zerodevx/svelte-toast": "^0.7.1",
