@@ -25,6 +25,9 @@
 				})[];
 			} = await res.json();
 
+			const tokenRes = await fetch(`/pusher/auth`);
+
+			const token = (await tokenRes.json()).token;
 			// for (let i = 0; i < 3; i++) {
 			// 	board.columns[0].cards.push(
 			// 		...board.columns[0].cards.map((c: any) => {
@@ -43,7 +46,7 @@
 
 			return {
 				status: res.status,
-				props: { board: board ?? null }
+				props: { board: board ?? null, token, userId: session.user.id }
 			};
 		} catch (error) {
 			console.log(error);
@@ -59,12 +62,14 @@
 <script lang="ts">
 	import type { Board, Card, Column, Label, WorkSpace } from '@prisma/client';
 	import Avatar from '../../../components/Avatar.svelte';
-	import { afterNavigate } from '$app/navigation';
-	import layout from '../../../stores/layout';
+	import { afterNavigate, invalidate } from '$app/navigation';
+	import { layout } from '../../../stores/layout';
 	import { handleError } from '../../../utils/errorHandler';
 	import axios from 'axios';
-	import { goto } from '$app/navigation';
 	import { toast } from '@zerodevx/svelte-toast';
+	import { onMount } from 'svelte';
+	import { Pusher } from '../../../pusher';
+	import type Pubnub from 'pubnub';
 
 	export let board: Board & {
 		workSpace: WorkSpace & {
@@ -76,6 +81,8 @@
 			})[];
 		})[];
 	};
+	export let token: string;
+	export let userId: string;
 
 	let hoveringCard = -1;
 	let hoveringColumn = -1;
@@ -115,13 +122,23 @@
 	let draggedCard = -1;
 	let draggedCardColumn = -1;
 
-	const cardDrop = (event: any, cardTarget: number, columnTarget: number, bottom: boolean) => {
+	const cardDrop = async (
+		event: any,
+		cardTarget: number,
+		columnTarget: number,
+		bottom: boolean
+	) => {
 		event.dataTransfer.dropEffect = 'move';
 		const data = JSON.parse(event.dataTransfer.getData('text/plain'));
 
 		if (!data) return;
 
-		if (typeof data.card === 'undefined' || typeof data.column === 'undefined') {
+		if (
+			typeof data.card === 'undefined' ||
+			typeof data.column === 'undefined' ||
+			typeof data.columnId === 'undefined' ||
+			typeof data.cardId === 'undefined'
+		) {
 			return;
 		}
 
@@ -138,19 +155,42 @@
 				newSourceColumn.splice(cardTarget + Number(bottom), 0, newSourceColumn[card]);
 				newSourceColumn.splice(card + 1, 1);
 			}
+
+			await axios.patch(`/card/moveCards`, {
+				cards: newSourceColumn,
+				sourceColumnId: data.columnId,
+				targetColumnId: data.columnId,
+				boardId: board.id
+			});
+
+			console.log(newSourceColumn.map((c) => c.title));
 		} else {
 			newTargetColumn.splice(cardTarget + Number(bottom), 0, newSourceColumn[card]);
 			newSourceColumn.splice(card, 1);
+
+			await axios.patch(`/card/moveCards`, {
+				cards: newTargetColumn,
+				sourceCards: newSourceColumn,
+				sourceColumnId: data.columnId,
+				targetColumnId: board.columns[columnTarget].id,
+				boardId: board.id
+			});
 		}
 
 		board.columns[column].cards = newSourceColumn;
 		board.columns[columnTarget].cards = newTargetColumn;
 		board = { ...board };
 
+		Pusher.getInstance().publish(
+			{ message: 'REQUEST_UPDATE', channel: 'board-' + board.id },
+			() => {
+				console.log('Update request sent');
+			}
+		);
 		reset();
 	};
 
-	const cardDragStart = (event: any, i: number, j: number) => {
+	const cardDragStart = (event: any, i: number, j: number, cardId: string, columnId: string) => {
 		event.dataTransfer.effectAllowed = 'move';
 		event.dataTransfer.dropEffect = 'move';
 		const card = i;
@@ -158,7 +198,7 @@
 		draggedCard = i;
 		draggedCardColumn = j;
 
-		event.dataTransfer.setData('text/plain', JSON.stringify({ card, column }));
+		event.dataTransfer.setData('text/plain', JSON.stringify({ card, column, cardId, columnId }));
 	};
 
 	const cardDragEnter = (e: any, i: number, j: number) => {
@@ -208,7 +248,7 @@
 		}, 100);
 	};
 
-	const columnDrop = (event: any, target: number) => {
+	const columnDrop = async (event: any, target: number) => {
 		event.dataTransfer.dropEffect = 'move';
 		const data = JSON.parse(event.dataTransfer.getData('text/plain'));
 
@@ -232,6 +272,18 @@
 		board.columns = columns;
 		board = { ...board };
 
+		await axios.patch(`/column/moveColumns`, {
+			columns,
+			boardId: board.id
+		});
+
+		Pusher.getInstance().publish(
+			{ message: 'REQUEST_UPDATE', channel: 'board-' + board.id },
+			() => {
+				console.log('Update request sent');
+			}
+		);
+
 		reset();
 	};
 
@@ -243,6 +295,36 @@
 
 		event.dataTransfer.setData('text/plain', JSON.stringify({ column }));
 	};
+
+	let invalidateTimeout: NodeJS.Timeout | null = null;
+
+	onMount(() => {
+		const listener = {
+			status: function (statusEvent) {
+				if (statusEvent.category === 'PNConnectedCategory') {
+					console.log('sub connected');
+				}
+			},
+			message: function (data) {
+				if (data.message === 'REQUEST_UPDATE') {
+					console.log('invalidating');
+					invalidate(`/board/${board.id}/api`);
+				}
+			},
+			presence: function (presenceEvent) {
+				// This is where you handle presence. Not important for now :)
+			}
+		} as Pubnub.ListenerParameters;
+
+		Pusher.setInfos(
+			'pub-c-be25a5ac-e5c9-451f-9070-e27717cc1b26',
+			'sub-c-fda059c7-710d-4e8e-875d-08c257b7fb4b',
+			userId,
+			token,
+			{ channels: ['board-' + board.id] },
+			listener
+		);
+	});
 </script>
 
 <svelte:head>
@@ -324,7 +406,7 @@
 				<h4>{column.title}</h4>
 				<ul>
 					{#each column.cards as card, i (card.id + i)}
-						{#if cardDraggable && hoveringCard === i && hoveringColumn === j && hoveringTop && (draggedCard !== i || j !== draggedCardColumn)}
+						{#if cardDraggable && hoveringCard === i && hoveringColumn === j && hoveringTop && (draggedCard !== i || (j && draggedCard !== i - 1)) !== draggedCardColumn}
 							<li
 								class="preview-drop"
 								on:drop|preventDefault={(event) => cardDrop(event, i, j, hoveringBottom)}
@@ -337,7 +419,9 @@
 						{/if}
 						<li
 							draggable={cardDraggable}
-							on:dragstart={cardDraggable ? (event) => cardDragStart(event, i, j) : null}
+							on:dragstart={cardDraggable
+								? (event) => cardDragStart(event, i, j, card.id, column.id)
+								: null}
 							on:drop|preventDefault={cardDraggable
 								? (event) => cardDrop(event, i, j, hoveringBottom)
 								: null}
@@ -353,7 +437,7 @@
 						>
 							<h5>
 								{card.title}
-								{card.id}
+								{card.index}
 							</h5>
 
 							{#each card.labels as label}
@@ -361,7 +445,7 @@
 							{/each}
 						</li>
 
-						{#if cardDraggable && hoveringCard === i && hoveringColumn === j && hoveringBottom && (draggedCard !== i || j !== draggedCardColumn)}
+						{#if cardDraggable && hoveringCard === i && hoveringColumn === j && hoveringBottom && (draggedCard !== i || (j && draggedCard !== i + 1) || j !== draggedCardColumn)}
 							<li
 								class="preview-drop"
 								on:drop|preventDefault={(event) => cardDrop(event, i, j, hoveringBottom)}

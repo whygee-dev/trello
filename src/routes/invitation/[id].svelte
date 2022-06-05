@@ -14,8 +14,6 @@
 
 		const data = await res.json();
 
-		console.log(res);
-
 		if (res.status !== 200) {
 			return {
 				status: 302,
@@ -24,9 +22,10 @@
 		}
 
 		return {
-			status: 200,
+			status: 302,
 			props: {
-				id: data.workSpaceId ?? []
+				id: data.workSpaceId ?? [],
+				name: data.workSpace.title ?? []
 			}
 		};
 	};
@@ -34,19 +33,28 @@
 
 <script lang="ts">
 	import axios from 'axios';
-	import { handleError } from '../../utils/errorHandler';
+	import Modal from '../../components/Modal.svelte';
 	export let id: string;
+	export let name: string;
+	let confirmModal = true;
+
 	const accept = async () => {
 		try {
-			let res = await axios.patch(`${id}/accept`);
-			if (res.status === 200) {
-				goto('/');
-			}
-			handleError(res);
+			await axios.patch(`${id}/accept`);
 		} catch (error) {
 			console.log(error);
 		}
 	};
 </script>
 
-<button on:click={accept}>accept</button>
+<Modal
+	footerButton="+ Accept"
+	header="Create an invitation link"
+	open={confirmModal}
+	on:close={() => ((confirmModal = false), goto('/'))}
+	on:create={accept}
+>
+	<div>
+		<p>You have been invited to join the workSpace {name}</p>
+	</div>
+</Modal>

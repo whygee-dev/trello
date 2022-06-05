@@ -10,7 +10,10 @@ export const get: RequestHandler = async ({ request, locals, params }) => {
 		const board = await prisma.board.findUnique({
 			where: { id: params.id },
 			include: {
-				columns: { include: { cards: { include: { labels: true }, orderBy: { index: 'asc' } } } },
+				columns: {
+					include: { cards: { include: { labels: true }, orderBy: { index: 'asc' } } },
+					orderBy: { index: 'asc' }
+				},
 				workSpace: { include: { users: true } }
 			}
 		});

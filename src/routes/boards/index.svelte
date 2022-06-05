@@ -39,11 +39,13 @@
 	import axios from 'axios';
 	import { toast } from '@zerodevx/svelte-toast';
 	import { handleError } from '../../utils/errorHandler';
-	import { invalidate } from '$app/navigation';
+	import { afterNavigate, invalidate } from '$app/navigation';
 	import trashO from 'svelte-awesome/icons/trashO';
+	import signOut from 'svelte-awesome/icons/signOut';
 	import edit from 'svelte-awesome/icons/edit';
 	import { session } from '$app/stores';
 	import Icon from 'svelte-awesome';
+	import { resetLayout } from '../../stores/layout';
 
 	export let workspaces: (WorkSpace & {
 		users: User[];
@@ -125,6 +127,18 @@
 		}
 	};
 
+	const exitWorkspace = async (id: string) => {
+		try {
+			const res = await axios.patch(`/workspace/${id}/removeUser`, { id: $session.user?.id });
+
+			toast.push('Quitted workspace successfully');
+
+			invalidate('/workspace/getAllWorkSpaces');
+		} catch (error) {
+			handleError(error);
+		}
+	};
+
 	const deleteBoard = async (id: string) => {
 		try {
 			const res = await axios.delete(`/board/${id}/api/delete`);
@@ -159,6 +173,10 @@
 			handleError(error);
 		}
 	};
+
+	afterNavigate(() => {
+		resetLayout();
+	});
 </script>
 
 <svelte:head>
@@ -192,7 +210,7 @@
 				? image.toString().startsWith('board')
 					? image + '?' + Date.now()
 					: image.toString()
-				: '/default-board.jpg'}
+				: '/default-board.png'}
 			alt="Uploaded"
 		/>
 	</div>
@@ -225,6 +243,8 @@
 
 						{#if workspace.owner?.email === $session.user?.email}
 							<span on:click={() => deleteWorkspace(workspace.id)}><Icon data={trashO} /></span>
+						{:else}
+							<span on:click={() => exitWorkspace(workspace.id)}><Icon data={signOut} /></span>
 						{/if}
 					</h4>
 
@@ -245,7 +265,7 @@
 					{#each workspace.boards as board}
 						<div class="board">
 							<a class="board-link" href={'/board/' + board.id}>
-								<img src={board.image ? board.image : '/default-board.jpg'} alt="Board" />
+								<img src={board.image ? board.image : '/default-board.png'} alt="Board" />
 
 								<h5>{board.title}</h5>
 							</a>

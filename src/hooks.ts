@@ -21,7 +21,8 @@ export const getSession: GetSession = async ({ locals }) => {
 	return {
 		user: locals.user && {
 			email: locals.user.email,
-			fullname: locals.user.fullname
+			fullname: locals.user.fullname,
+			id: locals.user.id
 		}
 	};
 };
