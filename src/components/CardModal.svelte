@@ -1,5 +1,5 @@
 <script lang="ts">
-	import type { Card, Column, Label } from '@prisma/client';
+	import type { Column, Label, User } from '@prisma/client';
 	import { createEventDispatcher } from 'svelte';
 	import axios from 'axios';
 	import { toast } from '@zerodevx/svelte-toast';
@@ -12,11 +12,16 @@
 	import tags from 'svelte-awesome/icons/tags';
 	import users from 'svelte-awesome/icons/users';
 	import Avatar from './Avatar.svelte';
-	import { Space } from '@svelteuidev/core';
+	import { NativeSelect, Space } from '@svelteuidev/core';
 	import fileTextO from 'svelte-awesome/icons/fileTextO';
+	import plusCircle from 'svelte-awesome/icons/plusCircle';
+	import trashO from 'svelte-awesome/icons/trashO';
+	import { clickOutside } from '../utils/clickOutside';
+	import { isLight, isWhitish } from '../utils/color';
 
 	export let open: boolean;
 	export let selectedColumn: Column | null;
+	export let boardMembers: User[] = [];
 	export let card: Partial<{
 		id: string;
 		title: string;
@@ -24,25 +29,28 @@
 		date: Date | null;
 		users: User[];
 		labels: Label[];
+		cover: string | null;
 	}> & { new?: boolean } = {
 		title: '',
 		description: '',
 		date: new Date(),
 		labels: [],
 		users: [],
+		cover: null,
 		new: false
 	};
 
 	let files: FileList;
 	let coverInput: HTMLInputElement | null = null;
-	let cover: string | ArrayBuffer | null = null;
 
 	function getBase64(_image: Blob) {
 		const reader = new FileReader();
 		reader.readAsDataURL(_image);
 		reader.onload = (e: ProgressEvent<FileReader>) => {
 			if (e.target) {
-				cover = e.target.result;
+				card.cover = e.target.result?.toString();
+
+				updateCard();
 			}
 		};
 	}
@@ -55,13 +63,9 @@
 
 	const createCard = async () => {
 		try {
-			const res = await axios.post('/card/create', {
-				columnId: selectedColumn!.id,
-				title: card.title,
-				description: card.description,
-				date: new Date(card.date!),
-				cover: cover
-			});
+			const res = await axios.post('/card/create', card);
+
+			handleClose();
 
 			toast.push('Card created successfully');
 		} catch (error) {
@@ -79,9 +83,9 @@
 		}
 	};
 
-	const deleteCard = async (id: string) => {
+	const deleteCard = async () => {
 		try {
-			const res = await axios.delete(`/card/${id}/api/delete`);
+			const res = await axios.delete(`/card/${card.id}/api/delete`);
 
 			handleClose();
 
@@ -91,42 +95,99 @@
 		}
 	};
 
-	// const createLabel = async () => {
-	// 	try {
-	// 		const res = await axios.post('/label/create', {
-	// 			cardId: editingCard,
-	// 			title: labelTitle,
-	// 			color: labelColor
-	// 		});
+	const createLabel = async (label: {
+		title: string;
+		color: string;
+		cardId: string | undefined;
+	}) => {
+		try {
+			const res = await axios.post('/label/create', label);
 
-	// 		handleClose();
+			toast.push('Label created successfully');
 
-	// 		toast.push('Label created successfully');
-	// 	} catch (error) {
-	// 		handleError(error);
-	// 	}
-	// };
+			return res.data;
+		} catch (error) {
+			handleError(error);
 
-	// const deleteLabel = async (id: string | null) => {
-	// 	try {
-	// 		const res = await axios.delete(`/label/${id}/api/delete`);
+			return null;
+		}
+	};
 
-	// 		const labelsRes = await axios.post(`/label/getAllByCard`, {
-	// 			cardId: editingCard
-	// 		});
-	// 		cardLabels = await labelsRes.data;
+	const deleteLabel = async (id: string) => {
+		try {
+			const res = (await axios.delete(`/label/${id}/api/delete`)).data;
 
-	// 		handleClose();
+			card.labels = card.labels?.filter((label) => label.id !== res.id);
 
-	// 		toast.push('Label deleted successfully');
-	// 	} catch (error) {
-	// 		handleError(error);
-	// 	}
-	// };
+			toast.push('Label deleted successfully');
+		} catch (error) {
+			handleError(error);
+		}
+	};
+
+	const addMemberToCard = async (user: User, cardId: string) => {
+		try {
+			const res = (await axios.patch(`/card/addUserToCard`, { cardId, userId: user.id })).data;
+
+			toast.push('Member added successfully');
+
+			return res;
+		} catch (error) {
+			handleError(error);
+
+			return null;
+		}
+	};
+
+	let labelDropdown = false;
+	let labelDropdownRef: HTMLElement;
+	let labelInput = '';
+	let labelColorInput = '#2f80ed';
+
+	const addLabel = async () => {
+		const label = { title: labelInput, color: labelColorInput, cardId: card.id };
+
+		const newLabel = await createLabel(label);
+
+		if (newLabel) {
+			card.labels?.push(newLabel);
+			card.labels = card.labels;
+			labelInput = '';
+		}
+	};
+
+	let membersDropdown = false;
+	let membersDropdownRef: HTMLElement;
+	let memberInput = '';
+
+	const addMember = async () => {
+		const user = boardMembers.find((u) => u.fullname === memberInput);
+
+		if (!user || !card.id) return;
+
+		const newMember = await addMemberToCard(user, card.id);
+
+		if (newMember) {
+			card.users?.push(user);
+			card.users = card.users;
+			memberInput = '';
+		}
+	};
 </script>
 
 {#if open && selectedColumn}
-	<Modal {open} header="" footerButton="" on:create={() => {}} on:close={handleClose}>
+	<Modal
+		{open}
+		header=""
+		footerButton=""
+		on:create={() => {}}
+		on:close={handleClose}
+		backdropClose={!labelDropdown && !membersDropdown}
+	>
+		{#if card.cover}
+			<img class="uploaded-cover" src={card.cover} alt="Uploaded" />
+		{/if}
+
 		<div class="container">
 			<div class="column column-first">
 				{#if !card.new}
@@ -177,25 +238,130 @@
 					</div>
 
 					<ul>
-						<li class="icon-group">
+						<label for="cover-upload" class=" li icon-group">
 							<Icon class="icon" data={photo} />
-							<span>Cover</span>
-						</li>
 
-						<li class="icon-group">
+							<input
+								class="hidden"
+								id="cover-upload"
+								type="file"
+								accept=".png,.jpg,.jpeg"
+								bind:files
+								bind:this={coverInput}
+								on:change={() => getBase64(files[0])}
+							/>
+
+							<span>Cover</span>
+						</label>
+
+						<li
+							bind:this={labelDropdownRef}
+							class="icon-group"
+							on:click={() => (labelDropdown = true)}
+						>
 							<Icon class="icon" data={tags} />
+
 							<span>Labels</span>
 						</li>
 					</ul>
 				</div>
 
 				<div class="members">
-					<div>
-						<Icon data={users} />
+					<div class="icon-group">
+						<Icon class="icon" data={users} />
 
 						<span>Members</span>
 					</div>
 
+					<div
+						class="blue-btn"
+						bind:this={membersDropdownRef}
+						on:click={() => (membersDropdown = true)}
+					>
+						<Icon data={plusCircle} />
+						<span>Add</span>
+					</div>
+				</div>
+
+				{#if !card.new}
+					<button class="red-btn" on:click={deleteCard}>
+						<Icon data={trashO} />
+						<span>Delete</span>
+					</button>
+				{/if}
+			</div>
+		</div>
+	</Modal>
+
+	{#if labelDropdown}
+		<div
+			use:clickOutside
+			on:click_outside={() => {
+				labelDropdown = false;
+			}}
+			class="label-dropdown"
+			style="
+			top:{labelDropdownRef?.getBoundingClientRect().top +
+				labelDropdownRef?.getBoundingClientRect().height +
+				10}px;
+			left: {labelDropdownRef?.getBoundingClientRect().left - 75}px;"
+		>
+			<div>
+				<input class="color-pick" type="color" bind:value={labelColorInput} />
+				<input type="text" bind:value={labelInput} placeholder="New label" />
+
+				<button class="blue-btn" on:click={addLabel}>+ Add</button>
+			</div>
+
+			{#if card.labels}
+				<div class="existant-labels">
+					{#each card.labels as label}
+						<span
+							style="background-color: {isWhitish(label.color)
+								? '#2f80ed'
+								: label.color}; color: {!isLight(label.color) || isWhitish(label.color)
+								? '#fff'
+								: '#000'}; "
+						>
+							{label.title}
+
+							<span on:click={async () => await deleteLabel(label.id)}>
+								<Icon data={trashO} />
+							</span>
+						</span>
+					{/each}
+				</div>
+			{/if}
+		</div>
+	{/if}
+
+	{#if membersDropdown}
+		<div
+			use:clickOutside
+			on:click_outside={() => {
+				membersDropdown = false;
+			}}
+			class="members-dropdown"
+			style="
+			top:{membersDropdownRef?.getBoundingClientRect().top +
+				membersDropdownRef?.getBoundingClientRect().height +
+				10}px;
+			left: {membersDropdownRef?.getBoundingClientRect().left - 75}px;"
+		>
+			<div>
+				<NativeSelect
+					data={boardMembers.map((m) => m.fullname)}
+					placeholder="Select a member"
+					label="Select a member"
+					bind:value={memberInput}
+					required
+				/>
+
+				<button class="blue-btn" on:click={addMember}>+ Add</button>
+			</div>
+
+			{#if card.users}
+				<div class="existant-users">
 					{#if card.users}
 						<div>
 							{#each card.users as user}
@@ -205,29 +371,124 @@
 									<span>{user?.fullname}</span>
 								</div>
 							{/each}
-
-							<div>
-								<span>Assign a member</span>
-
-								<span>+</span>
-							</div>
 						</div>
 					{/if}
 				</div>
-			</div>
+			{/if}
 		</div>
-	</Modal>
+	{/if}
 {/if}
 
 <style lang="scss">
+	.uploaded-cover {
+		display: block;
+		width: 100%;
+		max-height: 200px;
+		margin: auto;
+		margin-bottom: 20px;
+	}
 	:global(.modal) {
 		width: 50vw !important;
+		max-width: 1024px;
+		padding-top: 30px !important;
+
+		:global(.modal-header) {
+			position: absolute;
+			right: 10px;
+			top: 10px;
+		}
+
+		@media (max-width: 1024px) {
+			width: 75vw !important;
+		}
+
+		@media (max-width: 650px) {
+			width: 95vw !important;
+			padding-top: 10px !important;
+		}
+	}
+
+	.hidden {
+		display: none;
+	}
+
+	.label-dropdown,
+	.members-dropdown {
+		position: absolute;
+		z-index: 333;
+		background-color: white;
+		border-radius: 8px;
+		width: 300px;
+		box-shadow: 2px 2px 6px #000;
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		padding: 10px;
+	}
+
+	.label-dropdown {
+		> div {
+			display: flex;
+			align-items: center;
+			width: 100%;
+		}
+		input {
+			width: 60%;
+		}
+
+		.color-pick {
+			width: 30px;
+			margin: 0;
+			height: 40px;
+			padding: 0;
+		}
+
+		button {
+			padding: 10px;
+			font-size: 16px;
+			height: fit-content;
+		}
+
+		.existant-labels {
+			display: flex;
+			flex-wrap: wrap;
+
+			span {
+				:global(svg) {
+					margin-left: 5px;
+					cursor: pointer;
+				}
+
+				span {
+					margin: 0;
+				}
+
+				border-radius: 5px;
+				margin-right: 10px;
+				margin-top: 8px;
+				height: 20px;
+				padding: 5px 10px;
+				font-size: 15px;
+				height: fit-content;
+				display: flex;
+				align-items: center;
+			}
+		}
+	}
+
+	.members-dropdown {
+		> div {
+			display: flex;
+			justify-content: space-between;
+			align-items: flex-end;
+			width: 100%;
+		}
 	}
 
 	.container {
 		display: flex;
 		justify-content: space-between;
-		height: 70vh;
+
 		input,
 		textarea {
 			width: 100%;
@@ -257,14 +518,13 @@
 		.icon-group {
 			display: flex;
 			align-items: center;
-			.icon {
-				width: 18px;
-			}
+
 			span {
 				margin-left: 15px;
 				font-size: 16px;
 			}
 		}
+
 		.column {
 			display: flex;
 			flex-direction: column;
@@ -272,12 +532,93 @@
 			height: 100%;
 
 			&.column-first {
-				width: 60%;
+				width: 65%;
 			}
 
 			&.column-second {
 				width: 30%;
 				align-items: center;
+
+				> div,
+				button {
+					width: 80%;
+				}
+
+				.icon-group {
+					color: grey;
+				}
+
+				.settings {
+					ul {
+						padding: 0;
+						margin: 20px 0 30px;
+
+						li,
+						.li {
+							background-color: lightgrey;
+							padding: 10px;
+							border-radius: 8px;
+							color: $black;
+							margin-bottom: 10px;
+							cursor: pointer;
+							transition: 0.3s all;
+
+							&:hover {
+								background-color: darken(lightgrey, 10%);
+							}
+						}
+					}
+				}
+
+				.blue-btn {
+					display: flex;
+					align-items: center;
+					margin-top: 10px;
+					font-size: 16px;
+					border-radius: 8px;
+					padding: 10px;
+					cursor: pointer;
+
+					span {
+						margin-left: 15px;
+					}
+				}
+
+				.red-btn {
+					background-color: red;
+					color: white;
+					display: flex;
+					align-items: center;
+					padding: 10px;
+					border-radius: 8px;
+					font-size: 16px;
+					transition: 0.3s all;
+
+					&:hover {
+						background-color: darken(red, 5%);
+					}
+
+					span {
+						margin-left: 15px;
+					}
+				}
+			}
+		}
+
+		@media (max-width: 650px) {
+			flex-direction: column;
+
+			.column {
+				width: 100% !important;
+
+				&.column-second {
+					margin-top: 25px;
+
+					> div,
+					button {
+						width: 100%;
+					}
+				}
 			}
 		}
 	}

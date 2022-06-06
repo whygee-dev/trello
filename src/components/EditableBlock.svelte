@@ -18,14 +18,14 @@
 
 <div>
 	{#if !editing}
-		<div
+		<p
 			on:click={() => {
 				editing = true;
 			}}
 			class={className}
 		>
-			<span> {value}</span>
-		</div>
+			{value}
+		</p>
 	{:else if textarea}
 		<textarea
 			on:blur={() => {
@@ -65,7 +65,12 @@
 
 <style lang="scss">
 	div {
-		height: fit-content;
+		p {
+			margin: 0;
+			width: 100%;
+			word-break: break-all;
+			white-space: normal;
+		}
 	}
 
 	input,
@@ -73,5 +78,10 @@
 		width: 100%;
 
 		font-size: 16px;
+	}
+
+	textarea {
+		height: 200px;
+		max-height: 200px;
 	}
 </style>

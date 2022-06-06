@@ -50,21 +50,30 @@ export class Pusher {
 		return Pusher._loaded;
 	}
 
-	public static reconnect() {
+	public static reconnect(
+		pubKey: string,
+		subKey: string,
+		uuid: string,
+		token: string,
+		channels: PubNub.SubscribeParameters,
+		listener: PubNub.ListenerParameters
+	) {
+		if (!uuid) return;
+
 		try {
 			console.log('reconnecting');
 			this._loaded = false;
 
 			Pusher._sub?.unsubscribeAll();
 			Pusher._sub = new PubNub({
-				publishKey: Pusher._pubKey,
-				subscribeKey: Pusher._subKey,
-				uuid: Pusher._uuid,
+				publishKey: pubKey,
+				subscribeKey: subKey,
+				uuid: uuid,
 				presenceTimeout: 20
 			});
-			Pusher._sub.setToken(Pusher._token);
-			Pusher._sub.addListener(Pusher._listener);
-			Pusher._sub.subscribe(Pusher._channels);
+			Pusher._sub.setToken(token);
+			Pusher._sub.addListener(listener);
+			Pusher._sub.subscribe(channels);
 
 			this._loaded = true;
 		} catch (error) {
