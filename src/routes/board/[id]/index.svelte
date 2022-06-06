@@ -913,7 +913,7 @@
 			justify-content: space-between;
 			align-items: center;
 			cursor: pointer !important;
-			min-height: 0 !important;
+			min-height: 100px !important;
 			padding: 10px !important;
 		}
 	}
