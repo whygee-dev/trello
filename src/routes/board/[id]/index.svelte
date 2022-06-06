@@ -85,11 +85,19 @@
 	let hoveringRight = false;
 	let cardDraggable = true;
 	let lastMousePost = { x: -1, y: -1 };
+
 	let invitationDuration: Date | null;
 	let invitationModalOpen = false;
 	let linkModalOpen = false;
 	let modalLink: string;
+
 	let min = new Date().toISOString().slice(0, 16);
+	const getMaxDate = () => {
+		const d = new Date();
+		d.setDate(d.getDate() + 6);
+		return d.toISOString().slice(0, 16);
+	};	
+	let max = getMaxDate();
 
 	const copyLink = async () => {
 		navigator.clipboard.writeText(modalLink);
@@ -437,7 +445,7 @@
 >
 	<div class="invitation-modal">
 		<h4>Please choose a time limit for the invitation :</h4>
-		<input type="datetime-local" {min} bind:value={invitationDuration} placeholder="limit" />
+		<input type="datetime-local" {min} {max} bind:value={invitationDuration} placeholder="limit" />
 	</div>
 </Modal>
 
