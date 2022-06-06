@@ -18,7 +18,7 @@ export const patch: RequestHandler = async ({ request, locals }) => {
 
 		const json: Body = await request.json();
 		const validateFullname = Validators.validateFullname(json.fullname);
-		const validatePassword = Validators.validatePassword(json.image);
+		const validatePassword = Validators.validatePassword(json.password);
 		const validateUsername = Validators.validateUsername(json.username);
 		const validateImage = Validators.validateImage(json.image?.split(',')[1]);
 
