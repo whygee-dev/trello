@@ -46,20 +46,21 @@
 </script>
 
 <script lang="ts">
-	import type { Board, Card, Column, Label, WorkSpace } from '@prisma/client';
-	import Avatar from '../../../components/Avatar.svelte';
-	import { invalidate } from '$app/navigation';
-	import { layout } from '../../../stores/layout';
-	import { handleError } from '../../../utils/errorHandler';
 	import axios from 'axios';
-	import { toast } from '@zerodevx/svelte-toast';
-	import { onMount } from 'svelte';
-	import { Pusher } from '../../../pusher';
-	import { clickOutside } from '../../../utils/clickOutside';
-	import CardModal from '../../../components/CardModal.svelte';
-	import { members } from '../store';
 	import type Pubnub from 'pubnub';
 	import { editingCard } from './store';
+	import { onMount } from 'svelte';
+	import { invalidate } from '$app/navigation';
+	import { toast } from '@zerodevx/svelte-toast';
+	import { handleError } from '../../../utils/errorHandler';
+	import { clickOutside } from '../../../utils/clickOutside';
+	import { members } from '../store';
+	import { layout } from '../../../stores/layout';
+	import { Pusher } from '../../../pusher';
+	import type { Board, Card, Column, Label, WorkSpace } from '@prisma/client';
+
+	import CardModal from '../../../components/CardModal.svelte';
+	import Avatar from '../../../components/Avatar.svelte';
 
 	export let board: Board & {
 		workSpace: WorkSpace & {
@@ -114,14 +115,6 @@
 	let draggedColumn = -1;
 	let draggedCard = -1;
 	let draggedCardColumn = -1;
-
-	let createColumnModalOpen = false;
-	let cardModalOpen = false;
-
-	let selectedColumn: Column | null = null;
-
-	let columnTitle: string | null = '';
-	let editingColumn: Column | null = null;
 
 	const cardDrop = async (
 		event: any,
@@ -284,6 +277,13 @@
 		event.dataTransfer.setData('text/plain', JSON.stringify({ column }));
 	};
 
+	let createColumnModalOpen = false;
+	let cardModalOpen = false;
+	let selectedColumn: Column | null = null;
+
+	let columnTitle: string | null = '';
+	let editingColumn: Column | null = null;
+
 	const createColumn = async () => {
 		try {
 			const res = await axios.post('/column/create', {
@@ -361,7 +361,8 @@
 					// @ts-ignore
 					if (presenceEvent.join) {
 						// @ts-ignore
-						$members = [...new Set([...$members, ...presenceEvent.join])];
+						members.push(...presenceEvent.join);
+						$members = [...new Set($members)];
 					} else {
 						checkPresence();
 					}
@@ -410,6 +411,7 @@
 			Pusher.reconnect();
 		}, 100000);
 	}
+	let lastFocus = Date.now();
 </script>
 
 <svelte:head>
@@ -597,9 +599,13 @@
 								{card.title}
 							</h5>
 
-							{#each card.labels as label}
-								<span class="label" style="background-color: {label.color};">{label.title}</span>
-							{/each}
+							<div class="labels">
+								{#each card.labels as label}
+									<span style="background-color: {label.color};">
+										<p style="color: white;">{label.title}</p>
+									</span>
+								{/each}
+							</div>
 						</li>
 
 						{#if cardDraggable && hoveringCard === i && hoveringColumn === j && hoveringBottom && (draggedCard !== i || (j && draggedCard !== i + 1) || j !== draggedCardColumn)}
@@ -813,11 +819,26 @@
 						}
 					}
 
-					.label {
-						color: white;
-						border-radius: 25px;
-						padding: 10px;
-						margin-right: 10px;
+					.labels {
+						display: flex;
+						flex-wrap: wrap;
+
+						span {
+							border-radius: 30px;
+							margin-right: 10px;
+							margin-top: 8px;
+							height: 20px;
+							padding-left: 10px;
+							padding-right: 10px;
+
+							p {
+								font-size: 15px;
+								vertical-align: middle;
+								margin-top: auto;
+								text-align: center;
+								font-weight: 300;
+							}
+						}
 					}
 				}
 			}

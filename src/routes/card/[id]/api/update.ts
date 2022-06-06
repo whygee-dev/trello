@@ -6,6 +6,7 @@ type Body = {
 	title: string;
 	description: string;
 	date: Date;
+	cover: string;
 };
 
 export const patch: RequestHandler = async ({ request, locals, params }) => {
@@ -17,11 +18,12 @@ export const patch: RequestHandler = async ({ request, locals, params }) => {
 		const id = params.id;
 		const json: Body = await request.json();
 		const validateTitle = Validators.validateTitle(json.title);
-		
-		if (!validateTitle.pass) {
+		const validateCover = Validators.validateImage(json.cover?.split(',')[1]);
+
+		if (!validateTitle.pass || !validateCover.pass) {
 			return {
 				status: 400,
-				body: { errors: [validateTitle.message] }
+				body: { errors: [validateTitle.message, validateCover.message] }
 			};
 		}
 
@@ -52,7 +54,8 @@ export const patch: RequestHandler = async ({ request, locals, params }) => {
 			data: {
 				title: json.title,
 				description: json.description,
-				date: json.date
+				date: json.date,
+				cover: json.cover ?? card.cover
 			}
 		});
 

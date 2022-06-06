@@ -7,6 +7,7 @@ type Body = {
 	title: string;
 	description: string;
 	date: Date;
+	cover: string;
 };
 
 export const post: RequestHandler = async ({ request, locals }) => {
@@ -17,16 +18,17 @@ export const post: RequestHandler = async ({ request, locals }) => {
 
 		const json: Body = await request.json();
 		const validateTitle = Validators.validateTitle(json.title);
+		const validateCover = Validators.validateImage(json.cover?.split(',')[1]);
 
 		if (!json.columnId || typeof json.columnId !== 'string') {
 			return {
 				status: 400,
 				body: { error: ['Invalid column ID'] }
 			};
-		} else if (!validateTitle.pass) {
+		} else if (!validateTitle.pass || !validateCover.pass) {
 			return {
 				status: 400,
-				body: { errors: [validateTitle.message] }
+				body: { errors: [validateTitle.message, validateCover.message] }
 			};
 		}
 
@@ -58,6 +60,7 @@ export const post: RequestHandler = async ({ request, locals }) => {
 				title: json.title,
 				description: json.description,
 				date: json.date,
+				cover: json.cover ?? null,
 				index,
 				column: { connect: { id: column?.id } }
 			}

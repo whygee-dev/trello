@@ -33,6 +33,20 @@
 		new: false
 	};
 
+	let files: FileList;
+	let coverInput: HTMLInputElement | null = null;
+	let cover: string | ArrayBuffer | null = null;
+
+	function getBase64(_image: Blob) {
+		const reader = new FileReader();
+		reader.readAsDataURL(_image);
+		reader.onload = (e: ProgressEvent<FileReader>) => {
+			if (e.target) {
+				cover = e.target.result;
+			}
+		};
+	}
+
 	const dispatch = createEventDispatcher();
 
 	const handleClose = () => {
@@ -45,7 +59,8 @@
 				columnId: selectedColumn!.id,
 				title: card.title,
 				description: card.description,
-				date: new Date(card.date!)
+				date: new Date(card.date!),
+				cover: cover
 			});
 
 			toast.push('Card created successfully');
