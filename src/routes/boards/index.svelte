@@ -33,20 +33,21 @@
 </script>
 
 <script lang="ts">
-	import type { Board, WorkSpace } from '@prisma/client';
-	import Avatar from '../../components/Avatar.svelte';
-	import Modal from '../../components/Modal.svelte';
 	import axios from 'axios';
-	import { toast } from '@zerodevx/svelte-toast';
-	import { handleError } from '../../utils/errorHandler';
-	import { afterNavigate, goto, invalidate } from '$app/navigation';
+	import Icon from 'svelte-awesome';
 	import trashO from 'svelte-awesome/icons/trashO';
 	import signOut from 'svelte-awesome/icons/signOut';
 	import edit from 'svelte-awesome/icons/edit';
+	import { toast } from '@zerodevx/svelte-toast';
+	import { afterNavigate, goto, invalidate } from '$app/navigation';
+	import { handleError } from '../../utils/errorHandler';
 	import { page, session } from '$app/stores';
-	import Icon from 'svelte-awesome';
 	import { resetLayout } from '../../stores/layout';
 	import { onMount } from 'svelte';
+	import type { Board, WorkSpace } from '@prisma/client';
+
+	import Avatar from '../../components/Avatar.svelte';
+	import Modal from '../../components/Modal.svelte';
 
 	export let workspaces: (WorkSpace & {
 		users: User[];
@@ -56,13 +57,18 @@
 
 	let boardModalOpen = false;
 	let workspaceModalOpen = false;
+
 	let editingBoard: string | null = null;
 	let editingWorkspace = false;
+
 	let selectedWorkspace: string | null = null;
+
 	let boardTitle = '';
 	let boardDescription: string | null = '';
+
 	let workspaceTitle = '';
 	let workspaceDescription = '';
+
 	let imageInput: HTMLInputElement | null = null;
 	let files: FileList;
 	let image: string | ArrayBuffer | null = null;

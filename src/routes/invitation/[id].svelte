@@ -34,6 +34,7 @@
 <script lang="ts">
 	import axios from 'axios';
 	import Modal from '../../components/Modal.svelte';
+	import { handleError } from '../../utils/errorHandler';
 	export let id: string;
 	export let name: string;
 	let confirmModal = true;
@@ -41,9 +42,10 @@
 	const accept = async () => {
 		try {
 			await axios.patch(`${id}/accept`);
-			goto('/');
 		} catch (error) {
-			console.log(error);
+			handleError(error);
+		} finally {
+			goto('/boards');
 		}
 	};
 </script>

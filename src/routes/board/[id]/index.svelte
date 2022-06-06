@@ -45,20 +45,20 @@
 </script>
 
 <script lang="ts">
-	import type { Board, Card, Column, Label, WorkSpace } from '@prisma/client';
-	import Avatar from '../../../components/Avatar.svelte';
-	import { invalidate } from '$app/navigation';
-	import { layout } from '../../../stores/layout';
-	import { handleError } from '../../../utils/errorHandler';
 	import axios from 'axios';
-	import { toast } from '@zerodevx/svelte-toast';
-	import { onMount } from 'svelte';
-	import { Pusher } from '../../../pusher';
 	import type Pubnub from 'pubnub';
-	import Icon from 'svelte-awesome';
-	import trashO from 'svelte-awesome/icons/trashO';
-	import edit from 'svelte-awesome/icons/edit';
+	import { onMount } from 'svelte';
+	import { invalidate } from '$app/navigation';
+	import { toast } from '@zerodevx/svelte-toast';
+	import { handleError } from '../../../utils/errorHandler';
 	import { clickOutside } from '../../../utils/clickOutside';
+	import { members } from '../store';
+	import { layout } from '../../../stores/layout';
+	import { Pusher } from '../../../pusher';
+	import type { Board, Card, Column, Label, WorkSpace } from '@prisma/client';
+
+	import CardModal from '../../../components/CardModal.svelte';
+	import Avatar from '../../../components/Avatar.svelte';
 
 	export let board: Board & {
 		workSpace: WorkSpace & {
@@ -119,22 +119,6 @@
 	let draggedColumn = -1;
 	let draggedCard = -1;
 	let draggedCardColumn = -1;
-
-	let cardModalOpen = false;
-	let cardTitle: string | null = '';
-	let cardDescription: string | null = '';
-	let cardDate: Date | null = new Date();
-	let editingCard: string | null = null;
-	let selectedColumn: string | null = null;
-
-	let columnModalOpen = false;
-	let columnTitle: string | null = '';
-	let editingColumn: Column | null = null;
-
-	let cardLabels: Label[] = [];
-	let labelModalOpen = false;
-	let labelTitle: string | null = '';
-	let labelColor: string | null = '';
 
 	const cardDrop = async (
 		event: any,
@@ -297,59 +281,14 @@
 		event.dataTransfer.setData('text/plain', JSON.stringify({ column }));
 	};
 
-	const createCard = async () => {
-		try {
-			const res = await axios.post('/card/create', {
-				columnId: selectedColumn,
-				title: cardTitle,
-				description: cardDescription,
-				date: new Date(cardDate!)
-			});
+	let createColumnModalOpen = false;
+	let cardModalOpen = false;
 
-			cardModalOpen = false;
-			cardTitle = '';
-			cardDescription = '';
-			cardDate = new Date();
+	let editingCard: Partial<Card> & { new?: boolean };
+	let selectedColumn: string | null = null;
 
-			requestSync();
-
-			toast.push('Card created successfully');
-		} catch (error) {
-			handleError(error);
-		}
-	};
-
-	const updateCard = async (id: string | null) => {
-		if (!id || !editingCard) return;
-
-		try {
-			const res = await axios.patch(`/card/${id}/api/update`, {
-				title: cardTitle,
-				description: cardDescription,
-				date: new Date()
-			});
-
-			cardModalOpen = false;
-
-			requestSync();
-
-			toast.push('Card updated successfully');
-		} catch (error) {
-			handleError(error);
-		}
-	};
-
-	const deleteCard = async (id: string) => {
-		try {
-			const res = await axios.delete(`/card/${id}/api/delete`);
-
-			requestSync();
-
-			toast.push('Card deleted successfully');
-		} catch (error) {
-			handleError(error);
-		}
-	};
+	let columnTitle: string | null = '';
+	let editingColumn: Column | null = null;
 
 	const createColumn = async () => {
 		try {
@@ -358,8 +297,7 @@
 				title: columnTitle
 			});
 
-			columnModalOpen = false;
-			cardTitle = '';
+			createColumnModalOpen = false;
 
 			requestSync();
 
@@ -385,54 +323,30 @@
 		}
 	};
 
-	const createLabel = async () => {
-		try {
-			const res = await axios.post('/label/create', {
-				cardId: editingCard,
-				title: labelTitle,
-				color: labelColor
+	const checkPresence = async () => {
+		if (Pusher.hasLoaded()) {
+			const here = await Pusher.getInstance().hereNow({
+				channels: ['board-' + board.id]
 			});
 
-			const labelsRes = await axios.post(`/label/getAllByCard`, {
-				cardId: editingCard
-			});
-			cardLabels = await labelsRes.data;
+			console.log(here);
 
-			labelTitle = '';
-			labelColor = '';
+			$members = [
+				...new Set([
+					...here.channels['board-' + board.id].occupants.map((o) => o.uuid),
+					...$members
+				])
+			];
 
-			requestSync();
-
-			toast.push('Label created successfully');
-		} catch (error) {
-			handleError(error);
+			console.log($members);
 		}
 	};
-
-	const deleteLabel = async (id: string | null) => {
-		try {
-			const res = await axios.delete(`/label/${id}/api/delete`);
-
-			const labelsRes = await axios.post(`/label/getAllByCard`, {
-				cardId: editingCard
-			});
-			cardLabels = await labelsRes.data;
-
-			requestSync();
-
-			toast.push('Label deleted successfully');
-		} catch (error) {
-			handleError(error);
-		}
-	};
-
-	let members: string[] = [];
 
 	onMount(() => {
 		const listener = {
 			status: function (statusEvent) {
 				if (statusEvent.category === 'PNConnectedCategory') {
-					console.log('sub connected');
+					checkPresence();
 				}
 			},
 			message: function (data) {
@@ -444,7 +358,25 @@
 			presence: function (presenceEvent) {
 				console.log('presenve', presenceEvent);
 
-				members.push(presenceEvent.uuid);
+				if (
+					(presenceEvent.action === 'timeout' || presenceEvent.action === 'leave') &&
+					presenceEvent.uuid !== userId
+				) {
+					$members = $members.filter((m) => m !== presenceEvent.uuid);
+				} else if (presenceEvent.action === 'join') {
+					$members.push(presenceEvent.uuid);
+					$members = [...new Set($members)];
+					// @ts-ignore
+				} else if (presenceEvent.action === 'interval') {
+					// @ts-ignore
+					if (presenceEvent.join) {
+						// @ts-ignore
+						members.push(...presenceEvent.join);
+						$members = [...new Set($members)];
+					} else {
+						checkPresence();
+					}
+				}
 			},
 			disconnect: function () {
 				console.log('disconnected');
@@ -462,6 +394,8 @@
 			{ channels: ['board-' + board.id], withPresence: true },
 			listener
 		);
+
+		Pusher.getInstance();
 	});
 
 	let syncTimeout: NodeJS.Timeout | null = null;
@@ -479,10 +413,14 @@
 		}, 1000);
 	};
 
+	let lastFocus = Date.now();
+
 	const onWindowFocus = () => {
-		console.log('reconnecting');
-		Pusher.getInstance().reconnect();
-		invalidate(`/board/${board.id}/api`);
+		if (Date.now() - lastFocus >= 100000) {
+			window.location.reload();
+		}
+
+		lastFocus = Date.now();
 	};
 </script>
 
@@ -491,6 +429,16 @@
 </svelte:head>
 
 <svelte:window on:focus={onWindowFocus} />
+
+<CardModal
+	{selectedColumn}
+	open={cardModalOpen}
+	bind:card={editingCard}
+	on:close={() => {
+		cardModalOpen = false;
+		requestSync();
+	}}
+/>
 
 <Modal
 	footerButton="+ Create"
@@ -502,19 +450,6 @@
 	<div class="invitation-modal">
 		<h4>Please choose a time limit for the invitation :</h4>
 		<input type="datetime-local" {min} {max} bind:value={invitationDuration} placeholder="limit" />
-	</div>
-</Modal>
-<Modal
-	header={editingCard ? 'Update ' + cardTitle : 'Create a new Card'}
-	footerButton={editingCard ? 'Update' : '+ Create'}
-	open={cardModalOpen}
-	on:close={() => (cardModalOpen = false)}
-	on:create={() => (editingCard ? updateCard(editingCard) : createCard())}
->
-	<div class="modal">
-		<input type="text" bind:value={cardTitle} placeholder="Title" />
-		<input type="text" bind:value={cardDescription} placeholder="Description" />
-		<input type="date" bind:value={cardDate} />
 	</div>
 </Modal>
 
@@ -532,8 +467,8 @@
 <Modal
 	header={editingColumn ? 'Update ' + columnTitle : 'Create a new Column'}
 	footerButton={editingColumn ? 'Update' : '+ Create'}
-	open={columnModalOpen}
-	on:close={() => (columnModalOpen = false)}
+	open={createColumnModalOpen}
+	on:close={() => (createColumnModalOpen = false)}
 	on:create={() => (editingColumn ? updateColumn(editingColumn.id) : createColumn())}
 >
 	<div class="modal">
@@ -541,41 +476,23 @@
 	</div>
 </Modal>
 
-<Modal
-	header={'Labels'}
-	footerButton={'Create a new label'}
-	open={labelModalOpen}
-	on:close={() => (labelModalOpen = false)}
-	on:create={() => createLabel()}
->
-	<ul>
-		{#each cardLabels as label}
-			<li>
-				<button
-					style="background-color: {label.color}; color: white;"
-					on:click={() => deleteLabel(label.id)}
-				>
-					{label.title}
-				</button>
-			</li>
-		{/each}
-	</ul>
-	<div class="modal">
-		<input type="text" bind:value={labelTitle} placeholder="Title" />
-		<input type="text" bind:value={labelColor} placeholder="Color" />
-	</div>
-</Modal>
-
 <section class="container" style={`background-image: url(${board.image ?? '/default-board.png'});`}>
 	<div class="users">
 		{#each board.workSpace.users as user}
 			{#if user}
-				<Avatar
-					starred={user.id === board.workSpace.ownerId}
-					width={32}
-					round={false}
-					userFullName={user.fullname}
-				/>
+				<div>
+					<Avatar
+						starred={user.id === board.workSpace.ownerId}
+						width={32}
+						round={false}
+						userFullName={user.fullname}
+					/>
+					{#if $members.includes(user.id)}
+						<span class="online-indicator green" />
+					{:else}
+						<span class="online-indicator red" />
+					{/if}
+				</div>
 			{/if}
 		{/each}
 		{#if board.workSpace.ownerId === userId}
@@ -678,10 +595,8 @@
 							on:focus={() => (cardDraggable = true)}
 							on:mouseleave={() => (cardDraggable = draggedCard !== -1)}
 							on:click={() => {
-								editingCard = card.id;
-								cardTitle = card.title;
-								cardDescription = card.description;
-								cardDate = card.date;
+								editingCard = card;
+								selectedColumn = column.id;
 								cardModalOpen = true;
 							}}
 						>
@@ -689,22 +604,12 @@
 								{card.title}
 							</h5>
 
-							{#each card.labels as label}
-								<span class="label" style="background-color: {label.color};">{label.title}</span>
-							{/each}
-
-							<div class="buttons">
-								<button class="delete blue-btn" on:click={() => deleteCard(card.id)}>
-									<Icon data={trashO} />Delete</button
-								>
-								<button
-									class="blue-btn"
-									on:click={() => {
-										editingCard = card.id;
-										cardLabels = card.labels;
-										labelModalOpen = true;
-									}}>Labels</button
-								>
+							<div class="labels">
+								{#each card.labels as label}
+									<span style="background-color: {label.color};">
+										<p style="color: white;">{label.title}</p>
+									</span>
+								{/each}
 							</div>
 						</li>
 
@@ -745,9 +650,12 @@
 						on:dragenter={(e) => cardDragEnter(e, board.columns[j].cards.length, j)}
 						on:dragend={reset}
 						on:click={() => {
-							editingCard = null;
-							cardTitle = '';
-							cardDescription = '';
+							editingCard = {
+								title: '',
+								description: '',
+								date: new Date(),
+								new: true
+							};
 							(selectedColumn = column.id), (cardModalOpen = true);
 						}}
 						class:is-active={hoveringCard === board.columns[j].cards.length && hoveringColumn === j}
@@ -782,7 +690,7 @@
 				on:click={() => {
 					editingColumn = null;
 					columnTitle = '';
-					columnModalOpen = true;
+					createColumnModalOpen = true;
 				}}
 			>
 				+ Add a column
@@ -797,12 +705,12 @@
 		flex-direction: column;
 		padding: 40px 0;
 
-		input,
-		label {
+		input {
 			width: 100%;
 			margin-top: 10px;
 		}
 	}
+
 	.container {
 		[draggable='true'] {
 			user-select: none;
@@ -836,6 +744,25 @@
 			:global(img),
 			button {
 				margin-right: 10px !important;
+			}
+
+			> div {
+				position: relative;
+				.online-indicator {
+					height: 12px;
+					width: 12px;
+					position: absolute;
+					bottom: -2px;
+					right: 10px;
+					border-radius: 50%;
+					&.green {
+						background-color: green;
+					}
+
+					&.red {
+						background-color: red;
+					}
+				}
 			}
 		}
 
@@ -895,11 +822,26 @@
 						}
 					}
 
-					.label {
-						color: white;
-						border-radius: 25px;
-						padding: 10px;
-						margin-right: 10px;
+					.labels {
+						display: flex;
+						flex-wrap: wrap;
+
+						span {
+							border-radius: 30px;
+							margin-right: 10px;
+							margin-top: 8px;
+							height: 20px;
+							padding-left: 10px;
+							padding-right: 10px;
+							
+							p {
+								font-size: 15px;
+								vertical-align: middle;
+								margin-top: auto;
+								text-align: center;
+								font-weight: 300;
+							}
+						}
 					}
 				}
 			}
@@ -911,21 +853,6 @@
 			cursor: pointer !important;
 			min-height: 0 !important;
 			padding: 10px !important;
-		}
-	}
-
-	.buttons,
-	button {
-		display: flex;
-		align-items: center;
-		justify-content: space-between;
-	}
-
-	.delete {
-		background-color: red;
-
-		&:hover {
-			background-color: darken(red, 10%) !important;
 		}
 	}
 

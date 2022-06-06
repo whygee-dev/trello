@@ -8,6 +8,7 @@ export class Pusher {
 	private static _sub: PubNub | null = null;
 	private static _channels: PubNub.SubscribeParameters;
 	private static _listener: PubNub.ListenerParameters;
+	private static _loaded = false;
 
 	public static setInfos(
 		pubKey: string,
@@ -30,15 +31,22 @@ export class Pusher {
 			Pusher._sub = new PubNub({
 				publishKey: Pusher._pubKey,
 				subscribeKey: Pusher._subKey,
-				uuid: Pusher._uuid
+				uuid: Pusher._uuid,
+				presenceTimeout: 2
 			});
 			Pusher._sub.setToken(Pusher._token);
-			Pusher._sub.subscribe(Pusher._channels);
 			Pusher._sub.addListener(Pusher._listener);
+			Pusher._sub.subscribe(Pusher._channels);
+
+			this._loaded = true;
 
 			return Pusher._sub;
 		}
 
 		return Pusher._sub;
+	}
+
+	public static hasLoaded() {
+		return Pusher._loaded;
 	}
 }
