@@ -34,13 +34,6 @@ export const post: RequestHandler = async ({ request, locals }) => {
 			};
 		}
 
-		if (!validateTitle.pass) {
-			return {
-				status: 400,
-				body: { errors: [validateTitle.message] }
-			};
-		}
-
 		if (!validateTitle.pass || !validateImage.pass) {
 			return {
 				status: 400,
