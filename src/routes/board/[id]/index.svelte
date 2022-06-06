@@ -854,6 +854,15 @@
 							border-radius: 12px;
 						}
 
+						.card-members {
+							display: flex;
+							align-items: center;
+
+							:global(.avatar-container) {
+								margin: 15px 5px 10px 0;
+							}
+						}
+
 						h5 {
 							margin: 0;
 						}

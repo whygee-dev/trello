@@ -94,6 +94,40 @@ export class Validators {
 		};
 	}
 
+	static validateLabel(u: string) {
+		const pass = u.length <= 40 && u.length >= 2;
+
+		return {
+			pass,
+			message: !pass ? 'Label length must be between 2 and 20 characters' : undefined
+		};
+	}
+
+	static labelValidator() {
+		return (v: string) => {
+			const b = Validators.validateLabel(v);
+
+			return b.pass || b.message;
+		};
+	}
+
+	static validateColor(u: string) {
+		const pass = /^#([0-9a-f]{3}){1,2}$/i.test(u);
+
+		return {
+			pass,
+			message: !pass ? 'Invalid color' : undefined
+		};
+	}
+
+	static colorValidator() {
+		return (v: string) => {
+			const b = Validators.validateColor(v);
+
+			return b.pass || b.message;
+		};
+	}
+
 	static validateDescription(u: string) {
 		const pass = u && u.length <= 200 && u.length >= 10;
 

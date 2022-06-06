@@ -22,7 +22,7 @@
 		'#bdc3c7',
 		'#7f8c8d'
 	];
-	import { onMount } from 'svelte';
+	import { afterUpdate, onMount } from 'svelte';
 	export let width = 32;
 	export let round = true;
 	export let src = '';
@@ -84,6 +84,10 @@
 	}
 
 	onMount(() => {
+		avatarImage.src = src !== '' ? src : LetterAvatar(userFullName, width);
+	});
+
+	afterUpdate(() => {
 		avatarImage.src = src !== '' ? src : LetterAvatar(userFullName, width);
 	});
 </script>

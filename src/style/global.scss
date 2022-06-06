@@ -37,7 +37,8 @@ $black: #091e42;
 	background-color: #f8f9fd;
 }
 
-:global(.blue-btn) {
+:global(.blue-btn),
+:global(.black-btn) {
 	background-color: $light-blue;
 	color: white;
 	border-radius: 8px;
@@ -48,6 +49,14 @@ $black: #091e42;
 
 	&:hover {
 		background-color: darken($light-blue, 5%) !important;
+	}
+}
+
+:global(.black-btn) {
+	background-color: $black;
+
+	&:hover {
+		background-color: lighten($black, 5%) !important;
 	}
 }
 

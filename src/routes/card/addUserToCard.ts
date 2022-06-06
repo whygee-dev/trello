@@ -14,19 +14,19 @@ export const patch: RequestHandler = async ({ request, locals }) => {
 
 		const json: Body = await request.json();
 
-		if (!json.cardId || typeof json.cardId !== 'string') {
+		if (
+			!json.cardId ||
+			typeof json.cardId !== 'string' ||
+			!json.userId ||
+			typeof json.userId !== 'string'
+		) {
 			return {
 				status: 400,
 				body: { errors: ['Invalid card ID'] }
 			};
-		} else if (!json.userId || typeof json.userId !== 'string') {
-			return {
-				status: 400,
-				body: { errors: ['Invalid user ID'] }
-			};
 		}
 
-		const card =  await prisma.card.findFirst({
+		const card = await prisma.card.findFirst({
 			where: {
 				id: json.cardId,
 				column: {
@@ -39,18 +39,15 @@ export const patch: RequestHandler = async ({ request, locals }) => {
 					}
 				}
 			},
-			select: {
-				column: {
-					select: {
-						board: {
-							include: {
-								workSpace: true
-							}
-						}
-					}
-				}
-			}
+			include: { column: { include: { board: { include: { workSpace: true } } } }, users: true }
 		});
+
+		if (card?.users.find((u) => u.id === json.userId)) {
+			return {
+				status: 403,
+				body: { errors: ['Member already assigned to card'] }
+			};
+		}
 
 		const user = await prisma.user.findFirst({
 			where: {

@@ -33,6 +33,16 @@ export const post: RequestHandler = async ({ request, locals }) => {
 			};
 		}
 
+		const validateLabel = Validators.validateLabel(json.title);
+		const validateColor = Validators.validateColor(json.color);
+
+		if (!validateLabel.pass || !validateColor.pass) {
+			return {
+				status: 400,
+				body: { errors: [validateLabel.message, validateColor.message] }
+			};
+		}
+
 		const card = await prisma.card.findFirst({
 			where: {
 				id: json.cardId,

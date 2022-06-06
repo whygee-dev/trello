@@ -12,12 +12,14 @@
 	import tags from 'svelte-awesome/icons/tags';
 	import users from 'svelte-awesome/icons/users';
 	import Avatar from './Avatar.svelte';
-	import { NativeSelect, Space } from '@svelteuidev/core';
+	import { Space } from '@svelteuidev/core';
 	import fileTextO from 'svelte-awesome/icons/fileTextO';
 	import plusCircle from 'svelte-awesome/icons/plusCircle';
 	import trashO from 'svelte-awesome/icons/trashO';
 	import { clickOutside } from '../utils/clickOutside';
 	import { isLight, isWhitish } from '../utils/color';
+	import plus from 'svelte-awesome/icons/plus';
+	import Select from 'svelte-select';
 
 	export let open: boolean;
 	export let selectedColumn: Column | null;
@@ -50,7 +52,9 @@
 			if (e.target) {
 				card.cover = e.target.result?.toString();
 
-				updateCard();
+				if (!card.new) {
+					updateCard();
+				}
 			}
 		};
 	}
@@ -63,7 +67,9 @@
 
 	const createCard = async () => {
 		try {
-			const res = await axios.post('/card/create', card);
+			const body = { ...card, columnId: selectedColumn?.id };
+
+			const res = await axios.post('/card/create', body);
 
 			handleClose();
 
@@ -115,11 +121,15 @@
 
 	const deleteLabel = async (id: string) => {
 		try {
-			const res = (await axios.delete(`/label/${id}/api/delete`)).data;
+			if (card.new) {
+				card.labels = card.labels?.filter((label) => label.id !== id);
+			} else {
+				const res = (await axios.delete(`/label/${id}/api/delete`)).data;
 
-			card.labels = card.labels?.filter((label) => label.id !== res.id);
+				card.labels = card.labels?.filter((label) => label.id !== res.id);
 
-			toast.push('Label deleted successfully');
+				toast.push('Label deleted successfully');
+			}
 		} catch (error) {
 			handleError(error);
 		}
@@ -139,38 +149,94 @@
 		}
 	};
 
+	const removeMemberFromCard = async (user: User, cardId: string) => {
+		try {
+			const res = (await axios.patch(`/card/removeUserFromCard`, { cardId, userId: user.id })).data;
+
+			toast.push('Member removed successfully');
+
+			return res;
+		} catch (error) {
+			handleError(error);
+
+			return null;
+		}
+	};
+
 	let labelDropdown = false;
 	let labelDropdownRef: HTMLElement;
 	let labelInput = '';
 	let labelColorInput = '#2f80ed';
 
 	const addLabel = async () => {
-		const label = { title: labelInput, color: labelColorInput, cardId: card.id };
+		if (!labelInput) return;
 
-		const newLabel = await createLabel(label);
+		const label = {
+			title: labelInput,
+			color: labelColorInput,
+			cardId: card.id,
+			id: Date.now().toString()
+		};
 
-		if (newLabel) {
-			card.labels?.push(newLabel);
+		if (card.new) {
+			card.labels?.push(label as Label);
 			card.labels = card.labels;
 			labelInput = '';
+		} else {
+			const newLabel = await createLabel(label);
+
+			if (newLabel) {
+				card.labels?.push(newLabel);
+				card.labels = card.labels;
+				labelInput = '';
+			}
 		}
 	};
 
 	let membersDropdown = false;
 	let membersDropdownRef: HTMLElement;
-	let memberInput = '';
+	$: addableMembers = boardMembers
+		.map((m) => m.fullname)
+		.filter((m) => !card.users?.find((u) => u.fullname === m));
+	$: memberInput = addableMembers[0] ?? '';
+
+	// $: setAddableMembers = () =>
+	// 	(addableMembers = boardMembers
+	// 		.map((m) => m.fullname)
+	// 		.filter((m) => !card.users?.find((u) => u.fullname === m)));
 
 	const addMember = async () => {
 		const user = boardMembers.find((u) => u.fullname === memberInput);
+		if (!user) return;
 
-		if (!user || !card.id) return;
-
-		const newMember = await addMemberToCard(user, card.id);
-
-		if (newMember) {
+		if (card.new) {
 			card.users?.push(user);
 			card.users = card.users;
-			memberInput = '';
+		} else {
+			if (!card.id) return;
+
+			const newMember = await addMemberToCard(user, card.id);
+
+			if (newMember) {
+				card.users?.push(user);
+				card.users = card.users;
+			}
+		}
+	};
+
+	const removeMember = async (user: User) => {
+		console.log(user);
+
+		if (card.new) {
+			card.users = card.users?.filter((u) => u.id !== user.id);
+		} else {
+			if (!card.id) return;
+
+			const res = await removeMemberFromCard(user, card.id);
+
+			if (res) {
+				card.users = card.users?.filter((u) => u.id !== user.id);
+			}
 		}
 	};
 </script>
@@ -283,7 +349,12 @@
 					</div>
 				</div>
 
-				{#if !card.new}
+				{#if card.new}
+					<button class="black-btn" on:click={createCard}>
+						<Icon data={plus} />
+						<span>Create</span>
+					</button>
+				{:else}
 					<button class="red-btn" on:click={deleteCard}>
 						<Icon data={trashO} />
 						<span>Delete</span>
@@ -349,30 +420,30 @@
 			left: {membersDropdownRef?.getBoundingClientRect().left - 75}px;"
 		>
 			<div>
-				<NativeSelect
-					data={boardMembers.map((m) => m.fullname)}
-					placeholder="Select a member"
-					label="Select a member"
-					bind:value={memberInput}
-					required
-				/>
+				{#if addableMembers.length > 0}
+					<Select
+						on:select={(e) => (memberInput = e.detail.value)}
+						value={memberInput}
+						items={addableMembers}
+						containerClasses="select"
+						isClearable={false}
+					/>
 
-				<button class="blue-btn" on:click={addMember}>+ Add</button>
+					<button class="blue-btn" on:click={addMember}>+ Add</button>
+				{/if}
 			</div>
 
 			{#if card.users}
 				<div class="existant-users">
-					{#if card.users}
+					{#each card.users as user}
 						<div>
-							{#each card.users as user}
-								<div>
-									<Avatar width={32} round={false} userFullName={user?.fullname || ''} />
+							<Avatar width={32} round={false} userFullName={user?.fullname || ''} />
 
-									<span>{user?.fullname}</span>
-								</div>
-							{/each}
+							<span on:click={() => removeMember(user)}>
+								<Icon data={trashO} />
+							</span>
 						</div>
-					{/if}
+					{/each}
 				</div>
 			{/if}
 		</div>
@@ -393,9 +464,18 @@
 		padding-top: 30px !important;
 
 		:global(.modal-header) {
-			position: absolute;
-			right: 10px;
-			top: 10px;
+			margin-top: -10px;
+			:global(.close) {
+				position: absolute;
+				right: 10px;
+				z-index: 2;
+				top: 10px;
+			}
+		}
+
+		:global(.modal-body) {
+			position: relative;
+			z-index: 1;
 		}
 
 		@media (max-width: 1024px) {
@@ -476,12 +556,39 @@
 		}
 	}
 
+	:global(.select) {
+		width: 70%;
+	}
+
 	.members-dropdown {
 		> div {
 			display: flex;
 			justify-content: space-between;
 			align-items: flex-end;
 			width: 100%;
+		}
+
+		.existant-users {
+			display: flex;
+			flex-wrap: wrap;
+			justify-content: flex-start;
+
+			> div {
+				position: relative;
+
+				:global(svg) {
+					margin-left: 5px;
+					cursor: pointer;
+					position: absolute;
+					bottom: 8px;
+					color: red;
+					right: 10px;
+				}
+			}
+
+			:global(.avatar-container) {
+				margin: 10px 10px 10px 0;
+			}
 		}
 	}
 
@@ -570,7 +677,8 @@
 					}
 				}
 
-				.blue-btn {
+				.blue-btn,
+				.black-btn {
 					display: flex;
 					align-items: center;
 					margin-top: 10px;
@@ -582,6 +690,10 @@
 					span {
 						margin-left: 15px;
 					}
+				}
+
+				.black-btn {
+					margin-top: 30px;
 				}
 
 				.red-btn {

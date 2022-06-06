@@ -1,3 +1,4 @@
+import type { Label } from '@prisma/client';
 import type { RequestHandler } from '@sveltejs/kit';
 import { prisma } from '../../db';
 import { Validators } from '../../utils/validators';
@@ -8,6 +9,8 @@ type Body = {
 	description: string;
 	date: Date;
 	cover: string;
+	labels: Label[];
+	users: User[];
 };
 
 export const post: RequestHandler = async ({ request, locals }) => {
@@ -23,7 +26,7 @@ export const post: RequestHandler = async ({ request, locals }) => {
 		if (!json.columnId || typeof json.columnId !== 'string') {
 			return {
 				status: 400,
-				body: { error: ['Invalid column ID'] }
+				body: { errors: ['Invalid column ID'] }
 			};
 		} else if (!validateTitle.pass || !validateCover.pass) {
 			return {
@@ -42,13 +45,43 @@ export const post: RequestHandler = async ({ request, locals }) => {
 						}
 					}
 				}
-			}
+			},
+			include: { board: { include: { workSpace: { include: { users: true } } } } }
 		});
 
 		if (!column) {
 			return {
 				status: 403,
 				body: { errors: ['Unauthorized operation'] }
+			};
+		}
+
+		if (
+			!json.users
+				.map((u) => {
+					return column.board.workSpace.users.find((user) => user.id === u!.id);
+				})
+				.every((user) => user !== undefined)
+		) {
+			return {
+				status: 403,
+				body: { errors: ['Unauthorized operation'] }
+			};
+		}
+
+		if (
+			!json.labels
+				.map((l) => {
+					const validateLabel = Validators.validateLabel(l.title);
+					const validateColor = Validators.validateColor(l.color);
+
+					return validateLabel.pass && validateColor.pass;
+				})
+				.every((label) => !!label)
+		) {
+			return {
+				status: 400,
+				body: { errors: ['Invalid label (between 2 and 40 characters) or color representation'] }
 			};
 		}
 
@@ -62,7 +95,13 @@ export const post: RequestHandler = async ({ request, locals }) => {
 				date: json.date,
 				cover: json.cover ?? null,
 				index,
-				column: { connect: { id: column?.id } }
+				column: { connect: { id: column?.id } },
+				labels: { createMany: { data: json.labels } },
+				users: {
+					connect: json.users
+						.map((user) => (user ? { id: user.id } : null))
+						.filter((user) => !!user) as any[]
+				}
 			}
 		});
 
