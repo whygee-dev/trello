@@ -11,7 +11,7 @@ export const get: RequestHandler = async ({ request, locals, params }) => {
 			where: { id: params.id },
 			include: {
 				columns: {
-					include: { cards: { include: { labels: true }, orderBy: { index: 'asc' } } },
+					include: { cards: { include: { labels: true, users: true }, orderBy: { index: 'asc' } } },
 					orderBy: { index: 'asc' }
 				},
 				workSpace: { include: { users: true } }

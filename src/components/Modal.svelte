@@ -30,7 +30,9 @@
 	</div>
 
 	<div class="modal-footer">
-		<button class="blue-btn" on:click={handleCreate}>{footerButton}</button>
+		{#if footerButton}
+			<button class="blue-btn" on:click={handleCreate}>{footerButton}</button>
+		{/if}
 	</div>
 </section>
 

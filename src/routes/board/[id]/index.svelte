@@ -25,6 +25,7 @@
 				})[];
 			} = await res.json();
 
+			console.log('fetch');
 			const tokenRes = await fetch(`/pusher/auth`);
 
 			const token = (await tokenRes.json()).token;
@@ -58,6 +59,7 @@
 	import CardModal from '../../../components/CardModal.svelte';
 	import { members } from '../store';
 	import type Pubnub from 'pubnub';
+	import { editingCard } from './store';
 
 	export let board: Board & {
 		workSpace: WorkSpace & {
@@ -65,10 +67,12 @@
 		};
 		columns: (Column & {
 			cards: (Card & {
+				users: User[];
 				labels: Label[];
 			})[];
 		})[];
 	};
+
 	export let token: string;
 	export let userId: string;
 
@@ -114,8 +118,7 @@
 	let createColumnModalOpen = false;
 	let cardModalOpen = false;
 
-	let editingCard: Partial<Card> & { new?: boolean };
-	let selectedColumn: string | null = null;
+	let selectedColumn: Column | null = null;
 
 	let columnTitle: string | null = '';
 	let editingColumn: Column | null = null;
@@ -320,16 +323,12 @@
 				channels: ['board-' + board.id]
 			});
 
-			console.log(here);
-
 			$members = [
 				...new Set([
 					...here.channels['board-' + board.id].occupants.map((o) => o.uuid),
 					...$members
 				])
 			];
-
-			console.log($members);
 		}
 	};
 
@@ -403,21 +402,24 @@
 		}, 1000);
 	};
 
-	const onWindowFocus = () => {
-		Pusher.getInstance().reconnect();
-	};
+	let focusInterval: NodeJS.Timer;
+
+	$: {
+		clearInterval(focusInterval);
+		focusInterval = setInterval(() => {
+			Pusher.reconnect();
+		}, 100000);
+	}
 </script>
 
 <svelte:head>
 	<title>Board | {board.title}</title>
 </svelte:head>
 
-<svelte:window on:focus={onWindowFocus} />
-
 <CardModal
 	{selectedColumn}
 	open={cardModalOpen}
-	bind:card={editingCard}
+	bind:card={$editingCard}
 	on:close={() => {
 		cardModalOpen = false;
 		requestSync();
@@ -579,8 +581,15 @@
 							on:focus={() => (cardDraggable = true)}
 							on:mouseleave={() => (cardDraggable = draggedCard !== -1)}
 							on:click={() => {
-								editingCard = card;
-								selectedColumn = column.id;
+								$editingCard = {
+									title: card.title,
+									description: card?.description || '',
+									date: card.date,
+									id: card.id,
+									labels: card.labels,
+									users: card.users
+								};
+								selectedColumn = column;
 								cardModalOpen = true;
 							}}
 						>
@@ -630,13 +639,15 @@
 						on:dragenter={(e) => cardDragEnter(e, board.columns[j].cards.length, j)}
 						on:dragend={reset}
 						on:click={() => {
-							editingCard = {
+							$editingCard = {
 								title: '',
 								description: '',
 								date: new Date(),
-								new: true
+								new: true,
+								labels: [],
+								users: []
 							};
-							(selectedColumn = column.id), (cardModalOpen = true);
+							(selectedColumn = column), (cardModalOpen = true);
 						}}
 						class:is-active={hoveringCard === board.columns[j].cards.length && hoveringColumn === j}
 						class:hovering-top={hoveringCard === board.columns[j].cards.length &&

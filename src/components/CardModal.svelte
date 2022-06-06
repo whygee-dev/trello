@@ -1,18 +1,37 @@
 <script lang="ts">
-    import type { Card } from '@prisma/client';
+	import type { Card, Column, Label } from '@prisma/client';
 	import { createEventDispatcher } from 'svelte';
-	import { clickOutside } from '../utils/clickOutside';
-    import axios from 'axios';
-    import { toast } from '@zerodevx/svelte-toast';
-    import { handleError } from '../utils/errorHandler';
+	import axios from 'axios';
+	import { toast } from '@zerodevx/svelte-toast';
+	import { handleError } from '../utils/errorHandler';
+	import Modal from './Modal.svelte';
+	import EditableBlock from './EditableBlock.svelte';
+	import cogs from 'svelte-awesome/icons/cogs';
+	import Icon from 'svelte-awesome';
+	import photo from 'svelte-awesome/icons/photo';
+	import tags from 'svelte-awesome/icons/tags';
+	import users from 'svelte-awesome/icons/users';
+	import Avatar from './Avatar.svelte';
+	import { Space } from '@svelteuidev/core';
+	import fileTextO from 'svelte-awesome/icons/fileTextO';
 
 	export let open: boolean;
-    export let selectedColumn: string | null;
-    export let card = {
-        title: "",
-        description: "",
-        date: ""
-    };
+	export let selectedColumn: Column | null;
+	export let card: Partial<{
+		id: string;
+		title: string;
+		description: string;
+		date: Date | null;
+		users: User[];
+		labels: Label[];
+	}> & { new?: boolean } = {
+		title: '',
+		description: '',
+		date: new Date(),
+		labels: [],
+		users: [],
+		new: false
+	};
 
 	const dispatch = createEventDispatcher();
 
@@ -20,10 +39,10 @@
 		dispatch('close');
 	};
 
-    const createCard = async () => {
+	const createCard = async () => {
 		try {
 			const res = await axios.post('/card/create', {
-				columnId: selectedColumn,
+				columnId: selectedColumn!.id,
 				title: card.title,
 				description: card.description,
 				date: new Date(card.date!)
@@ -35,19 +54,9 @@
 		}
 	};
 
-/* const updateCard = async (id: string | null) => {
-		if (!id || !editingCard) return;
-
+	const updateCard = async () => {
 		try {
-			const res = await axios.patch(`/card/${id}/api/update`, {
-				title: cardTitle,
-				description: cardDescription,
-				date: new Date()
-			});
-
-			cardModalOpen = false;
-
-			requestSync();
+			const res = await axios.patch(`/card/${card.id}/api/update`, card);
 
 			toast.push('Card updated successfully');
 		} catch (error) {
@@ -59,7 +68,7 @@
 		try {
 			const res = await axios.delete(`/card/${id}/api/delete`);
 
-			requestSync();
+			handleClose();
 
 			toast.push('Card deleted successfully');
 		} catch (error) {
@@ -67,155 +76,193 @@
 		}
 	};
 
-    const createLabel = async () => {
-		try {
-			const res = await axios.post('/label/create', {
-				cardId: editingCard,
-				title: labelTitle,
-				color: labelColor
-			});
+	// const createLabel = async () => {
+	// 	try {
+	// 		const res = await axios.post('/label/create', {
+	// 			cardId: editingCard,
+	// 			title: labelTitle,
+	// 			color: labelColor
+	// 		});
 
-			const labelsRes = await axios.post(`/label/getAllByCard`, {
-				cardId: editingCard
-			});
-			cardLabels = await labelsRes.data;
+	// 		handleClose();
 
-			labelTitle = '';
-			labelColor = '';
+	// 		toast.push('Label created successfully');
+	// 	} catch (error) {
+	// 		handleError(error);
+	// 	}
+	// };
 
-			requestSync();
+	// const deleteLabel = async (id: string | null) => {
+	// 	try {
+	// 		const res = await axios.delete(`/label/${id}/api/delete`);
 
-			toast.push('Label created successfully');
-		} catch (error) {
-			handleError(error);
-		}
-	};
+	// 		const labelsRes = await axios.post(`/label/getAllByCard`, {
+	// 			cardId: editingCard
+	// 		});
+	// 		cardLabels = await labelsRes.data;
 
-	const deleteLabel = async (id: string | null) => {
-		try {
-			const res = await axios.delete(`/label/${id}/api/delete`);
+	// 		handleClose();
 
-			const labelsRes = await axios.post(`/label/getAllByCard`, {
-				cardId: editingCard
-			});
-			cardLabels = await labelsRes.data;
-
-			requestSync();
-
-			toast.push('Label deleted successfully');
-		} catch (error) {
-			handleError(error);
-		}
-	}; */
+	// 		toast.push('Label deleted successfully');
+	// 	} catch (error) {
+	// 		handleError(error);
+	// 	}
+	// };
 </script>
 
-{#if open}
-    <div class="backdrop" class:open />
-    <section class="modal" use:clickOutside on:click_outside={handleClose} class:open>
+{#if open && selectedColumn}
+	<Modal {open} header="" footerButton="" on:create={() => {}} on:close={handleClose}>
+		<div class="container">
+			<div class="column column-first">
+				{#if !card.new}
+					<EditableBlock
+						className="title-edit"
+						bind:value={card.title}
+						placeholder="Title"
+						on:save={() => updateCard()}
+					/>
+				{:else}
+					<input type="text" bind:value={card.title} placeholder="Title" />
+				{/if}
 
-        {#if !card.title}
-            <div class="modal-header">
-                <h3>Create a new card</h3>
-                <button class="close blue-btn" on:click={handleClose}>
-                    <span>&times;</span>
-                </button>
-            </div>
-            <div class="modal-body">
-                <input type="text" bind:value={card.title}  placeholder="Title" />
-                <input type="text" bind:value={card.description} placeholder="Description" />
-                <input type="date" bind:value={card.date} />
-            </div>
-            <div class="modal-footer">
-                <button class="blue-btn" on:click={() => createCard()}>+ Create</button>
-            </div>
+				<Space h="sm" />
 
-        {:else}
-            <div class="modal-header">
-                <h3>{card.title}</h3>
-                <button class="close blue-btn" on:click={handleClose}>
-                    <span>&times;</span>
-                </button>
-            </div>
-            <div class="modal-body">
-                <span>{card.date}</span>
-                
-                <h4>Description</h4>
-                <span>{card.description}</span>                
-            </div>
-        {/if}
-    </section>
+				<div class="in-list">
+					{selectedColumn.title}
+				</div>
+
+				<Space h="xl" />
+
+				<div class="icon-group">
+					<Icon class="icon" data={fileTextO} />
+					<span class="desc">Description</span>
+				</div>
+
+				<Space h="sm" />
+
+				{#if !card.new}
+					<EditableBlock
+						className="description-edit"
+						bind:value={card.description}
+						placeholder="Description"
+						on:save={() => updateCard()}
+						textarea
+					/>
+				{:else}
+					<textarea bind:value={card.description} placeholder="Description" />
+				{/if}
+			</div>
+
+			<div class="column column-second">
+				<div class="settings">
+					<div class="icon-group">
+						<Icon class="icon" data={cogs} />
+
+						<span>Actions</span>
+					</div>
+
+					<ul>
+						<li class="icon-group">
+							<Icon class="icon" data={photo} />
+							<span>Cover</span>
+						</li>
+
+						<li class="icon-group">
+							<Icon class="icon" data={tags} />
+							<span>Labels</span>
+						</li>
+					</ul>
+				</div>
+
+				<div class="members">
+					<div>
+						<Icon data={users} />
+
+						<span>Members</span>
+					</div>
+
+					{#if card.users}
+						<div>
+							{#each card.users as user}
+								<div>
+									<Avatar width={32} round={false} userFullName={user?.fullname || ''} />
+
+									<span>{user?.fullname}</span>
+								</div>
+							{/each}
+
+							<div>
+								<span>Assign a member</span>
+
+								<span>+</span>
+							</div>
+						</div>
+					{/if}
+				</div>
+			</div>
+		</div>
+	</Modal>
 {/if}
 
 <style lang="scss">
-	.backdrop {
-		display: none;
-
-		&.open {
-			display: block;
-		}
-
-		position: fixed;
-		left: 0;
-		right: 0;
-		top: 0;
-		bottom: 0;
-		background: black;
-		opacity: 0.5;
+	:global(.modal) {
+		width: 50vw !important;
 	}
 
-	.modal {
-		position: fixed;
-		left: 50%;
-		top: 50%;
-		width: clamp(500px, 30vw, 700px);
-		transform: translate(-50%, -50%);
-		background-color: white;
-		display: none;
-		border-radius: 12px;
-		padding: 20px;
-
-		@media (max-width: 600px) {
-			width: 90vw;
+	.container {
+		display: flex;
+		justify-content: space-between;
+		height: 70vh;
+		input,
+		textarea {
+			width: 100%;
 		}
 
-		&.open {
-			display: flex;
-			flex-direction: column;
+		:global(.title-edit) {
+			color: $black;
+			font-weight: 700;
+			font-size: 18px;
 		}
 
-		.modal-header {
+		.in-list {
+			font-size: 16px;
+			padding: 8px 12px;
+			background-color: $black;
+			color: white;
+			border-radius: 4px;
+			font-weight: 700;
+			width: fit-content;
+		}
+
+		.desc {
+			font-weight: 700;
+			font-size: 17px;
+		}
+
+		.icon-group {
 			display: flex;
 			align-items: center;
-			justify-content: space-between;
-			width: 100%;
-
-			h3 {
-				margin: 0;
+			.icon {
+				width: 18px;
 			}
-
-			button {
-				padding: 0 10px;
-
-				font-size: 30px;
-				font-weight: 700;
+			span {
+				margin-left: 15px;
+				font-size: 16px;
 			}
 		}
+		.column {
+			display: flex;
+			flex-direction: column;
 
-        .modal-body {
-            display: flex;
-            flex-direction: column;
-            padding: 40px 0;
+			height: 100%;
 
-            input {
-                width: 100%;
-                margin-top: 10px;
-            }
-		}
+			&.column-first {
+				width: 60%;
+			}
 
-		.modal-footer {
-			button {
-				margin-left: auto;
-				display: block;
+			&.column-second {
+				width: 30%;
+				align-items: center;
 			}
 		}
 	}

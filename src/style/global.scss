@@ -98,7 +98,8 @@ $black: #091e42;
 	}
 }
 
-:global(input) {
+:global(input),
+:global(textarea) {
 	outline-color: #4c9aff;
 	border-radius: 4px;
 	border: 1px solid #cdd2d4;

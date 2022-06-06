@@ -78,11 +78,11 @@ export class Validators {
 	}
 
 	static validateTitle(u: string) {
-		const pass = u && u.length <= 50 && u.length >= 2;
+		const pass = u && u.length <= 100 && u.length >= 2;
 
 		return {
 			pass,
-			message: !pass ? 'Title length must be between 2 and 50 ' : undefined
+			message: !pass ? 'Title length must be between 2 and 100 characters' : undefined
 		};
 	}
 
