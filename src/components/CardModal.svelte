@@ -226,8 +226,6 @@
 	};
 
 	const removeMember = async (user: User) => {
-		console.log(user);
-
 		if (card.new) {
 			card.users = card.users?.filter((u) => u.id !== user.id);
 		} else {

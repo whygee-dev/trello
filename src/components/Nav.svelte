@@ -30,8 +30,6 @@
 			console.log(error);
 		}
 	};
-
-	console.log($session);
 </script>
 
 <svelte:window bind:innerWidth />

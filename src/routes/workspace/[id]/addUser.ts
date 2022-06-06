@@ -28,8 +28,6 @@ export const patch: RequestHandler = async ({ request, locals, params }) => {
 		const userToAdd = await prisma.user.findUnique({ where: { email: json.email } });
 		const workSpace = await prisma.workSpace.findUnique({ where: { id: params.id } });
 
-		console.log(userToAdd, workSpace);
-
 		if (!workSpace) {
 			return {
 				status: 401,

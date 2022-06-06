@@ -32,8 +32,6 @@ export const get: RequestHandler = async ({ locals, params }) => {
 			const diffHours = Math.floor((diff % days) / hours);
 			const diffMinutes = Math.floor((diff % hours) / minutes);
 
-			console.log(diffDays, diffHours, diffMinutes);
-
 			if (diffDays < 0 && diffHours < 0 && diffMinutes < 0) {
 				return {
 					status: 403,
