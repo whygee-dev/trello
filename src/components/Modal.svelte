@@ -5,6 +5,7 @@
 	export let open: boolean;
 	export let header: string;
 	export let footerButton: string;
+	export let backdropClose = false;
 
 	const dispatch = createEventDispatcher();
 
@@ -15,10 +16,16 @@
 	const handleCreate = () => {
 		dispatch('create');
 	};
+
+	const handleClickOutisde = () => {
+		if (backdropClose) {
+			handleClose();
+		}
+	};
 </script>
 
 <div class="backdrop" class:open />
-<section class="modal" use:clickOutside on:click_outside={handleClose} class:open>
+<section class="modal" use:clickOutside on:click_outside={handleClickOutisde} class:open>
 	<div class="modal-header">
 		<h3>{header}</h3>
 		<button class="close blue-btn" on:click={handleClose}>
@@ -55,6 +62,7 @@
 
 	.modal {
 		position: fixed;
+		z-index: 1;
 		left: 50%;
 		top: 50%;
 		width: clamp(500px, 30vw, 700px);
@@ -63,6 +71,8 @@
 		display: none;
 		border-radius: 12px;
 		padding: 20px;
+		max-height: 90vh;
+		overflow: auto;
 
 		@media (max-width: 600px) {
 			width: 90vw;

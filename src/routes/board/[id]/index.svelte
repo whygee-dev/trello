@@ -1,6 +1,7 @@
 <script context="module" lang="ts">
 	import type { Load } from '@sveltejs/kit';
 	import Modal from '../../../components/Modal.svelte';
+	import { isLight, isWhitish } from '../../../utils/color';
 
 	export const load: Load = async ({ session, fetch, params }) => {
 		if (!session.user) {
@@ -57,7 +58,7 @@
 	import { members } from '../store';
 	import { layout } from '../../../stores/layout';
 	import { Pusher } from '../../../pusher';
-	import type { Board, Card, Column, Label, WorkSpace } from '@prisma/client';
+	import type { Board, Card, Column, Label, WorkSpace, User } from '@prisma/client';
 
 	import CardModal from '../../../components/CardModal.svelte';
 	import Avatar from '../../../components/Avatar.svelte';
@@ -96,7 +97,7 @@
 		const d = new Date();
 		d.setDate(d.getDate() + 6);
 		return d.toISOString().slice(0, 16);
-	};	
+	};
 	let max = getMaxDate();
 
 	const copyLink = async () => {
@@ -339,58 +340,55 @@
 			];
 		}
 	};
-
-	onMount(() => {
-		const listener = {
-			status: function (statusEvent) {
-				if (statusEvent.category === 'PNConnectedCategory') {
+	const pubListener = {
+		status: function (statusEvent) {
+			if (statusEvent.category === 'PNConnectedCategory') {
+				checkPresence();
+			}
+		},
+		message: function (data) {
+			if (data.message === 'REQUEST_UPDATE') {
+				console.log('invalidating');
+				invalidate(`/board/${board.id}/api`);
+			}
+		},
+		presence: function (presenceEvent) {
+			if (
+				(presenceEvent.action === 'timeout' || presenceEvent.action === 'leave') &&
+				presenceEvent.uuid !== userId
+			) {
+				$members = $members.filter((m) => m !== presenceEvent.uuid);
+			} else if (presenceEvent.action === 'join') {
+				$members.push(presenceEvent.uuid);
+				$members = [...new Set($members)];
+				// @ts-ignore
+			} else if (presenceEvent.action === 'interval') {
+				// @ts-ignore
+				if (presenceEvent.join) {
+					// @ts-ignore
+					$members.push(...presenceEvent.join);
+					$members = [...new Set($members)];
+				} else {
 					checkPresence();
 				}
-			},
-			message: function (data) {
-				if (data.message === 'REQUEST_UPDATE') {
-					console.log('invalidating');
-					invalidate(`/board/${board.id}/api`);
-				}
-			},
-			presence: function (presenceEvent) {
-				console.log('presenve', presenceEvent);
-
-				if (
-					(presenceEvent.action === 'timeout' || presenceEvent.action === 'leave') &&
-					presenceEvent.uuid !== userId
-				) {
-					$members = $members.filter((m) => m !== presenceEvent.uuid);
-				} else if (presenceEvent.action === 'join') {
-					$members.push(presenceEvent.uuid);
-					$members = [...new Set($members)];
-					// @ts-ignore
-				} else if (presenceEvent.action === 'interval') {
-					// @ts-ignore
-					if (presenceEvent.join) {
-						// @ts-ignore
-						members.push(...presenceEvent.join);
-						$members = [...new Set($members)];
-					} else {
-						checkPresence();
-					}
-				}
-			},
-			disconnect: function () {
-				console.log('disconnected');
-			},
-			reconnect: function () {
-				console.log('reconnected');
 			}
-		} as Pubnub.ListenerParameters;
+		},
+		disconnect: function () {
+			console.log('disconnected');
+		},
+		reconnect: function () {
+			console.log('reconnected');
+		}
+	} as Pubnub.ListenerParameters;
 
+	onMount(() => {
 		Pusher.setInfos(
 			'pub-c-be25a5ac-e5c9-451f-9070-e27717cc1b26',
 			'sub-c-fda059c7-710d-4e8e-875d-08c257b7fb4b',
 			userId,
 			token,
 			{ channels: ['board-' + board.id], withPresence: true },
-			listener
+			pubListener
 		);
 
 		Pusher.getInstance();
@@ -408,18 +406,26 @@
 					console.log('Update request sent');
 				}
 			);
-		}, 1000);
+		}, 500);
 	};
 
 	let focusInterval: NodeJS.Timer;
 
 	$: {
-		clearInterval(focusInterval);
-		focusInterval = setInterval(() => {
-			Pusher.reconnect();
-		}, 100000);
+		if (typeof window !== 'undefined') {
+			clearInterval(focusInterval);
+			focusInterval = setInterval(() => {
+				Pusher.reconnect(
+					'pub-c-be25a5ac-e5c9-451f-9070-e27717cc1b26',
+					'sub-c-fda059c7-710d-4e8e-875d-08c257b7fb4b',
+					userId,
+					token,
+					{ channels: ['board-' + board.id], withPresence: true },
+					pubListener
+				);
+			}, 100000);
+		}
 	}
-	let lastFocus = Date.now();
 </script>
 
 <svelte:head>
@@ -434,6 +440,7 @@
 		cardModalOpen = false;
 		requestSync();
 	}}
+	boardMembers={board.workSpace.users}
 />
 
 <Modal
@@ -460,6 +467,7 @@
 		<input type="text" value={modalLink} placeholder="Link" />
 	</div>
 </Modal>
+
 <Modal
 	header={editingColumn ? 'Update ' + columnTitle : 'Create a new Column'}
 	footerButton={editingColumn ? 'Update' : '+ Create'}
@@ -467,9 +475,7 @@
 	on:close={() => (createColumnModalOpen = false)}
 	on:create={() => (editingColumn ? updateColumn(editingColumn.id) : createColumn())}
 >
-	<div class="modal">
-		<input type="text" bind:value={columnTitle} placeholder="Title" />
-	</div>
+	<input class="column-input" type="text" bind:value={columnTitle} placeholder="Title" />
 </Modal>
 
 <section class="container" style={`background-image: url(${board.image ?? '/default-board.png'});`}>
@@ -597,21 +603,46 @@
 									date: card.date,
 									id: card.id,
 									labels: card.labels,
-									users: card.users
+									users: card.users,
+									cover: card.cover
 								};
 								selectedColumn = column;
 								cardModalOpen = true;
 							}}
 						>
+							{#if card.cover}
+								<img src={card.cover} alt="Card cover" class="card-cover" />
+							{/if}
+
 							<h5>
 								{card.title}
 							</h5>
 
 							<div class="labels">
 								{#each card.labels as label}
-									<span style="background-color: {label.color};">
-										<p style="color: white;">{label.title}</p>
+									<span
+										class="label"
+										style="background-color: {isWhitish(label.color)
+											? '#2f80ed'
+											: label.color}; color: {!isLight(label.color) || isWhitish(label.color)
+											? '#fff'
+											: '#000'}; "
+									>
+										{label.title}
 									</span>
+								{/each}
+							</div>
+
+							<div class="card-members">
+								{#each card.users as user}
+									{#if user}
+										<Avatar
+											starred={user.id === board.workSpace.ownerId}
+											width={32}
+											round={false}
+											userFullName={user.fullname}
+										/>
+									{/if}
 								{/each}
 							</div>
 						</li>
@@ -718,7 +749,7 @@
 
 	.container {
 		[draggable='true'] {
-			user-select: none;
+			user-select: none !important;
 			-moz-user-select: none;
 			-webkit-user-select: none;
 			-ms-user-select: none;
@@ -809,17 +840,27 @@
 					.preview-drop {
 						background-color: rgba(255, 255, 255, 0.9);
 						list-style: none;
-						padding: 30px 10px;
+						padding: 20px 10px;
 						border-radius: 8px;
 						box-shadow: 0px 4px 12px 0px #0000000d;
 						cursor: move;
 						margin-bottom: 20px;
-						min-height: 150px;
+					}
+
+					li {
+						.card-cover {
+							width: 100%;
+							max-height: 200px;
+							border-radius: 12px;
+						}
+
+						h5 {
+							margin: 0;
+						}
 					}
 
 					.preview-drop {
-						height: 50px;
-						padding: 0;
+						height: 100px;
 						background-color: grey;
 
 						&.bottom {
@@ -832,20 +873,13 @@
 						flex-wrap: wrap;
 
 						span {
-							border-radius: 30px;
+							border-radius: 5px;
 							margin-right: 10px;
 							margin-top: 8px;
 							height: 20px;
-							padding-left: 10px;
-							padding-right: 10px;
-
-							p {
-								font-size: 15px;
-								vertical-align: middle;
-								margin-top: auto;
-								text-align: center;
-								font-weight: 300;
-							}
+							padding: 5px 10px;
+							font-size: 15px;
+							height: fit-content;
 						}
 					}
 				}
@@ -861,14 +895,8 @@
 		}
 	}
 
-	.modal {
-		display: flex;
-		flex-direction: column;
-		padding: 40px 0;
-
-		input {
-			width: 100%;
-			margin-top: 10px;
-		}
+	.column-input {
+		width: 100%;
+		margin: 30px 0;
 	}
 </style>

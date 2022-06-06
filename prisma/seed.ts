@@ -48,17 +48,53 @@ async function main() {
 													{
 														title: faker.lorem.lines(1),
 														description: faker.lorem.lines(2),
-														index: 0
+														index: 0,
+														labels: {
+															create: [
+																{
+																	title: faker.company.bsBuzz(),
+																	color: faker.color.rgb({ format: 'css' })
+																},
+																{
+																	title: faker.company.bsBuzz(),
+																	color: faker.color.rgb({ format: 'css' })
+																}
+															]
+														}
 													},
 													{
 														title: faker.lorem.lines(1),
 														description: faker.lorem.lines(2),
-														index: 1
+														index: 1,
+														labels: {
+															create: [
+																{
+																	title: faker.company.bsBuzz(),
+																	color: faker.color.rgb({ format: 'css' })
+																},
+																{
+																	title: faker.company.bsBuzz(),
+																	color: faker.color.rgb({ format: 'css' })
+																}
+															]
+														}
 													},
 													{
 														title: faker.lorem.lines(1),
 														description: faker.lorem.lines(2),
-														index: 2
+														index: 2,
+														labels: {
+															create: [
+																{
+																	title: faker.company.bsBuzz(),
+																	color: faker.color.rgb({ format: 'css' })
+																},
+																{
+																	title: faker.company.bsBuzz(),
+																	color: faker.color.rgb({ format: 'css' })
+																}
+															]
+														}
 													}
 												]
 											}
