@@ -5,6 +5,7 @@
 	import Avatar from './Avatar.svelte';
 	import { clickOutside } from '../utils/clickOutside';
 	import axios from 'axios';
+	import { goto } from '$app/navigation';
 
 	$: innerWidth = 0;
 	$: dropdownOpen = false;
@@ -67,6 +68,10 @@
 			on:click_outside={handleClickOutsideDropdown}
 			class:active={dropdownOpen}
 		>
+			<div on:click={() => goto('/profile')}>
+				<span>Profile</span>
+			</div>
+
 			<div on:click={async () => await onLogout()}>
 				<span class="red">Logout</span>
 			</div>
@@ -116,11 +121,12 @@
 				position: absolute;
 				background-color: white;
 				top: 50px;
-				border-radius: 12px;
+				border-radius: 0 0 12px 12px;
 				box-shadow: 0px 4px 12px 0px #0000000d;
 
 				> div {
 					cursor: pointer;
+					margin: 10px 0;
 
 					.red {
 						color: red;
