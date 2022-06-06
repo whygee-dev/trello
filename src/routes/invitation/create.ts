@@ -1,5 +1,6 @@
 import type { RequestHandler } from '@sveltejs/kit';
 import { prisma } from '../../db';
+import { isPast } from 'date-fns';
 
 type Body = {
 	duration: Date;
@@ -12,10 +13,6 @@ export const post: RequestHandler = async ({ request, locals }) => {
 			return { status: 401, body: { message: 'Unauthorized' } };
 		}
 
-		const days = 24 * 60 * 60 * 1000;
-		const hours = 60 * 60 * 1000;
-		const minutes = 60 * 1000;
-
 		if (!request.body) return { status: 403, body: { message: 'Forbidden' } };
 
 		const json: Body = await request.json();
@@ -25,8 +22,6 @@ export const post: RequestHandler = async ({ request, locals }) => {
 		if (!json.duration) {
 			return { status: 403, body: { message: 'A datetime must be specified' } };
 		}
-
-		const limit = new Date(json.duration);
 
 		const board = await prisma.board.findUnique({
 			where: { id: json.boardId },
@@ -46,6 +41,16 @@ export const post: RequestHandler = async ({ request, locals }) => {
 			});
 
 			link = encodeURI(`http://localhost:3000/invitation/${invitation.id}`);
+
+			const invitations = await prisma.invitation.findMany({});
+
+			const expiredInvitations = invitations.filter((inv) => isPast(inv.validFor));
+
+			if (expiredInvitations.length > 0) {
+				expiredInvitations.forEach(async (inv) => {
+					await prisma.invitation.delete({ where: { id: inv.id } });
+				});
+			}
 
 			return {
 				status: 201,
