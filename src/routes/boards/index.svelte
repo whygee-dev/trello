@@ -264,11 +264,14 @@
 					<div class="members">
 						{#each workspace.users as user}
 							<div class="member">
-								<Avatar
-									starred={user?.id === workspace.ownerId}
-									width={28}
-									userFullName={user?.fullname ?? ''}
-								/>
+								{#if user}
+									<Avatar
+										src={user.image ? user.image : ''}
+										starred={user.id === workspace.ownerId}
+										width={28}
+										userFullName={user.fullname}
+									/>
+								{/if}
 							</div>
 						{/each}
 					</div>

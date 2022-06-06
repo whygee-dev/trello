@@ -423,7 +423,7 @@
 					{ channels: ['board-' + board.id], withPresence: true },
 					pubListener
 				);
-			}, 100000);
+			}, 1000000);
 		}
 	}
 </script>
@@ -478,12 +478,16 @@
 	<input class="column-input" type="text" bind:value={columnTitle} placeholder="Title" />
 </Modal>
 
-<section class="container" style={`background-image: url(${board.image ?? '/default-board.png'});`}>
+<section
+	class="container"
+	style={`background-image: url(${board.image !== '' ? board.image : '/default-board.png'});`}
+>
 	<div class="users">
 		{#each board.workSpace.users as user}
 			{#if user}
 				<div>
 					<Avatar
+						src={user.image ? user.image : ''}
 						starred={user.id === board.workSpace.ownerId}
 						width={32}
 						round={false}
@@ -637,6 +641,7 @@
 								{#each card.users as user}
 									{#if user}
 										<Avatar
+											src={user.image ? user.image : ''}
 											starred={user.id === board.workSpace.ownerId}
 											width={32}
 											round={false}

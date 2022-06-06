@@ -1,6 +1,8 @@
 import * as cookie from 'cookie';
 import type { GetSession, Handle } from '@sveltejs/kit';
 import jwt from 'jsonwebtoken';
+import { prisma } from './db';
+import type { User } from '@prisma/client';
 
 export const handle: Handle = async ({ event, resolve }) => {
 	if (process.env.JWT_SECRET) {
@@ -8,7 +10,18 @@ export const handle: Handle = async ({ event, resolve }) => {
 			const cookies = cookie.parse(event.request.headers.get('cookie') || '');
 			const token = cookies.jwt;
 
-			event.locals.user = token ? (jwt.verify(token, process.env.JWT_SECRET) as User) : null;
+			if (token) {
+				const payload = jwt.verify(token, process.env.JWT_SECRET);
+				event.locals.user = payload as User;
+
+				if (event.locals.user!.id) {
+					const user = await prisma.user.findUnique({ where: { id: event.locals.user!.id } });
+
+					event.locals.user.image = user?.image;
+				}
+			} else {
+				event.locals.user = null;
+			}
 		} catch (error) {
 			console.log('hooks', error);
 		}
@@ -22,7 +35,8 @@ export const getSession: GetSession = async ({ locals }) => {
 		user: locals.user && {
 			email: locals.user.email,
 			fullname: locals.user.fullname,
-			id: locals.user.id
+			id: locals.user.id,
+			image: locals.user.image ?? ''
 		}
 	};
 };

@@ -20,6 +20,7 @@
 	import { isLight, isWhitish } from '../utils/color';
 	import plus from 'svelte-awesome/icons/plus';
 	import Select from 'svelte-select';
+	import { session } from '$app/stores';
 
 	export let open: boolean;
 	export let selectedColumn: Column | null;
@@ -437,7 +438,12 @@
 				<div class="existant-users">
 					{#each card.users as user}
 						<div>
-							<Avatar width={32} round={false} userFullName={user?.fullname || ''} />
+							<Avatar
+								src={user.image ? user.image : ''}
+								width={32}
+								round={false}
+								userFullName={user?.fullname || ''}
+							/>
 
 							<span on:click={() => removeMember(user)}>
 								<Icon data={trashO} />

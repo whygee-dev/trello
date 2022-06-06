@@ -8,6 +8,7 @@ type User = {
 	email: string;
 	fullname: string;
 	id: string;
+	image?: string | null;
 } | null;
 declare namespace App {
 	interface Locals {

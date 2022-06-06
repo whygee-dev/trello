@@ -41,6 +41,8 @@ export const get: RequestHandler = async ({ request, locals }) => {
 
 		const token = await pubnub.grantToken(tokenParams);
 
+		console.log(token);
+
 		return { status: 200, body: { token } };
 	} catch (status) {
 		console.log(status);

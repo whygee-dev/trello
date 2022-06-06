@@ -85,10 +85,6 @@
 </svelte:head>
 
 <section class="container">
-	<div class="logo">
-		<img src="/logo.svg" alt="Thullo logo" />
-	</div>
-
 	<div class="profile-box">
 		<h2>Modify your Thullo profile</h2>
 
@@ -180,6 +176,10 @@
 
 <style lang="scss">
 	.container {
+		.profile-box {
+			margin: 50px;
+		}
+
 		display: flex;
 		justify-content: center;
 		align-items: center;

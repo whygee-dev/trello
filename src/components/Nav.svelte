@@ -6,6 +6,7 @@
 	import { clickOutside } from '../utils/clickOutside';
 	import axios from 'axios';
 	import { goto } from '$app/navigation';
+	import { onMount } from 'svelte';
 
 	$: innerWidth = 0;
 	$: dropdownOpen = false;
@@ -29,6 +30,8 @@
 			console.log(error);
 		}
 	};
+
+	console.log($session);
 </script>
 
 <svelte:window bind:innerWidth />
@@ -56,7 +59,12 @@
 
 	<div class="dropdown-avatar">
 		<div class="avatar-container" on:click={handleChevronClick}>
-			<Avatar width={32} round={false} userFullName={$session.user?.fullname || ''} />
+			<Avatar
+				width={32}
+				src={$session.user && $session.user.image ? $session.user.image : ''}
+				round={false}
+				userFullName={$session.user?.fullname || ''}
+			/>
 
 			<span> {$session.user?.fullname}</span>
 
@@ -94,6 +102,10 @@
 		top: 0;
 		background-color: #fff;
 
+		.user-image {
+			width: 32px;
+			height: 32px;
+		}
 		.board-name {
 			margin: 0;
 			font-size: clamp(0.5rem, 2vw, 1.5rem);
