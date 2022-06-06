@@ -15,12 +15,23 @@ export const post: RequestHandler = async ({ request, locals }) => {
 
 		const json: Body = await request.json();
 		const validateTitle = Validators.validateTitle(json.title);
-		const valideDescription = Validators.validateDescription(json.description);
+		const validateDescription = json.description
+			? Validators.validateDescription(json.description)
+			: null;
 
-		if (!validateTitle.pass || !valideDescription.pass) {
+		if (validateDescription && !validateDescription.pass) {
 			return {
 				status: 400,
-				body: { errors: [validateTitle.message, valideDescription.message] }
+				body: {
+					errors: [validateTitle.message, validateDescription.message]
+				}
+			};
+		}
+
+		if (!validateTitle.pass) {
+			return {
+				status: 400,
+				body: { errors: [validateTitle.message] }
 			};
 		}
 
