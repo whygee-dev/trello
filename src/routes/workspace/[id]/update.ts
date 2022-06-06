@@ -15,6 +15,18 @@ export const patch: RequestHandler = async ({ request, locals, params }) => {
 
 		const json: Body = await request.json();
 		const validateTitle = Validators.validateTitle(json.title);
+		const validateDescription = json.description
+			? Validators.validateDescription(json.description)
+			: null;
+
+		if (validateDescription && !validateDescription.pass) {
+			return {
+				status: 400,
+				body: {
+					errors: [validateTitle.message, validateDescription.message]
+				}
+			};
+		}
 
 		if (!validateTitle.pass) {
 			return {

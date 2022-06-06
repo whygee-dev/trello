@@ -17,14 +17,25 @@ export const patch: RequestHandler = async ({ request, locals, params }) => {
 
 		const json: Body = await request.json();
 		const validateTitle = Validators.validateTitle(json.title);
-		const validateDescription = Validators.validateDescription(json.description);
+		const validateDescription = json.description
+			? Validators.validateDescription(json.description)
+			: null;
 		const validateImage = Validators.validateImage(json.image?.split(',')[1]);
 
-		if (!validateTitle.pass || !validateDescription.pass || !validateImage.pass) {
+		if (validateDescription && !validateDescription.pass) {
 			return {
 				status: 400,
 				body: {
-					errors: [validateTitle.message, validateDescription.message, validateImage.message]
+					errors: [validateTitle.message, validateDescription.message]
+				}
+			};
+		}
+
+		if (!validateTitle.pass || !validateImage.pass) {
+			return {
+				status: 400,
+				body: {
+					errors: [validateTitle.message, validateImage.message]
 				}
 			};
 		}

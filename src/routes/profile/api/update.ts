@@ -16,38 +16,59 @@ export const patch: RequestHandler = async ({ request, locals }) => {
 			return { status: 401, body: { message: 'Unauthorized' } };
 		}
 
+		let user = await prisma.user.findUnique({ where: { id: locals.user.id } });
+
 		const json: Body = await request.json();
 		const validateFullname = Validators.validateFullname(json.fullname);
-		const validatePassword = Validators.validatePassword(json.image);
+
+		if (json.password) {
+			const validatePassword = Validators.validatePassword(json.password);
+
+			if (validatePassword && !validatePassword.pass) {
+				return {
+					status: 400,
+					body: {
+						errors: [validateFullname.message, validatePassword.message]
+					}
+				};
+			}
+		}
+
 		const validateUsername = Validators.validateUsername(json.username);
 		const validateImage = Validators.validateImage(json.image?.split(',')[1]);
 
-		if (
-			!validateFullname.pass ||
-			!validatePassword.pass ||
-			!validateImage.pass ||
-			!validateUsername.pass
-		) {
+		if (!validateFullname.pass || !validateImage.pass || !validateUsername.pass) {
 			return {
 				status: 400,
 				body: {
-					errors: [
-						validateFullname.message,
-						validatePassword.message,
-						validateImage.message,
-						validateUsername.message
-					]
+					errors: [validateFullname.message, validateImage.message, validateUsername.message]
 				}
 			};
 		}
 
-		const user = await prisma.user.update({
+		if (user && json.password) {
+			user = await prisma.user.update({
+				where: { id: locals.user.id },
+				data: {
+					fullname: json.fullname,
+					username: json.username,
+					image: json.image,
+					password: await argon2.hash(json.password)
+				}
+			});
+
+			return {
+				status: 200,
+				body: user || []
+			};
+		}
+
+		user = await prisma.user.update({
 			where: { id: locals.user.id },
 			data: {
 				fullname: json.fullname,
 				username: json.username,
-				image: json.image,
-				password: await argon2.hash(json.password)
+				image: json.image
 			}
 		});
 
