@@ -1,6 +1,8 @@
 <script lang="ts">
 	import { createEventDispatcher } from 'svelte';
 	import { clickOutside } from '../utils/clickOutside';
+	import edit from 'svelte-awesome/icons/edit';
+	import Icon from 'svelte-awesome';
 
 	export let value = '';
 	export let placeholder = '';
@@ -26,6 +28,10 @@
 		>
 			{value}
 		</p>
+
+		<span on:click={() => (editing = true)}>
+			<Icon data={edit} />
+		</span>
 	{:else if textarea}
 		<textarea
 			on:blur={() => {
@@ -65,11 +71,18 @@
 
 <style lang="scss">
 	div {
+		display: flex;
+		align-items: center;
 		p {
 			margin: 0;
 			width: 100%;
 			word-break: break-all;
 			white-space: normal;
+			min-height: 30px;
+		}
+
+		:global(svg) {
+			cursor: pointer;
 		}
 	}
 

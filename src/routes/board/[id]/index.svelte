@@ -340,6 +340,10 @@
 			];
 		}
 	};
+
+	let syncThrottleTimeout: NodeJS.Timeout | null = null;
+	let requestSyncTimeout: NodeJS.Timeout | null = null;
+
 	const pubListener = {
 		status: function (statusEvent) {
 			if (statusEvent.category === 'PNConnectedCategory') {
@@ -349,6 +353,7 @@
 		message: function (data) {
 			if (data.message === 'REQUEST_UPDATE') {
 				console.log('invalidating');
+				requestSyncTimeout && clearTimeout(requestSyncTimeout);
 				invalidate(`/board/${board.id}/api`);
 			}
 		},
@@ -394,18 +399,20 @@
 		Pusher.getInstance();
 	});
 
-	let syncTimeout: NodeJS.Timeout | null = null;
-
 	const requestSync = () => {
-		if (syncTimeout) clearTimeout(syncTimeout);
+		if (syncThrottleTimeout) clearTimeout(syncThrottleTimeout);
 
-		syncTimeout = setTimeout(() => {
+		syncThrottleTimeout = setTimeout(() => {
 			Pusher.getInstance().publish(
 				{ message: 'REQUEST_UPDATE', channel: 'board-' + board.id },
 				() => {
 					console.log('Update request sent');
 				}
 			);
+
+			requestSyncTimeout = setTimeout(() => {
+				invalidate(`/board/${board.id}/api`);
+			}, 2000);
 		}, 500);
 	};
 
@@ -480,7 +487,9 @@
 
 <section
 	class="container"
-	style={`background-image: url(${board.image !== '' ? board.image : '/default-board.png'});`}
+	style={`background-image: url(${
+		board && board.image && board.image !== '' ? board.image : '/default-board.png'
+	});`}
 >
 	<div class="users">
 		{#each board.workSpace.users as user}
