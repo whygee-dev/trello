@@ -124,3 +124,5 @@ A showcase production is available here: https://thullo-sveltekit.netlify.app/
 - Better image upload handling. Right now they are stored in base64 form raw in the database, this is bad as it makes requests slower since the images are fully requested in a everything or nothing fashion and not streamed / lazy loaded.
 
 - When the user profile is changed, a relogin is required for changes to be reflected on Navbar. This is because of the jwt not being refreshed.
+
+- Dragged & drop preview has a fixed height, it would be cooler to have it the same height as the dragged card
