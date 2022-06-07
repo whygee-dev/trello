@@ -35,7 +35,7 @@ export const get: RequestHandler = async ({ request, locals }) => {
 		const pubnub = new PubNub({
 			publishKey: 'pub-c-be25a5ac-e5c9-451f-9070-e27717cc1b26',
 			subscribeKey: 'sub-c-fda059c7-710d-4e8e-875d-08c257b7fb4b',
-			secretKey: 'sec-c-ZGEzZjI2ZTAtMjQwZS00ZGU5LWFlMjktNjY2NWQwMGRiMDg2',
+			secretKey: process.env.PUBNUB_SECRET,
 			uuid: locals.user.id
 		});
 
