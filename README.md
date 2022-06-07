@@ -1,38 +1,118 @@
-# create-svelte
+# Thullo
 
-Everything you need to build a Svelte project, powered by [`create-svelte`](https://github.com/sveltejs/kit/tree/master/packages/create-svelte).
+A mini clone of Trello made in SvelteKit, TypeScript & Prisma.
 
-## Creating a project
+## Goal
 
-If you're seeing this, you've probably already done this step. Congrats!
+The main goal of this project is to try and play around with SvelteKit in a close to real life project scenario.
 
-```bash
-# create a new project in the current directory
-npm init svelte
+## Installation
 
-# create a new project in my-app
-npm init svelte my-app
+Clone the repo:
+
+```
+git clone https://github.com/whygee-dev/trello.git
 ```
 
-## Developing
-
-Once you've created a project and installed dependencies with `npm install` (or `pnpm install` or `yarn`), start a development server:
+### Install dependencies
 
 ```bash
-npm run dev
-
-# or start the server and open the app in a new browser tab
-npm run dev -- --open
+yarn
 ```
 
-## Building
-
-To create a production version of your app:
+or
 
 ```bash
-npm run build
+npm i
 ```
 
-You can preview the production build with `npm run preview`.
+### Environment Variables
 
-> To deploy your app, you may need to install an [adapter](https://kit.svelte.dev/docs/adapters) for your target environment.
+```
+# Database URL. Example: postgresql://postgres:@localhost:5432/trello?schema=publi
+DATABASE_URL=
+
+# Random secret for JWT signing
+JWT_SECRET=
+
+# Root URL
+URL=http://localhost:3000
+
+# PubNub secret key: https://www.pubnub.com/docs/security/access-control#initialize-with-a-secret-key
+PUBNUB_SECRET=
+
+```
+
+### Apply prisma migrations
+
+```
+npx prisma migrate dev
+```
+
+### Run the local server
+
+```
+yarn dev
+```
+
+## Database
+
+Our project uses by default Postgresql. However Prisma supports multiple databases including MySQL, MSSQL, CockroachDB you can change the provider variable in schema.prisma file:
+
+```
+provider = "postgresql"
+```
+
+to
+
+```
+provider = "mysql" // or sqlserver, cockroachdb
+```
+
+If any database other than postgresql is used you also need to delete the migration folder and run
+
+```
+npx prisma migrate dev
+```
+
+to generate the correct SQL for your database.
+
+## Features
+
+- Login / Register
+
+![App Screenshot](https://i.ibb.co/rGhbSQ4/auth-min.gif)
+
+- Workspace, Board CRUD
+  ![App Screenshot](https://i.ibb.co/c3F2vb3/board-workspace-crud.gif)
+
+- Cards & Lists drag & drop
+  ![App Screenshot](https://i.ibb.co/1z9Ls5M/drag-drop.gif)
+
+- Real time board sync across members
+  ![App Screenshot](https://i.ibb.co/w0gsjfm/sync-drag-drop.gif)
+
+- Cards cover, labels, members, title, description
+  ![App Screenshot](https://i.ibb.co/6wrHmX5/card-crud.gif)
+
+- Invite collaborators
+
+![App Screenshot](https://i.ibb.co/fxZ3shJ/invite.gif)
+
+## Production
+
+A showcase production is available here: https://thullo-sveltekit.netlify.app/
+
+**Disclaimer**: Due to the free nature of the host, it is limited and therefore its availability cannot be guaranteed.
+
+## Can be improved
+
+- CSS / Responsivity in some pages
+
+- SvelteKit doesn't support websockets natively yet, for simplicity sake we choosed to use PubNub which isn't satisfactory especially in production; removing it and using a custom node server will improve latency drastically.
+
+- More flexible member roles
+
+- Better image upload handling. Right now they are stored in base64 form raw in the database, this is bad as it makes requests slower since the images are fully requested in a everything or nothing fashion and not streamed / lazy loaded.
+
+- When the user profile is changed, a relogin is required for changes to be reflected on Navbar. This is because of the jwt not being refreshed.
