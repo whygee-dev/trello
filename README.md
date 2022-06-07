@@ -88,15 +88,19 @@ to generate the correct SQL for your database.
 ![App Screenshot](https://github.com/whygee-dev/public_gifs/blob/main/thullo/profil.png?raw=true)
 
 - Workspace, Board CRUD
+
   ![App Screenshot](https://github.com/whygee-dev/public_gifs/blob/main/thullo/board-workspace-crud.gif?raw=true)
 
 - Cards & Lists drag & drop
+
   ![App Screenshot](https://github.com/whygee-dev/public_gifs/blob/main/thullo/card-crud.gif?raw=true)
 
 - Real time board sync across members
+
   ![App Screenshot](https://github.com/whygee-dev/public_gifs/blob/main/thullo/sync-drag&drop.gif?raw=true)
 
 - Cards cover, labels, members, title, description
+
   ![App Screenshot](https://github.com/whygee-dev/public_gifs/blob/main/thullo/card-crud.gif?raw=true)
 
 - Invite collaborators
