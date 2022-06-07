@@ -81,23 +81,27 @@ to generate the correct SQL for your database.
 
 - Login / Register
 
-![App Screenshot](https://i.ibb.co/rGhbSQ4/auth-min.gif)
+![App Screenshot](https://github.com/whygee-dev/public_gifs/blob/main/thullo/auth.gif?raw=true)
+
+- User profil
+
+![App Screenshot](https://github.com/whygee-dev/public_gifs/blob/main/thullo/profil.png?raw=true)
 
 - Workspace, Board CRUD
-  ![App Screenshot](https://i.ibb.co/c3F2vb3/board-workspace-crud.gif)
+  ![App Screenshot](https://github.com/whygee-dev/public_gifs/blob/main/thullo/board-workspace-crud.gif?raw=true)
 
 - Cards & Lists drag & drop
-  ![App Screenshot](https://i.ibb.co/1z9Ls5M/drag-drop.gif)
+  ![App Screenshot](https://github.com/whygee-dev/public_gifs/blob/main/thullo/card-crud.gif?raw=true)
 
 - Real time board sync across members
-  ![App Screenshot](https://i.ibb.co/w0gsjfm/sync-drag-drop.gif)
+  ![App Screenshot](https://github.com/whygee-dev/public_gifs/blob/main/thullo/sync-drag&drop.gif?raw=true)
 
 - Cards cover, labels, members, title, description
-  ![App Screenshot](https://i.ibb.co/6wrHmX5/card-crud.gif)
+  ![App Screenshot](https://github.com/whygee-dev/public_gifs/blob/main/thullo/card-crud.gif?raw=true)
 
 - Invite collaborators
 
-![App Screenshot](https://i.ibb.co/fxZ3shJ/invite.gif)
+![App Screenshot](https://github.com/whygee-dev/public_gifs/blob/main/thullo/invite.gif?raw=true)
 
 ## Production
 
