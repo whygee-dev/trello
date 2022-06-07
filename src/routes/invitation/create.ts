@@ -40,7 +40,7 @@ export const post: RequestHandler = async ({ request, locals }) => {
 				}
 			});
 
-			link = encodeURI(`http://localhost:3000/invitation/${invitation.id}`);
+			link = encodeURI(`${process.env.URL}/invitation/${invitation.id}`);
 
 			const invitations = await prisma.invitation.findMany({});
 
